@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Utility Dashboard</title>
+  <style>
+    body { font-family: Arial; background:#f4f6f9; }
+    .container { max-width:500px; margin:50px auto; background:#fff; padding:20px; border-radius:8px; }
+    input, button { width:100%; padding:10px; margin-top:10px; }
+    .card { background:#f9fafc; padding:15px; margin-top:15px; border:1px solid #ddd; border-radius:5px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Utility Portal</h1>
+    <div id="login">
+      <input id="customerId" placeholder="Enter Customer ID">
+      <button onclick="login()">Login</button>
+      <div id="error" style="color:red;"></div>
+    </div>
+    <div id="dashboard" style="display:none;">
+      <h2>Dashboard</h2>
+      <div class="card"><b>Electric Balance:</b> <span id="electric"></span></div>
+      <div class="card"><b>Water Bill Due:</b> <span id="water"></span></div>
+      <button onclick="logout()">Logout</button>
+    </div>
+  </div>
+
+<script>
+  const API_BASE = "https://script.google.com/macros/s/AKfycbycTaOXplA2F5ama0lsqVCjVKIaAOFtjRzlMzjLIMZ5XCRHJPW_Ck31fcYRaGC0r6-h/exec"; // Replace with Apps Script URL
+
+  async function login() {
+    const id = document.getElementById("customerId").value.trim();
+    if (!id) { document.getElementById("error").innerText = "Enter ID"; return; }
+    try {
+      const res = await fetch(`${API_BASE}?id=${id}`);
+      const data = await res.json();
+      if (data.error) { document.getElementById("error").innerText = data.error; return; }
+      document.getElementById("electric").innerText = data.electricBalance;
+      document.getElementById("water").innerText = data.waterBillDue;
+      document.getElementById("login").style.display = "none";
+      document.getElementById("dashboard").style.display = "block";
+    } catch (err) {
+      document.getElementById("error").innerText = "Network error";
+    }
+  }
+
+  function logout() {
+    document.getElementById("dashboard").style.display = "none";
+    document.getElementById("login").style.display = "block";
+    document.getElementById("error").innerText = "";
+  }
+</script>
+</body>
+</html>
