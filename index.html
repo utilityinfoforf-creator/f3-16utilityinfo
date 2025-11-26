@@ -14,6 +14,7 @@
     .card { background:#f9fafc; padding:15px; margin-top:15px; border:1px solid #ddd; border-radius:5px; }
     .error { color:red; margin-top:10px; }
     .toggle { margin-top:15px; }
+    .note { margin-top:20px; font-size:14px; color:#b30000; text-align:center; font-weight:bold; }
   </style>
 </head>
 <body>
@@ -31,6 +32,11 @@
       <div class="card"><b>Water Bill Due:</b> <span id="water"></span></div>
       <div class="card"><b>Flat Number:</b> <span id="flat"></span></div>
       <div class="card"><b>Last Updated:</b> <span id="updated"></span></div>
+
+      <!-- Warning note -->
+      <div class="note">
+        ⚠️ If your electric meter balance goes below -200, your line will be cut off.
+      </div>
 
       <!-- Email toggle -->
       <div class="card toggle">
@@ -72,7 +78,6 @@
         document.getElementById("updated").innerText = "N/A";
       }
 
-      // If backend returns subscription status, set toggle + email
       if (data.subscribed) {
         document.getElementById("emailToggle").checked = (data.subscribed === "true");
       }
@@ -102,7 +107,7 @@
       const res = await fetch(`${API_BASE}?id=${encodeURIComponent(id)}&subscribe=${enabled}&email=${encodeURIComponent(email)}`);
       const data = await res.json();
       if (data.status) {
-        alert(data.status); // confirmation popup
+        alert(data.status);
       }
     } catch (err) {
       alert("Network error");
