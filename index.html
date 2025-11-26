@@ -28,6 +28,7 @@
       <div class="card"><b>Name:</b> <span id="name"></span></div>
       <div class="card"><b>Electric Balance:</b> <span id="electric"></span></div>
       <div class="card"><b>Water Bill Due:</b> <span id="water"></span></div>
+      <div class="card"><b>Flat Number:</b> <span id="flat"></span></div>
       <div class="card"><b>Last Updated:</b> <span id="updated"></span></div>
       <button onclick="logout()">Logout</button>
     </div>
@@ -52,11 +53,11 @@
       document.getElementById("name").innerText = data.name;
       document.getElementById("electric").innerText = data.electricBalance;
       document.getElementById("water").innerText = data.waterBillDue;
+      document.getElementById("flat").innerText = data.flatNumber || "N/A";
 
       // Show last updated time (formatted)
       if (data.lastUpdated) {
-        const date = new Date(data.lastUpdated);
-        document.getElementById("updated").innerText = date.toLocaleString();
+        document.getElementById("updated").innerText = data.lastUpdated;
       } else {
         document.getElementById("updated").innerText = "N/A";
       }
