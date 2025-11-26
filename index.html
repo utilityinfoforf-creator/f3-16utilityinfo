@@ -38,6 +38,7 @@
           <input type="checkbox" id="emailToggle" onchange="toggleEmail()">
           Receive balance updates by email
         </label>
+        <input id="emailAddress" placeholder="Enter your email" style="margin-top:10px;">
       </div>
 
       <button onclick="logout()">Logout</button>
@@ -71,9 +72,12 @@
         document.getElementById("updated").innerText = "N/A";
       }
 
-      // If backend returns subscription status, set toggle
+      // If backend returns subscription status, set toggle + email
       if (data.subscribed) {
         document.getElementById("emailToggle").checked = (data.subscribed === "true");
+      }
+      if (data.email) {
+        document.getElementById("emailAddress").value = data.email;
       }
 
       document.getElementById("login").style.display = "none";
@@ -86,9 +90,16 @@
   async function toggleEmail() {
     const id = document.getElementById("customerId").value.trim();
     const enabled = document.getElementById("emailToggle").checked;
+    const email = document.getElementById("emailAddress").value.trim();
+
+    if (enabled && !email) {
+      alert("Please enter your email address to subscribe.");
+      document.getElementById("emailToggle").checked = false;
+      return;
+    }
 
     try {
-      const res = await fetch(`${API_BASE}?id=${encodeURIComponent(id)}&subscribe=${enabled}`);
+      const res = await fetch(`${API_BASE}?id=${encodeURIComponent(id)}&subscribe=${enabled}&email=${encodeURIComponent(email)}`);
       const data = await res.json();
       if (data.status) {
         alert(data.status); // confirmation popup
@@ -104,6 +115,7 @@
     document.getElementById("error").innerText = "";
     document.getElementById("customerId").value = "";
     document.getElementById("emailToggle").checked = false;
+    document.getElementById("emailAddress").value = "";
   }
 </script>
 </body>
