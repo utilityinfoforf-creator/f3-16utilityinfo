@@ -15,6 +15,13 @@
     .error { color:red; margin-top:10px; }
     .toggle { margin-top:15px; }
     .note { margin-top:20px; font-size:14px; color:#b30000; text-align:center; font-weight:bold; }
+    /* 🔴 Style for negative balance */
+    .negative {
+      background:#ffcccc !important;
+      border:1px solid #b30000 !important;
+      color:#b30000;
+      font-weight:bold;
+    }
   </style>
 </head>
 <body>
@@ -28,7 +35,7 @@
     <div id="dashboard" style="display:none;">
       <h2>Dashboard</h2>
       <div class="card"><b>Name:</b> <span id="name"></span></div>
-      <div class="card"><b>Electric Balance:</b> <span id="electric"></span></div>
+      <div class="card" id="electricCard"><b>Electric Balance:</b> <span id="electric"></span></div>
       <div class="card"><b>Water Bill Due:</b> <span id="water"></span></div>
       <div class="card"><b>Flat Number:</b> <span id="flat"></span></div>
       <div class="card"><b>Last Updated:</b> <span id="updated"></span></div>
@@ -85,6 +92,15 @@
         document.getElementById("emailAddress").value = data.email;
       }
 
+      // 🔴 Turn card red if balance is negative
+      const balanceValue = parseFloat(String(data.electricBalance).replace(/[^\d.-]/g, ""));
+      const electricCard = document.getElementById("electricCard");
+      if (!isNaN(balanceValue) && balanceValue < 0) {
+        electricCard.classList.add("negative");
+      } else {
+        electricCard.classList.remove("negative");
+      }
+
       document.getElementById("login").style.display = "none";
       document.getElementById("dashboard").style.display = "block";
     } catch (err) {
@@ -121,6 +137,7 @@
     document.getElementById("customerId").value = "";
     document.getElementById("emailToggle").checked = false;
     document.getElementById("emailAddress").value = "";
+    document.getElementById("electricCard").classList.remove("negative");
   }
 </script>
 </body>
