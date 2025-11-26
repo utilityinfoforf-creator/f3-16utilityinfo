@@ -13,6 +13,7 @@
     button:hover { background:#0056b3; }
     .card { background:#f9fafc; padding:15px; margin-top:15px; border:1px solid #ddd; border-radius:5px; }
     .error { color:red; margin-top:10px; }
+    .toggle { margin-top:15px; }
   </style>
 </head>
 <body>
@@ -30,6 +31,15 @@
       <div class="card"><b>Water Bill Due:</b> <span id="water"></span></div>
       <div class="card"><b>Flat Number:</b> <span id="flat"></span></div>
       <div class="card"><b>Last Updated:</b> <span id="updated"></span></div>
+
+      <!-- Email toggle -->
+      <div class="card toggle">
+        <label>
+          <input type="checkbox" id="emailToggle" onchange="toggleEmail()">
+          Receive balance updates by email
+        </label>
+      </div>
+
       <button onclick="logout()">Logout</button>
     </div>
   </div>
@@ -55,11 +65,15 @@
       document.getElementById("water").innerText = data.waterBillDue;
       document.getElementById("flat").innerText = data.flatNumber || "N/A";
 
-      // Show last updated time (formatted)
       if (data.lastUpdated) {
         document.getElementById("updated").innerText = data.lastUpdated;
       } else {
         document.getElementById("updated").innerText = "N/A";
+      }
+
+      // If backend returns subscription status, set toggle
+      if (data.subscribed) {
+        document.getElementById("emailToggle").checked = (data.subscribed === "true");
       }
 
       document.getElementById("login").style.display = "none";
@@ -69,11 +83,27 @@
     }
   }
 
+  async function toggleEmail() {
+    const id = document.getElementById("customerId").value.trim();
+    const enabled = document.getElementById("emailToggle").checked;
+
+    try {
+      const res = await fetch(`${API_BASE}?id=${encodeURIComponent(id)}&subscribe=${enabled}`);
+      const data = await res.json();
+      if (data.status) {
+        alert(data.status); // confirmation popup
+      }
+    } catch (err) {
+      alert("Network error");
+    }
+  }
+
   function logout() {
     document.getElementById("dashboard").style.display = "none";
     document.getElementById("login").style.display = "block";
     document.getElementById("error").innerText = "";
     document.getElementById("customerId").value = "";
+    document.getElementById("emailToggle").checked = false;
   }
 </script>
 </body>
