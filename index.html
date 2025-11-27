@@ -15,13 +15,14 @@
     .error { color:red; margin-top:10px; }
     .toggle { margin-top:15px; }
     .note { margin-top:20px; font-size:14px; color:#b30000; text-align:center; font-weight:bold; }
-    /* 🔴 Style for negative balance */
-    .negative {
-      background:#ffcccc !important;
-      border:1px solid #b30000 !important;
-      color:#b30000;
-      font-weight:bold;
-    }
+    .negative { background:#ffcccc !important; border:1px solid #b30000 !important; color:#b30000; font-weight:bold; }
+
+    /* Payment page */
+    .options { display:flex; flex-direction:column; gap:10px; margin-top:20px; }
+    .steps { margin-top:20px; }
+    .step { margin-bottom:15px; }
+    .step img { max-width:100%; border:1px solid #ddd; border-radius:5px; }
+    .back-btn { background:#6c757d; color:#fff; }
   </style>
 </head>
 <body>
@@ -32,6 +33,8 @@
       <button onclick="login()">Login</button>
       <div id="error" class="error"></div>
     </div>
+
+    <!-- Dashboard -->
     <div id="dashboard" style="display:none;">
       <h2>Dashboard</h2>
       <div class="card"><b>Name:</b> <span id="name"></span></div>
@@ -40,12 +43,10 @@
       <div class="card"><b>Flat Number:</b> <span id="flat"></span></div>
       <div class="card"><b>Last Updated:</b> <span id="updated"></span></div>
 
-      <!-- Warning note -->
       <div class="note">
         ⚠️ If your electric meter balance goes below -200, your line will be cut off.
       </div>
 
-      <!-- Email toggle -->
       <div class="card toggle">
         <label>
           <input type="checkbox" id="emailToggle" onchange="toggleEmail()">
@@ -54,12 +55,27 @@
         <input id="emailAddress" placeholder="Enter your email" style="margin-top:10px;">
       </div>
 
+      <button onclick="showPayment()">Make Payment</button>
       <button onclick="logout()">Logout</button>
+    </div>
+
+    <!-- Payment Page -->
+    <div id="payment" style="display:none;">
+      <h2>Make a Payment</h2>
+      <p>Select your preferred payment option:</p>
+      <div class="options">
+        <button onclick="showSteps('bkash')">bKash</button>
+        <button onclick="showSteps('nagad')">Nagad</button>
+        <button onclick="showSteps('card')">Credit/Debit Card</button>
+        <button onclick="showSteps('bank')">Bank Transfer</button>
+      </div>
+      <div id="steps" class="steps"></div>
+      <button class="back-btn" onclick="backToDashboard()">Back to Dashboard</button>
     </div>
   </div>
 
 <script>
-  const API_BASE = "https://script.google.com/macros/s/AKfycbxvBjqw2zs8n8xop1V1flLaJFGLK8MfuzSQTDXPdzuByT4v0gtm6yu8ToaYrnAe7qJ7cQ/exec"; // Replace with your Apps Script Web App URL
+  const API_BASE = "YOUR_SCRIPT_URL"; // Replace with your Apps Script Web App URL
 
   async function login() {
     const id = document.getElementById("customerId").value.trim();
@@ -69,75 +85,104 @@
       const res = await fetch(`${API_BASE}?id=${encodeURIComponent(id)}`);
       const data = await res.json();
 
-      if (data.error) {
-        document.getElementById("error").innerText = data.error;
-        return;
-      }
+      if (data.error) { document.getElementById("error").innerText = data.error; return; }
 
       document.getElementById("name").innerText = data.name;
       document.getElementById("electric").innerText = data.electricBalance;
       document.getElementById("water").innerText = data.waterBillDue;
       document.getElementById("flat").innerText = data.flatNumber || "N/A";
+      document.getElementById("updated").innerText = data.lastUpdated || "N/A";
 
-      if (data.lastUpdated) {
-        document.getElementById("updated").innerText = data.lastUpdated;
-      } else {
-        document.getElementById("updated").innerText = "N/A";
-      }
+      if (data.subscribed) document.getElementById("emailToggle").checked = (data.subscribed === "true");
+      if (data.email) document.getElementById("emailAddress").value = data.email;
 
-      if (data.subscribed) {
-        document.getElementById("emailToggle").checked = (data.subscribed === "true");
-      }
-      if (data.email) {
-        document.getElementById("emailAddress").value = data.email;
-      }
-
-      // 🔴 Turn card red if balance is negative
       const balanceValue = parseFloat(String(data.electricBalance).replace(/[^\d.-]/g, ""));
       const electricCard = document.getElementById("electricCard");
-      if (!isNaN(balanceValue) && balanceValue < 0) {
-        electricCard.classList.add("negative");
-      } else {
-        electricCard.classList.remove("negative");
-      }
+      if (!isNaN(balanceValue) && balanceValue < 0) electricCard.classList.add("negative");
+      else electricCard.classList.remove("negative");
 
       document.getElementById("login").style.display = "none";
       document.getElementById("dashboard").style.display = "block";
-    } catch (err) {
-      document.getElementById("error").innerText = "Network error";
-    }
+    } catch (err) { document.getElementById("error").innerText = "Network error"; }
   }
 
   async function toggleEmail() {
     const id = document.getElementById("customerId").value.trim();
     const enabled = document.getElementById("emailToggle").checked;
     const email = document.getElementById("emailAddress").value.trim();
-
-    if (enabled && !email) {
-      alert("Please enter your email address to subscribe.");
-      document.getElementById("emailToggle").checked = false;
-      return;
-    }
-
+    if (enabled && !email) { alert("Please enter your email address to subscribe."); document.getElementById("emailToggle").checked = false; return; }
     try {
       const res = await fetch(`${API_BASE}?id=${encodeURIComponent(id)}&subscribe=${enabled}&email=${encodeURIComponent(email)}`);
       const data = await res.json();
-      if (data.status) {
-        alert(data.status);
-      }
-    } catch (err) {
-      alert("Network error");
-    }
+      if (data.status) alert(data.status);
+    } catch (err) { alert("Network error"); }
   }
 
   function logout() {
     document.getElementById("dashboard").style.display = "none";
+    document.getElementById("payment").style.display = "none";
     document.getElementById("login").style.display = "block";
     document.getElementById("error").innerText = "";
     document.getElementById("customerId").value = "";
     document.getElementById("emailToggle").checked = false;
     document.getElementById("emailAddress").value = "";
     document.getElementById("electricCard").classList.remove("negative");
+    document.getElementById("steps").innerHTML = "";
+  }
+
+  function showPayment() {
+    document.getElementById("dashboard").style.display = "none";
+    document.getElementById("payment").style.display = "block";
+  }
+
+  function backToDashboard() {
+    document.getElementById("payment").style.display = "none";
+    document.getElementById("dashboard").style.display = "block";
+    document.getElementById("steps").innerHTML = "";
+  }
+
+  function showSteps(option) {
+    const stepsDiv = document.getElementById("steps");
+    let html = "";
+
+    if (option === "bkash") {
+      html = `
+        <h3>bKash Payment Steps</h3>
+        <div class="step"><p><b>Step 1:</b> Open bKash app and log in</p><img src="bkash_step1.png" alt="Open bKash App"></div>
+        <div class="step"><p><b>Step 2:</b> Tap ‘Pay Bill’ or ‘Send Money’ (as instructed)</p><img src="bkash_step2.png" alt="Select Pay Bill"></div>
+        <div class="step"><p><b>Step 3:</b> Enter the merchant number or select the saved biller</p><img src="bkash_step3.png" alt="Enter Merchant Number"></div>
+        <div class="step"><p><b>Step 4:</b> Enter amount and reference (Customer ID)</p><img src="bkash_step4.png" alt="Enter Amount and Reference"></div>
+        <div class="step"><p><b>Step 5:</b> Confirm and enter PIN to complete</p><img src="bkash_step5.png" alt="Confirm and PIN"></div>
+      `;
+    } else if (option === "nagad") {
+      html = `
+        <h3>Nagad Payment Steps</h3>
+        <div class="step"><p><b>Step 1:</b> Open Nagad app and log in</p><img src="nagad_step1.png" alt="Open Nagad App"></div>
+        <div class="step"><p><b>Step 2:</b> Tap ‘Bill Pay’ or ‘Payment’</p><img src="nagad_step2.png" alt="Select Payment"></div>
+        <div class="step"><p><b>Step 3:</b> Enter merchant ID or select service</p><img src="nagad_step3.png" alt="Enter Merchant ID"></div>
+        <div class="step"><p><b>Step 4:</b> Enter amount and reference (Customer ID)</p><img src="nagad_step4.png" alt="Enter Amount and Reference"></div>
+        <div class="step"><p><b>Step 5:</b> Confirm and enter PIN to complete</p><img src="nagad_step5.png" alt="Confirm and PIN"></div>
+      `;
+    } else if (option === "card") {
+      html = `
+        <h3>Credit/Debit Card Payment Steps</h3>
+        <div class="step"><p><b>Step 1:</b> Enter card details (number, name, expiry, CVV)</p><img src="card_step1.png" alt="Enter Card Details"></div>
+        <div class="step"><p><b>Step 2:</b> Enter billing information (if required)</p><img src="card_step2.png" alt="Enter Billing Info"></div>
+        <div class="step"><p><b>Step 3:</b> Complete 3D Secure/OTP verification</p><img src="card_step3.png" alt="OTP Verification"></div>
+        <div class="step"><p><b>Step 4:</b> Payment confirmation and receipt</p><img src="card_step4.png" alt="Payment Confirmation"></div>
+      `;
+    } else if (option === "bank") {
+      html = `
+        <h3>Bank Transfer Steps</h3>
+        <div class="step"><p><b>Step 1:</b> Log in to your online banking</p><img src="bank_step1.png" alt="Online Banking Login"></div>
+        <div class="step"><p><b>Step 2:</b> Choose ‘Transfer’ or ‘Pay Bill’</p><img src="bank_step2.png" alt="Select Transfer"></div>
+        <div class="step"><p><b>Step 3:</b> Enter beneficiary account details</p><img src="bank_step3.png" alt="Enter Account Details"></div>
+        <div class="step"><p><b>Step 4:</b> Enter amount and reference (Customer ID)</p><img src="bank_step4.png" alt="Enter Amount and Reference"></div>
+        <div class="step"><p><b>Step 5:</b> Confirm transfer and save receipt</p><img src="bank_step5.png" alt="Confirm Transfer"></div>
+      `;
+    }
+
+    stepsDiv.innerHTML = html;
   }
 </script>
 </body>
