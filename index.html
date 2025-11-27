@@ -66,8 +66,6 @@
       <div class="options">
         <button onclick="showSteps('bkash')">bKash</button>
         <button onclick="showSteps('nagad')">Nagad</button>
-        <button onclick="showSteps('card')">Credit/Debit Card</button>
-        <button onclick="showSteps('bank')">Bank Transfer</button>
       </div>
       <div id="steps" class="steps"></div>
       <button class="back-btn" onclick="backToDashboard()">Back to Dashboard</button>
@@ -149,10 +147,10 @@
       html = `
         <h3>bKash Payment Steps</h3>
         <div class="step"><p><b>Step 1:</b> Open bKash app and log in</p><img src="bkash_step1.png" alt="Open bKash App"></div>
-        <div class="step"><p><b>Step 2:</b> Tap ‘Pay Bill’ or ‘Send Money’ (as instructed)</p><img src="bkash_step2.png" alt="Select Pay Bill"></div>
-        <div class="step"><p><b>Step 3:</b> Enter the merchant number or select the saved biller</p><img src="bkash_step3.png" alt="Enter Merchant Number"></div>
+        <div class="step"><p><b>Step 2:</b> Tap ‘Pay Bill’ or ‘Send Money’</p><img src="bkash_step2.png" alt="Select Pay Bill"></div>
+        <div class="step"><p><b>Step 3:</b> Enter merchant number</p><img src="bkash_step3.png" alt="Enter Merchant Number"></div>
         <div class="step"><p><b>Step 4:</b> Enter amount and reference (Customer ID)</p><img src="bkash_step4.png" alt="Enter Amount and Reference"></div>
-        <div class="step"><p><b>Step 5:</b> Confirm and enter PIN to complete</p><img src="bkash_step5.png" alt="Confirm and PIN"></div>
+        <div class="step"><p><b>Step 5:</b> Confirm and enter PIN</p><img src="bkash_step5.png" alt="Confirm and PIN"></div>
       `;
     } else if (option === "nagad") {
       html = `
@@ -161,24 +159,7 @@
         <div class="step"><p><b>Step 2:</b> Tap ‘Bill Pay’ or ‘Payment’</p><img src="nagad_step2.png" alt="Select Payment"></div>
         <div class="step"><p><b>Step 3:</b> Enter merchant ID or select service</p><img src="nagad_step3.png" alt="Enter Merchant ID"></div>
         <div class="step"><p><b>Step 4:</b> Enter amount and reference (Customer ID)</p><img src="nagad_step4.png" alt="Enter Amount and Reference"></div>
-        <div class="step"><p><b>Step 5:</b> Confirm and enter PIN to complete</p><img src="nagad_step5.png" alt="Confirm and PIN"></div>
-      `;
-    } else if (option === "card") {
-      html = `
-        <h3>Credit/Debit Card Payment Steps</h3>
-        <div class="step"><p><b>Step 1:</b> Enter card details (number, name, expiry, CVV)</p><img src="card_step1.png" alt="Enter Card Details"></div>
-        <div class="step"><p><b>Step 2:</b> Enter billing information (if required)</p><img src="card_step2.png" alt="Enter Billing Info"></div>
-        <div class="step"><p><b>Step 3:</b> Complete 3D Secure/OTP verification</p><img src="card_step3.png" alt="OTP Verification"></div>
-        <div class="step"><p><b>Step 4:</b> Payment confirmation and receipt</p><img src="card_step4.png" alt="Payment Confirmation"></div>
-      `;
-    } else if (option === "bank") {
-      html = `
-        <h3>Bank Transfer Steps</h3>
-        <div class="step"><p><b>Step 1:</b> Log in to your online banking</p><img src="bank_step1.png" alt="Online Banking Login"></div>
-        <div class="step"><p><b>Step 2:</b> Choose ‘Transfer’ or ‘Pay Bill’</p><img src="bank_step2.png" alt="Select Transfer"></div>
-        <div class="step"><p><b>Step 3:</b> Enter beneficiary account details</p><img src="bank_step3.png" alt="Enter Account Details"></div>
-        <div class="step"><p><b>Step 4:</b> Enter amount and reference (Customer ID)</p><img src="bank_step4.png" alt="Enter Amount and Reference"></div>
-        <div class="step"><p><b>Step 5:</b> Confirm transfer and save receipt</p><img src="bank_step5.png" alt="Confirm Transfer"></div>
+        <div class="step"><p><b>Step 5:</b> Confirm and enter PIN</p><img src="nagad_step5.png" alt="Confirm and PIN"></div>
       `;
     }
 
