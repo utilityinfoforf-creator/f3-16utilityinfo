@@ -12,7 +12,8 @@
     button { background:#007bff; color:#fff; border:none; cursor:pointer; }
     button:hover { background:#0056b3; }
     .card { background:#f9fafc; padding:15px; margin-top:15px; border:1px solid #ddd; border-radius:5px; }
-    .error { color:red; margin-top:10px; }
+    .error { color:#b30000; margin-top:10px; }
+    .success { color:#0a7c2f; margin-top:10px; }
     .toggle { margin-top:15px; }
     .note { margin-top:20px; font-size:14px; color:#b30000; text-align:center; font-weight:bold; }
     .negative { background:#ffcccc !important; border:1px solid #b30000 !important; color:#b30000; font-weight:bold; }
@@ -22,7 +23,14 @@
     .steps { margin-top:20px; }
     .step { margin-bottom:15px; }
     .step img { max-width:100%; border:1px solid #ddd; border-radius:5px; }
+
     .back-btn { background:#6c757d; color:#fff; }
+
+    /* Email input error highlight */
+    .input-error {
+      border-color:#b30000 !important;
+      background:#ffe9e9 !important;
+    }
   </style>
 </head>
 <body>
@@ -53,6 +61,7 @@
           Receive balance updates by email
         </label>
         <input id="emailAddress" placeholder="Enter your email" style="margin-top:10px;">
+        <div id="toggleMsg" class=""></div>
       </div>
 
       <button onclick="showPayment()">Make Payment</button>
@@ -75,8 +84,17 @@
 <script>
   const API_BASE = "https://script.google.com/macros/s/AKfycbxvBjqw2zs8n8xop1V1flLaJFGLK8MfuzSQTDXPdzuByT4v0gtm6yu8ToaYrnAe7qJ7cQ/exec"; // Replace with your Apps Script Web App URL
 
+  function setToggleMessage(text, type) {
+    const el = document.getElementById("toggleMsg");
+    el.className = type === "error" ? "error" : type === "success" ? "success" : "";
+    el.innerText = text || "";
+  }
+
   async function login() {
     const id = document.getElementById("customerId").value.trim();
+    setToggleMessage("", "");
+    document.getElementById("emailAddress").classList.remove("input-error");
+
     if (!id) { document.getElementById("error").innerText = "Enter Customer ID"; return; }
 
     try {
@@ -91,29 +109,56 @@
       document.getElementById("flat").innerText = data.flatNumber || "N/A";
       document.getElementById("updated").innerText = data.lastUpdated || "N/A";
 
-      if (data.subscribed) document.getElementById("emailToggle").checked = (data.subscribed === "true");
-      if (data.email) document.getElementById("emailAddress").value = data.email;
+      if (data.subscribed) document.getElementById("emailToggle").checked = (String(data.subscribed) === "true");
+      document.getElementById("emailAddress").value = data.email || "";
 
       const balanceValue = parseFloat(String(data.electricBalance).replace(/[^\d.-]/g, ""));
       const electricCard = document.getElementById("electricCard");
       if (!isNaN(balanceValue) && balanceValue < 0) electricCard.classList.add("negative");
       else electricCard.classList.remove("negative");
 
+      document.getElementById("error").innerText = "";
       document.getElementById("login").style.display = "none";
       document.getElementById("dashboard").style.display = "block";
-    } catch (err) { document.getElementById("error").innerText = "Network error"; }
+    } catch (err) {
+      document.getElementById("error").innerText = "Network error";
+    }
   }
 
   async function toggleEmail() {
     const id = document.getElementById("customerId").value.trim();
     const enabled = document.getElementById("emailToggle").checked;
-    const email = document.getElementById("emailAddress").value.trim();
-    if (enabled && !email) { alert("Please enter your email address to subscribe."); document.getElementById("emailToggle").checked = false; return; }
+    const emailInput = document.getElementById("emailAddress");
+    const email = emailInput.value.trim();
+
+    setToggleMessage("", "");
+    emailInput.classList.remove("input-error");
+
+    if (enabled && !email) {
+      emailInput.classList.add("input-error");
+      setToggleMessage("Please enter your email address to subscribe.", "error");
+      document.getElementById("emailToggle").checked = false;
+      return;
+    }
+
     try {
-      const res = await fetch(`${API_BASE}?id=${encodeURIComponent(id)}&subscribe=${enabled}&email=${encodeURIComponent(email)}`);
+      const url = `${API_BASE}?id=${encodeURIComponent(id)}&subscribe=${enabled}&email=${encodeURIComponent(email)}`;
+      const res = await fetch(url);
       const data = await res.json();
-      if (data.status) alert(data.status);
-    } catch (err) { alert("Network error"); }
+
+      if (data.status) {
+        setToggleMessage(data.status, "success");
+        // Optional: re-fetch to confirm saved state (keeps UI consistent)
+        const confirmRes = await fetch(`${API_BASE}?id=${encodeURIComponent(id)}`);
+        const confirmData = await confirmRes.json();
+        document.getElementById("emailToggle").checked = (String(confirmData.subscribed) === "true");
+        document.getElementById("emailAddress").value = confirmData.email || email;
+      } else {
+        setToggleMessage("Could not save changes.", "error");
+      }
+    } catch (err) {
+      setToggleMessage("Network error while saving subscription.", "error");
+    }
   }
 
   function logout() {
@@ -126,6 +171,8 @@
     document.getElementById("emailAddress").value = "";
     document.getElementById("electricCard").classList.remove("negative");
     document.getElementById("steps").innerHTML = "";
+    setToggleMessage("", "");
+    document.getElementById("emailAddress").classList.remove("input-error");
   }
 
   function showPayment() {
@@ -147,19 +194,19 @@
       html = `
         <h3>bKash Payment Steps</h3>
         <div class="step"><p><b>Step 1:</b> Open bKash app and log in</p><img src="bkash_step1.png" alt="Open bKash App"></div>
-        <div class="step"><p><b>Step 2:</b> Tap ‘Pay Bill’ or ‘Send Money’</p><img src="bkash_step2.png" alt="Select Send Money"></div>
-        <div class="step"><p><b>Step 3:</b> Enter merchant number</p><img src="bkash_step3.png" alt="Enter The Receiver Number"></div>
-        <div class="step"><p><b>Step 4:</b> Enter amount and reference (Customer ID)</p><img src="bkash_step4.png" alt="Enter Amount and Reference(in here type your  customer id)"></div>
-        <div class="step"><p><b>Step 5:</b> Confirm and enter PIN</p><img src="bkash_step5.png" alt="Confirm and PIN"></div>
+        <div class="step"><p><b>Step 2:</b> Tap ‘Pay Bill’ or ‘Send Money’</p><img src="bkash_step2.png" alt="Select Pay Bill or Send Money"></div>
+        <div class="step"><p><b>Step 3:</b> Enter the merchant number</p><img src="bkash_step3.png" alt="Enter Merchant Number"></div>
+        <div class="step"><p><b>Step 4:</b> Enter amount and reference (your Customer ID)</p><img src="bkash_step4.png" alt="Enter Amount and Reference (Customer ID)"></div>
+        <div class="step"><p><b>Step 5:</b> Confirm and enter PIN</p><img src="bkash_step5.png" alt="Confirm and Enter PIN"></div>
       `;
     } else if (option === "nagad") {
       html = `
         <h3>Nagad Payment Steps</h3>
         <div class="step"><p><b>Step 1:</b> Open Nagad app and log in</p><img src="nagad_step1.png" alt="Open Nagad App"></div>
-        <div class="step"><p><b>Step 2:</b> Tap ‘Bill Pay’ or ‘Payment’</p><img src="nagad_step2.png" alt="Select Send Money"></div>
-        <div class="step"><p><b>Step 3:</b> Enter merchant ID or select service</p><img src="nagad_step3.png" alt="Enter Send Money ID"></div>
-        <div class="step"><p><b>Step 4:</b> Enter amount and reference (Customer ID)</p><img src="nagad_step4.png" alt="Enter Amount and Reference(in here type your  customer id)"></div>
-        <div class="step"><p><b>Step 5:</b> Confirm and enter PIN</p><img src="nagad_step5.png" alt="Confirm and PIN"></div>
+        <div class="step"><p><b>Step 2:</b> Tap ‘Bill Pay’ or ‘Payment’</p><img src="nagad_step2.png" alt="Select Bill Pay or Payment"></div>
+        <div class="step"><p><b>Step 3:</b> Enter merchant ID or choose service</p><img src="nagad_step3.png" alt="Enter Merchant ID"></div>
+        <div class="step"><p><b>Step 4:</b> Enter amount and reference (your Customer ID)</p><img src="nagad_step4.png" alt="Enter Amount and Reference (Customer ID)"></div>
+        <div class="step"><p><b>Step 5:</b> Confirm and enter PIN</p><img src="nagad_step5.png" alt="Confirm and Enter PIN"></div>
       `;
     }
 
