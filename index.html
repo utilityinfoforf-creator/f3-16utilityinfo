@@ -251,48 +251,7 @@
 
     stepsDiv.innerHTML = html;
   }
-  <!-- Payment Page -->
-<div id="payment" style="display:none;">
-  <h2>Make a Payment</h2>
-  <p>Select your preferred payment option:</p>
-  <div class="options">
-    <button onclick="showSteps('bkash')">bKash</button>
-    <button onclick="showSteps('nagad')">Nagad</button>
-  </div>
-  <div id="steps" class="steps"></div>
 
-  <!-- NEW: Transaction confirmation box -->
-  <div class="card">
-    <h3>Confirm Your Payment</h3>
-    <input id="transactionNumber" placeholder="Enter Transaction Number">
-    <button onclick="submitTransaction()">Submit Payment Confirmation</button>
-    <div id="transactionMsg"></div>
-  </div>
-
-  <button class="back-btn" onclick="backToDashboard()">Back to Dashboard</button>
-</div>
-
-<script>
-  const API_BASE = "https://script.google.com/macros/s/AKfycbxvBjqw2zs8n8xop1V1flLaJFGLK8MfuzSQTDXPdzuByT4v0gtm6yu8ToaYrnAe7qJ7cQ/exec";
-
-  async function submitTransaction() {
-    const id = document.getElementById("customerId").value.trim();
-    const txn = document.getElementById("transactionNumber").value.trim();
-    const msgEl = document.getElementById("transactionMsg");
-
-    if (!id || !txn) {
-      msgEl.innerText = "Please enter your Customer ID and Transaction Number.";
-      return;
-    }
-
-    try {
-      const res = await fetch(`${API_BASE}?id=${encodeURIComponent(id)}&transaction=${encodeURIComponent(txn)}`);
-      const data = await res.json();
-      msgEl.innerText = data.status || "Error submitting transaction.";
-    } catch (err) {
-      msgEl.innerText = "Network error while submitting transaction.";
-    }
-  }
 </script>
 </body>
 </html>
