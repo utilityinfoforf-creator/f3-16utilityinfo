@@ -81,15 +81,6 @@
         <button onclick="showSteps('nagad')">Nagad</button>
       </div>
       <div id="steps" class="steps"></div>
-
-      <!-- NEW: Transaction confirmation -->
-      <div class="card">
-        <h3>Confirm Your Payment</h3>
-        <input id="transactionNumber" placeholder="Enter Transaction Number">
-        <button onclick="submitTransaction()">Submit Payment Confirmation</button>
-        <div id="transactionMsg"></div>
-      </div>
-
       <button class="back-btn" onclick="backToDashboard()">Back to Dashboard</button>
     </div>
 
@@ -121,27 +112,144 @@
   </div>
 
 <script>
-  const API_BASE = "https://script.google.com/macros/s/AKfycbxvBjqw2zs8n8xop1V1flLaJFGLK8MfuzSQTDXPdzuByT4v0gtm6yu8ToaYrnAe7qJ7cQ/exec"; // Replace with your Apps Script Web App URL
+  const API_BASE = "https://script.google.com/macros/s/AKfycbxvBjqw2zs8n8xop1V1flLaJFGLK8MfuzSQTDXPdzuByT4v0gtm6yu8ToaYrnAe7qJ7cQ/exec";
 
-  // ... keep your existing functions (login, toggleEmail, logout, showPayment, showTerms, backToDashboard, showSteps)
+  function setToggleMessage(text, type) {
+    const el = document.getElementById("toggleMsg");
+    el.className = type === "error" ? "error" : type === "success" ? "success" : "";
+    el.innerText = text || "";
+  }
 
-  async function submitTransaction() {
+  async function login() {
     const id = document.getElementById("customerId").value.trim();
-    const txn = document.getElementById("transactionNumber").value.trim();
-    const msgEl = document.getElementById("transactionMsg");
+    setToggleMessage("", "");
+    document.getElementById("emailAddress").classList.remove("input-error");
 
-    if (!id || !txn) {
-      msgEl.innerText = "Please enter your Customer ID and Transaction Number.";
+    if (!id) { document.getElementById("error").innerText = "Enter Customer ID"; return; }
+
+    try {
+      const res = await fetch(`${API_BASE}?id=${encodeURIComponent(id)}`);
+      const data = await res.json();
+
+      if (data.error) { document.getElementById("error").innerText = data.error; return; }
+
+      document.getElementById("name").innerText = data.name;
+      document.getElementById("electric").innerText = data.electricBalance;
+      document.getElementById("water").innerText = data.waterBillDue;
+      document.getElementById("flat").innerText = data.flatNumber || "N/A";
+      document.getElementById("updated").innerText = data.lastUpdated || "N/A";
+
+      if (data.subscribed) document.getElementById("emailToggle").checked = (String(data.subscribed) === "true");
+      document.getElementById("emailAddress").value = data.email || "";
+
+      const balanceValue = parseFloat(String(data.electricBalance).replace(/[^\d.-]/g, ""));
+      const electricCard = document.getElementById("electricCard");
+      if (!isNaN(balanceValue) && balanceValue < 0) electricCard.classList.add("negative");
+      else electricCard.classList.remove("negative");
+
+      document.getElementById("error").innerText = "";
+      document.getElementById("login").style.display = "none";
+      document.getElementById("dashboard").style.display = "block";
+    } catch (err) {
+      document.getElementById("error").innerText = "Network error";
+    }
+  }
+
+  async function toggleEmail() {
+    const id = document.getElementById("customerId").value.trim();
+    const enabled = document.getElementById("emailToggle").checked;
+    const emailInput = document.getElementById("emailAddress");
+    const email = emailInput.value.trim();
+
+    setToggleMessage("", "");
+    emailInput.classList.remove("input-error");
+
+    if (enabled && !email) {
+      emailInput.classList.add("input-error");
+      setToggleMessage("Please enter your email address to subscribe.", "error");
+      document.getElementById("emailToggle").checked = false;
       return;
     }
 
     try {
-      const res = await fetch(`${API_BASE}?id=${encodeURIComponent(id)}&transaction=${encodeURIComponent(txn)}`);
+      const url = `${API_BASE}?id=${encodeURIComponent(id)}&subscribe=${enabled}&email=${encodeURIComponent(email)}`;
+      const res = await fetch(url);
       const data = await res.json();
-      msgEl.innerText = data.status || "Error submitting transaction.";
+
+      if (data.status) {
+        setToggleMessage(data.status, "success");
+        // Re-fetch to confirm saved state
+        const confirmRes = await fetch(`${API_BASE}?id=${encodeURIComponent(id)}`);
+        const confirmData = await confirmRes.json();
+        document.getElementById("emailToggle").checked = (String(confirmData.subscribed) === "true");
+        document.getElementById("emailAddress").value = confirmData.email || email;
+      } else {
+        setToggleMessage("Could not save changes.", "error");
+      }
     } catch (err) {
-      msgEl.innerText = "Network error while submitting transaction.";
+      setToggleMessage("Network error while saving subscription.", "error");
     }
+  }
+
+  function logout() {
+    document.getElementById("dashboard").style.display = "none";
+    document.getElementById("payment").style.display = "none";
+    document.getElementById("terms").style.display = "none";
+    document.getElementById("login").style.display = "block";
+    document.getElementById("error").innerText = "";
+    document.getElementById("customerId").value = "";
+    document.getElementById("emailToggle").checked = false;
+    document.getElementById("emailAddress").value = "";
+    document.getElementById("electricCard").classList.remove("negative");
+    document.getElementById("steps").innerHTML = "";
+    setToggleMessage("", "");
+    document.getElementById("emailAddress").classList.remove("input-error");
+  }
+
+  function showPayment() {
+    document.getElementById("dashboard").style.display = "none";
+    document.getElementById("terms").style.display = "none";
+    document.getElementById("payment").style.display = "block";
+  }
+
+  function showTerms() {
+    document.getElementById("dashboard").style.display = "none";
+    document.getElementById("payment").style.display = "none";
+    document.getElementById("terms").style.display = "block";
+  }
+
+  function backToDashboard() {
+    document.getElementById("payment").style.display = "none";
+    document.getElementById("terms").style.display = "none";
+    document.getElementById("dashboard").style.display = "block";
+    document.getElementById("steps").innerHTML = "";
+  }
+
+  function showSteps(option) {
+    const stepsDiv = document.getElementById("steps");
+    let html = "";
+
+    if (option === "bkash") {
+      html = `
+        <h3>bKash Payment Steps</h3>
+        <div class="step"><p><b>Step 1:</b> Open bKash app and log in</p><img src="bkash_step1.png" alt="Open bKash App"></div>
+        <div class="step"><p><b>Step 2:</b> Tap ‘Pay Bill’ or ‘Send Money’</p><img src="bkash_step2.png" alt="Select Pay Bill or Send Money"></div>
+        <div class="step"><p><b>Step 3:</b> Enter the merchant number</p><img src="bkash_step3.png" alt="Enter Merchant Number"></div>
+        <div class="step"><p><b>Step 4:</b> Enter amount and reference (your Customer ID)</p><img src="bkash_step4.png" alt="Enter Amount and Reference (Customer ID)"></div>
+        <div class="step"><p><b>Step 5:</b> Confirm and enter PIN</p><img src="bkash_step5.png" alt="Confirm and Enter PIN"></div>
+      `;
+    } else if (option === "nagad") {
+      html = `
+        <h3>Nagad Payment Steps</h3>
+        <div class="step"><p><b>Step 1:</b> Open Nagad app and log in</p><img src="nagad_step1.png" alt="Open Nagad App"></div>
+        <div class="step"><p><b>Step 2:</b> Tap ‘Bill Pay’ or ‘Payment’</p><img src="nagad_step2.png" alt="Select Bill Pay or Payment"></div>
+        <div class="step"><p><b>Step 3:</b> Enter merchant ID or choose service</p><img src="nagad_step3.png" alt="Enter Merchant ID"></div>
+        <div class="step"><p><b>Step 4:</b> Enter amount and reference (your Customer ID)</p><img src="nagad_step4.png" alt="Enter Amount and Reference (Customer ID)"></div>
+        <div class="step"><p><b>Step 5:</b> Confirm and enter PIN</p><img src="nagad_step5.png" alt="Confirm and Enter PIN"></div>
+      `;
+    }
+
+    stepsDiv.innerHTML = html;
   }
 </script>
 </body>
