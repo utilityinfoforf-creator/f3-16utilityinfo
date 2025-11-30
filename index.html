@@ -83,6 +83,14 @@
       <div id="steps" class="steps"></div>
       <button class="back-btn" onclick="backToDashboard()">Back to Dashboard</button>
     </div>
+    
+<!-- Transaction confirmation box -->
+<div class="card">
+  <h3>Confirm Your Payment</h3>
+  <input id="transactionNumber" placeholder="Enter Transaction Number">
+  <button onclick="submitTransaction()">Submit Payment Confirmation</button>
+  <div id="transactionMsg"></div>
+</div>
 
     <!-- Terms & Conditions Page -->
     <div id="terms" style="display:none;">
@@ -251,6 +259,32 @@
 
     stepsDiv.innerHTML = html;
   }
+async function submitTransaction() {
+  const id = document.getElementById("customerId").value.trim();
+  const txn = document.getElementById("transactionNumber").value.trim();
+  const msgEl = document.getElementById("transactionMsg");
+
+  if (!id || !txn) {
+    msgEl.innerText = "Please enter your Customer ID and Transaction Number.";
+    msgEl.className = "error";
+    return;
+  }
+
+  try {
+    const res = await fetch(`${API_BASE}?id=${encodeURIComponent(id)}&transaction=${encodeURIComponent(txn)}`);
+    const data = await res.json();
+    if (data.status) {
+      msgEl.innerText = data.status;
+      msgEl.className = "success";
+    } else {
+      msgEl.innerText = "Could not submit transaction.";
+      msgEl.className = "error";
+    }
+  } catch (err) {
+    msgEl.innerText = "Network error while submitting transaction.";
+    msgEl.className = "error";
+  }
+}
 
 </script>
 </body>
