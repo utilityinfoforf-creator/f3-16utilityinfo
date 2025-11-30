@@ -266,7 +266,7 @@ async function submitTransaction() {
 
   if (!id || !txn) {
     msgEl.innerText = "Please enter your Customer ID and Transaction Number.";
-    msgEl.className = "error";
+    msgEl.className = "error";   // 🔴 red
     return;
   }
 
@@ -275,14 +275,14 @@ async function submitTransaction() {
     const data = await res.json();
     if (data.status) {
       msgEl.innerText = data.status;
-      msgEl.className = "success";
+      msgEl.className = "success";   // ✅ green
     } else {
       msgEl.innerText = "Could not submit transaction.";
-      msgEl.className = "error";
+      msgEl.className = "error";     // 🔴 red
     }
   } catch (err) {
     msgEl.innerText = "Network error while submitting transaction.";
-    msgEl.className = "error";
+    msgEl.className = "error";       // 🔴 red
   }
 }
 
