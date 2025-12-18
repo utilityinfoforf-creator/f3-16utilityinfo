@@ -103,6 +103,11 @@
       margin-bottom: 15px;
     }
 
+    .card p {
+      color: #555;
+      margin-bottom: 15px;
+    }
+
     .options { 
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
@@ -183,6 +188,23 @@
       transform: translateY(-2px);
     }
 
+    .submit-btn {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #fff;
+      padding: 12px;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+      width: 100%;
+    }
+
+    .submit-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+    }
+
     .input-error {
       border-color: #dc3545 !important;
       background: #ffe9e9 !important;
@@ -209,6 +231,7 @@
     <!-- Login Section -->
     <div id="loginSection" class="card">
       <h3>Login Required</h3>
+      <p>Enter your Customer ID to proceed:</p>
       <div class="form-group">
         <input id="customerId" placeholder="Enter your Customer ID" type="text">
       </div>
@@ -239,7 +262,7 @@
           <input id="transactionNumber" placeholder="Enter Transaction Number" type="text">
         </div>
         <div class="form-group">
-          <button onclick="submitTransaction()" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #fff; border: none; border-radius: 8px; padding: 12px; font-weight: 600; cursor: pointer;">Submit Payment Confirmation</button>
+          <button class="submit-btn" onclick="submitTransaction()">Submit Payment Confirmation</button>
         </div>
         <div id="confirmMsg"></div>
       </div>
@@ -267,7 +290,10 @@
 
       if (!id) { 
         const errorEl = document.getElementById("transactionMsg");
-        if (errorEl) errorEl.innerText = "Enter Customer ID"; 
+        if (errorEl) {
+          errorEl.innerText = "Enter Customer ID";
+          errorEl.className = "error";
+        }
         return; 
       }
 
@@ -277,23 +303,27 @@
 
         if (data.error) { 
           const errorEl = document.getElementById("transactionMsg");
-          if (errorEl) errorEl.innerText = data.error;
+          if (errorEl) {
+            errorEl.innerText = data.error;
+            errorEl.className = "error";
+          }
           return; 
         }
 
-        // Store customer ID for later use
         localStorage.setItem("customerId", id);
         localStorage.setItem("customerName", data.name);
         localStorage.setItem("customerEmail", data.email || "");
 
-        // Show payment section and hide login
         document.getElementById("loginSection").style.display = "none";
         document.getElementById("paymentSection").style.display = "block";
         const errorEl = document.getElementById("transactionMsg");
         if (errorEl) errorEl.innerText = "";
       } catch (err) {
         const errorEl = document.getElementById("transactionMsg");
-        if (errorEl) errorEl.innerText = "Network error";
+        if (errorEl) {
+          errorEl.innerText = "Network error";
+          errorEl.className = "error";
+        }
       }
     }
 
@@ -330,7 +360,7 @@
       const msgEl = document.getElementById("confirmMsg");
 
       if (!id || !txn) {
-        msgEl.innerText = "Please enter Customer ID and Transaction Number.";
+        msgEl.innerText = "Please enter Transaction Number.";
         msgEl.className = "error";
         return;
       }
