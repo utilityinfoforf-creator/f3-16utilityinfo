@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Terms & Conditions - Utility Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body { font-family: Arial, sans-serif; background:#f4f6f9; margin:0; padding:0; }
+    .container { max-width:500px; margin:50px auto; background:#fff; padding:20px; border-radius:8px; box-shadow:0 4px 10px rgba(0,0,0,.1); }
+    h1 { text-align:center; }
+    input, button { width:100%; padding:10px; margin-top:10px; border-radius:5px; border:1px solid #ccc; }
+    button { background:#007bff; color:#fff; border:none; cursor:pointer; }
+    button:hover { background:#0056b3; }
+    .card { background:#f9fafc; padding:15px; margin-top:15px; border:1px solid #ddd; border-radius:5px; text-align:left; }
+    .back-btn { background:#6c757d; color:#fff; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Terms & Conditions</h1>
+    
+    <div class="card">
+      <h3>1. Service usage</h3>
+      <p>Customers must provide accurate information when registering and using the utility portal.</p>
+    </div>
+    <div class="card">
+      <h3>2. Payments</h3>
+      <p>All payments must be made through approved channels (bKash, Nagad). Late payments may result in service interruption.</p>
+    </div>
+    <div class="card">
+      <h3>3. Balance policy</h3>
+      <p>If your electric meter balance goes below -200, your line will be cut off until payment is made.</p>
+    </div>
+    <div class="card">
+      <h3>4. Privacy</h3>
+      <p>Your personal data (Customer ID, email) is used only for service updates and billing notifications.</p>
+    </div>
+    <div class="card">
+      <h3>5. Changes</h3>
+      <p>We reserve the right to update these terms at any time. Updates will be communicated via the portal.</p>
+    </div>
+
+    <button class="back-btn" onclick="goBack()">Back to Dashboard</button>
+  </div>
+
+  <script>
+    function goBack() {
+      window.history.back();
+    }
+  </script>
+</body>
+</html>
