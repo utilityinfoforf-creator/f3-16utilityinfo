@@ -143,10 +143,16 @@
 
     .info-card.negative {
       background: linear-gradient(135deg, #ff6b6b 0%, #ff5252 100%);
+      border: 3px solid #dc3545 !important;
     }
 
     .info-card.negative h3 {
-      color: rgba(255, 255, 255, 0.8);
+      color: #fff;
+    }
+
+    .info-card.negative .value {
+      color: #fff;
+      font-weight: 900;
     }
 
     .info-card.negative .value {
@@ -309,7 +315,7 @@
       </div>
 
       <div class="warning-box">
-        ⚠️ If your electric meter balance goes below -200, your line will be cut off.
+        ⚠️ If your electric meter balance goes below 200 tk, your line will be cut off.
       </div>
 
       <div class="dashboard-grid">
@@ -398,8 +404,12 @@
 
       const balanceValue = parseFloat(String(data.electricBalance).replace(/[^\d.-]/g, ""));
       const electricCard = document.getElementById("electricCard");
-      if (!isNaN(balanceValue) && balanceValue < -200) electricCard.classList.add("negative");
-      else electricCard.classList.remove("negative");
+      console.log("Balance:", data.electricBalance, "Parsed:", balanceValue);
+      if (!isNaN(balanceValue) && balanceValue < 200) {
+        electricCard.classList.add("negative");
+      } else {
+        electricCard.classList.remove("negative");
+      }
 
       document.getElementById("error").innerText = "";
       document.getElementById("error").style.display = "none";
