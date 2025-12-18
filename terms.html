@@ -5,42 +5,126 @@
   <title>Terms & Conditions - Utility Dashboard</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
-    body { font-family: Arial, sans-serif; background:#f4f6f9; margin:0; padding:0; }
-    .container { max-width:500px; margin:50px auto; background:#fff; padding:20px; border-radius:8px; box-shadow:0 4px 10px rgba(0,0,0,.1); }
-    h1 { text-align:center; }
-    input, button { width:100%; padding:10px; margin-top:10px; border-radius:5px; border:1px solid #ccc; }
-    button { background:#007bff; color:#fff; border:none; cursor:pointer; }
-    button:hover { background:#0056b3; }
-    .card { background:#f9fafc; padding:15px; margin-top:15px; border:1px solid #ddd; border-radius:5px; text-align:left; }
-    .back-btn { background:#6c757d; color:#fff; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { 
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+    
+    .container { 
+      max-width: 800px; 
+      margin: 0 auto;
+    }
+
+    .page-header {
+      color: #fff;
+      margin-bottom: 30px;
+      text-align: center;
+    }
+
+    .page-header h1 {
+      font-size: 32px;
+      margin-bottom: 10px;
+    }
+
+    .page-header p {
+      font-size: 16px;
+      opacity: 0.9;
+    }
+
+    .card {
+      background: #fff;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+      transition: all 0.3s;
+      border-left: 4px solid #667eea;
+    }
+
+    .card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    }
+
+    .card h3 {
+      color: #667eea;
+      margin-bottom: 12px;
+      font-size: 18px;
+    }
+
+    .card p {
+      color: #555;
+      line-height: 1.6;
+      font-size: 15px;
+    }
+
+    .btn {
+      padding: 12px 20px;
+      border: none;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+      text-align: center;
+      width: 100%;
+      margin-top: 20px;
+      background: #f0f0f0;
+      color: #333;
+    }
+
+    .btn:hover {
+      background: #e0e0e0;
+      transform: translateY(-2px);
+    }
+
+    @media (max-width: 768px) {
+      .page-header h1 {
+        font-size: 24px;
+      }
+
+      .card {
+        padding: 15px;
+      }
+    }
   </style>
 </head>
 <body>
   <div class="container">
-    <h1>Terms & Conditions</h1>
+    <div class="page-header">
+      <h1>📋 Terms & Conditions</h1>
+      <p>Please review our policies</p>
+    </div>
     
     <div class="card">
-      <h3>1. Service usage</h3>
-      <p>Customers must provide accurate information when registering and using the utility portal.</p>
-    </div>
-    <div class="card">
-      <h3>2. Payments</h3>
-      <p>All payments must be made through approved channels (bKash, Nagad). Late payments may result in service interruption.</p>
-    </div>
-    <div class="card">
-      <h3>3. Balance policy</h3>
-      <p>If your electric meter balance goes below -200, your line will be cut off until payment is made.</p>
-    </div>
-    <div class="card">
-      <h3>4. Privacy</h3>
-      <p>Your personal data (Customer ID, email) is used only for service updates and billing notifications.</p>
-    </div>
-    <div class="card">
-      <h3>5. Changes</h3>
-      <p>We reserve the right to update these terms at any time. Updates will be communicated via the portal.</p>
+      <h3>1. Service Usage</h3>
+      <p>Customers must provide accurate information when registering and using the utility portal. Any false or misleading information may result in service suspension.</p>
     </div>
 
-    <button class="back-btn" onclick="goBack()">Back to Dashboard</button>
+    <div class="card">
+      <h3>2. Payments</h3>
+      <p>All payments must be made through approved channels (bKash, Nagad). Late payments may result in service interruption. We accept payments 24/7 for your convenience.</p>
+    </div>
+
+    <div class="card">
+      <h3>3. Balance Policy</h3>
+      <p>If your electric meter balance goes below -200, your line will be cut off until payment is made. It is your responsibility to maintain a positive balance to ensure continuous service.</p>
+    </div>
+
+    <div class="card">
+      <h3>4. Privacy & Data Protection</h3>
+      <p>Your personal data (Customer ID, email) is used only for service updates and billing notifications. We do not share your information with third parties without your consent.</p>
+    </div>
+
+    <div class="card">
+      <h3>5. Changes to Terms</h3>
+      <p>We reserve the right to update these terms at any time. Updates will be communicated via the portal. Your continued use of the service constitutes acceptance of the updated terms.</p>
+    </div>
+
+    <button class="btn" onclick="goBack()">← Back to Dashboard</button>
   </div>
 
   <script>

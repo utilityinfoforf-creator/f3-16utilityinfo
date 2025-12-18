@@ -5,51 +5,246 @@
   <title>Make Payment - Utility Dashboard</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
-    body { font-family: Arial, sans-serif; background:#f4f6f9; margin:0; padding:0; }
-    .container { max-width:500px; margin:50px auto; background:#fff; padding:20px; border-radius:8px; box-shadow:0 4px 10px rgba(0,0,0,.1); }
-    h1 { text-align:center; }
-    input, button { width:100%; padding:10px; margin-top:10px; border-radius:5px; border:1px solid #ccc; }
-    button { background:#007bff; color:#fff; border:none; cursor:pointer; }
-    button:hover { background:#0056b3; }
-    .card { background:#f9fafc; padding:15px; margin-top:15px; border:1px solid #ddd; border-radius:5px; }
-    .error { color:#b30000; margin-top:10px; }
-    .success { color:#0a7c2f; margin-top:10px; }
-    .options { display:flex; flex-direction:column; gap:10px; margin-top:20px; }
-    .steps { margin-top:20px; }
-    .step { margin-bottom:15px; }
-    .step img { max-width:100%; border:1px solid #ddd; border-radius:5px; }
-    .back-btn { background:#6c757d; color:#fff; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { 
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+    
+    .container { 
+      max-width: 900px; 
+      margin: 0 auto;
+    }
+
+    .page-header {
+      color: #fff;
+      margin-bottom: 30px;
+      text-align: center;
+    }
+
+    .page-header h1 {
+      font-size: 32px;
+      margin-bottom: 10px;
+    }
+
+    .page-header p {
+      font-size: 16px;
+      opacity: 0.9;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-group input {
+      width: 100%;
+      padding: 12px 15px;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 16px;
+      transition: all 0.3s;
+    }
+
+    .form-group input:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .form-group button {
+      width: 100%;
+      padding: 12px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .form-group button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+    }
+
+    .error { 
+      color: #dc3545; 
+      margin-top: 10px;
+      padding: 10px;
+      background: #ffe9e9;
+      border-radius: 6px;
+      border-left: 4px solid #dc3545;
+    }
+
+    .success { 
+      color: #28a745; 
+      margin-top: 10px;
+      padding: 10px;
+      background: #d4edda;
+      border-radius: 6px;
+      border-left: 4px solid #28a745;
+    }
+
+    .card {
+      background: #fff;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+      transition: all 0.3s;
+    }
+
+    .card h3 {
+      color: #667eea;
+      margin-bottom: 15px;
+    }
+
+    .options { 
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 15px; 
+      margin-top: 20px; 
+    }
+
+    .options button {
+      width: 100%;
+      padding: 12px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .options button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+    }
+
+    .steps { 
+      margin-top: 20px;
+      background: #fff;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+
+    .steps h3 {
+      color: #667eea;
+      margin-bottom: 20px;
+    }
+
+    .step { 
+      margin-bottom: 20px;
+      padding: 15px;
+      background: #f8f9fa;
+      border-left: 4px solid #667eea;
+      border-radius: 6px;
+    }
+
+    .step p {
+      margin-bottom: 10px;
+      font-weight: 500;
+    }
+
+    .step img { 
+      max-width: 100%; 
+      border: 2px solid #e0e0e0; 
+      border-radius: 8px;
+    }
+
+    .btn {
+      padding: 12px 20px;
+      border: none;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+      text-align: center;
+      width: 100%;
+    }
+
+    .btn-back {
+      background: #f0f0f0;
+      color: #333;
+      margin-top: 20px;
+    }
+
+    .btn-back:hover {
+      background: #e0e0e0;
+      transform: translateY(-2px);
+    }
+
+    .input-error {
+      border-color: #dc3545 !important;
+      background: #ffe9e9 !important;
+    }
+
+    @media (max-width: 768px) {
+      .options {
+        grid-template-columns: 1fr;
+      }
+
+      .page-header h1 {
+        font-size: 24px;
+      }
+    }
   </style>
 </head>
 <body>
   <div class="container">
-    <h1>Make a Payment</h1>
-    
+    <div class="page-header">
+      <h1>💳 Make a Payment</h1>
+      <p>Choose your payment method</p>
+    </div>
+
     <!-- Login Section -->
-    <div id="loginSection">
-      <input id="customerId" placeholder="Enter Customer ID">
-      <button onclick="login()">Login</button>
+    <div id="loginSection" class="card">
+      <h3>Login Required</h3>
+      <div class="form-group">
+        <input id="customerId" placeholder="Enter your Customer ID" type="text">
+      </div>
+      <div class="form-group">
+        <button onclick="login()">Login</button>
+      </div>
       <div id="transactionMsg"></div>
     </div>
 
     <!-- Payment Section (hidden until login) -->
     <div id="paymentSection" style="display:none;">
-      <p>Select your preferred payment option:</p>
-      <div class="options">
-        <button onclick="showSteps('bkash')">bKash</button>
-        <button onclick="showSteps('nagad')">Nagad</button>
+      <div class="card">
+        <h3>Select Payment Method</h3>
+        <p>Choose how you'd like to pay:</p>
+        <div class="options">
+          <button onclick="showSteps('bkash')">🏦 bKash</button>
+          <button onclick="showSteps('nagad')">💸 Nagad</button>
+        </div>
       </div>
+
       <div id="steps" class="steps"></div>
 
       <!-- Transaction confirmation box -->
       <div class="card">
         <h3>Confirm Your Payment</h3>
-        <input id="transactionNumber" placeholder="Enter Transaction Number">
-        <button onclick="submitTransaction()">Submit Payment Confirmation</button>
+        <p>Enter your transaction details:</p>
+        <div class="form-group">
+          <input id="transactionNumber" placeholder="Enter Transaction Number" type="text">
+        </div>
+        <div class="form-group">
+          <button onclick="submitTransaction()" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #fff; border: none; border-radius: 8px; padding: 12px; font-weight: 600; cursor: pointer;">Submit Payment Confirmation</button>
+        </div>
         <div id="confirmMsg"></div>
       </div>
 
-      <button class="back-btn" onclick="goBack()">Back</button>
+      <button class="btn btn-back" onclick="goBack()">← Back to Dashboard</button>
     </div>
   </div>
 
