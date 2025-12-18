@@ -210,32 +210,6 @@
     document.getElementById("dashboard").style.display = "block";
   }
 
-  function showSteps(option) {
-    const stepsDiv = document.getElementById("steps");
-    let html = "";
-
-    if (option === "bkash") {
-      html = `
-        <h3>bKash Payment Steps</h3>
-        <div class="step"><p><b>Step 1:</b> Open bKash app and log in</p><img src="bkash_step1.png" alt="Open bKash App"></div>
-        <div class="step"><p><b>Step 2:</b> Tap ‘Send Money’</p><img src="bkash_step2.png" alt="Select Send Money"></div>
-        <div class="step"><p><b>Step 3:</b> Enter the number(01727389485)</p><img src="bkash_step3.png" alt="Enter The Number(01727389485)"></div>
-        <div class="step"><p><b>Step 4:</b> Enter amount and reference (your Customer ID)</p><img src="bkash_step4.png" alt="Enter Amount and Reference (Customer ID)"></div>
-        <div class="step"><p><b>Step 5:</b> Confirm and enter PIN</p><img src="bkash_step5.png" alt="Confirm and Enter PIN"></div>
-      `;
-    } else if (option === "nagad(not completely working yet)") {
-      html = `
-        <h3>Nagad Payment Steps</h3>
-        <div class="step"><p><b>Step 1:</b> Open Nagad app and log in</p><img src="nagad_step1.png" alt="Open Nagad App"></div>
-        <div class="step"><p><b>Step 2:</b> Tap ‘Bill Pay’ or ‘Payment’</p><img src="nagad_step2.png" alt="Select Bill Pay or Payment"></div>
-        <div class="step"><p><b>Step 3:</b> Enter merchant ID or choose service</p><img src="nagad_step3.png" alt="Enter Merchant ID"></div>
-        <div class="step"><p><b>Step 4:</b> Enter amount and reference (your Customer ID)</p><img src="nagad_step4.png" alt="Enter Amount and Reference (Customer ID)"></div>
-        <div class="step"><p><b>Step 5:</b> Confirm and enter PIN</p><img src="nagad_step5.png" alt="Confirm and Enter PIN"></div>
-      `;
-    }
-
-    stepsDiv.innerHTML = html;
-  }
 
 </script>
 </body>
