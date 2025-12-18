@@ -68,21 +68,9 @@
         <div id="toggleMsg" class=""></div>
       </div>
 
-      <button onclick="showPayment()">Make Payment</button>
+      <button onclick="goToPayment()">Make Payment</button>
       <button onclick="showTerms()">Terms & Conditions</button>
       <button onclick="logout()">Logout</button>
-    </div>
-
-    <!-- Payment Page -->
-    <div id="payment" style="display:none;">
-      <h2>Make a Payment</h2>
-      <p>Select your preferred payment option:</p>
-      <div class="options">
-        <button onclick="showSteps('bkash')">bKash</button>
-        <button onclick="showSteps('nagad')">Nagad</button>
-      </div>
-      <div id="steps" class="steps"></div>
-      <button class="back-btn" onclick="backToDashboard()">Back to Dashboard</button>
     </div>
 
     <!-- Terms & Conditions Page -->
@@ -204,28 +192,22 @@
     document.getElementById("emailToggle").checked = false;
     document.getElementById("emailAddress").value = "";
     document.getElementById("electricCard").classList.remove("negative");
-    document.getElementById("steps").innerHTML = "";
     setToggleMessage("", "");
     document.getElementById("emailAddress").classList.remove("input-error");
   }
 
-  function showPayment() {
-    document.getElementById("dashboard").style.display = "none";
-    document.getElementById("terms").style.display = "none";
-    document.getElementById("payment").style.display = "block";
+  function goToPayment() {
+    window.location.href = "payment.html";
   }
 
   function showTerms() {
     document.getElementById("dashboard").style.display = "none";
-    document.getElementById("payment").style.display = "none";
     document.getElementById("terms").style.display = "block";
   }
 
   function backToDashboard() {
-    document.getElementById("payment").style.display = "none";
     document.getElementById("terms").style.display = "none";
     document.getElementById("dashboard").style.display = "block";
-    document.getElementById("steps").innerHTML = "";
   }
 
   function showSteps(option) {

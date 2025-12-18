@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Confirm Payment - Utility Dashboard</title>
+  <title>Make Payment - Utility Dashboard</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
     body { font-family: Arial, sans-serif; background:#f4f6f9; margin:0; padding:0; }
@@ -14,16 +14,27 @@
     .card { background:#f9fafc; padding:15px; margin-top:15px; border:1px solid #ddd; border-radius:5px; }
     .error { color:#b30000; margin-top:10px; }
     .success { color:#0a7c2f; margin-top:10px; }
+    .options { display:flex; flex-direction:column; gap:10px; margin-top:20px; }
+    .steps { margin-top:20px; }
+    .step { margin-bottom:15px; }
+    .step img { max-width:100%; border:1px solid #ddd; border-radius:5px; }
     .back-btn { background:#6c757d; color:#fff; }
   </style>
 </head>
 <body>
   <div class="container">
-    <h1>Confirm Your Payment</h1>
+    <h1>Make a Payment</h1>
     
+    <p>Select your preferred payment option:</p>
+    <div class="options">
+      <button onclick="showSteps('bkash')">bKash</button>
+      <button onclick="showSteps('nagad')">Nagad</button>
+    </div>
+    <div id="steps" class="steps"></div>
+
     <!-- Transaction confirmation box -->
     <div class="card">
-      <h3>Payment Confirmation</h3>
+      <h3>Confirm Your Payment</h3>
       <input id="customerId" placeholder="Enter Customer ID">
       <input id="transactionNumber" placeholder="Enter Transaction Number">
       <button onclick="submitTransaction()">Submit Payment Confirmation</button>
@@ -35,6 +46,33 @@
 
   <script>
     const API_BASE = "https://script.google.com/macros/s/AKfycbxvBjqw2zs8n8xop1V1flLaJFGLK8MfuzSQTDXPdzuByT4v0gtm6yu8ToaYrnAe7qJ7cQ/exec";
+
+    function showSteps(option) {
+      const stepsDiv = document.getElementById("steps");
+      let html = "";
+
+      if (option === "bkash") {
+        html = `
+          <h3>bKash Payment Steps</h3>
+          <div class="step"><p><b>Step 1:</b> Open bKash app and log in</p><img src="bkash_step1.png" alt="Open bKash App"></div>
+          <div class="step"><p><b>Step 2:</b> Tap 'Send Money'</p><img src="bkash_step2.png" alt="Select Send Money"></div>
+          <div class="step"><p><b>Step 3:</b> Enter the number(01727389485)</p><img src="bkash_step3.png" alt="Enter The Number(01727389485)"></div>
+          <div class="step"><p><b>Step 4:</b> Enter amount and reference (your Customer ID)</p><img src="bkash_step4.png" alt="Enter Amount and Reference (Customer ID)"></div>
+          <div class="step"><p><b>Step 5:</b> Confirm and enter PIN</p><img src="bkash_step5.png" alt="Confirm and Enter PIN"></div>
+        `;
+      } else if (option === "nagad") {
+        html = `
+          <h3>Nagad Payment Steps</h3>
+          <div class="step"><p><b>Step 1:</b> Open Nagad app and log in</p><img src="nagad_step1.png" alt="Open Nagad App"></div>
+          <div class="step"><p><b>Step 2:</b> Tap 'Bill Pay' or 'Payment'</p><img src="nagad_step2.png" alt="Select Bill Pay or Payment"></div>
+          <div class="step"><p><b>Step 3:</b> Enter merchant ID or choose service</p><img src="nagad_step3.png" alt="Enter Merchant ID"></div>
+          <div class="step"><p><b>Step 4:</b> Enter amount and reference (your Customer ID)</p><img src="nagad_step4.png" alt="Enter Amount and Reference (Customer ID)"></div>
+          <div class="step"><p><b>Step 5:</b> Confirm and enter PIN</p><img src="nagad_step5.png" alt="Confirm and Enter PIN"></div>
+        `;
+      }
+
+      stepsDiv.innerHTML = html;
+    }
 
     async function submitTransaction() {
       const id = document.getElementById("customerId").value.trim();
