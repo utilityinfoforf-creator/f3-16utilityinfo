@@ -398,7 +398,7 @@
 
       const balanceValue = parseFloat(String(data.electricBalance).replace(/[^\d.-]/g, ""));
       const electricCard = document.getElementById("electricCard");
-      if (!isNaN(balanceValue) && balanceValue < 0) electricCard.classList.add("negative");
+      if (!isNaN(balanceValue) && balanceValue < -200) electricCard.classList.add("negative");
       else electricCard.classList.remove("negative");
 
       document.getElementById("error").innerText = "";
