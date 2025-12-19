@@ -354,6 +354,7 @@
       <div class="action-buttons">
         <button class="btn btn-primary" onclick="goToPayment()">💳 Make Payment</button>
         <button class="btn btn-secondary" onclick="goToTerms()">📋 Terms & Conditions</button>
+        <button class="btn btn-secondary" onclick="downloadWebApp()">📥 Download App</button>
         <button class="btn btn-danger" onclick="logout()">🚪 Logout</button>
       </div>
     </div>
@@ -481,6 +482,29 @@
 
   function backToDashboard() {
     document.getElementById("dashboard").style.display = "block";
+  }
+
+  function downloadWebApp() {
+    const instructions = `
+📥 DOWNLOAD & RUN THE WEB APP 📥
+
+1. Clone or download the project:
+   git clone https://github.com/utilityinfoforf-creator/f3-16utilityinfo.git
+   cd f3-16utilityinfo
+
+2. Install dependencies:
+   npm install
+
+3. Start the server:
+   npm start
+
+4. Open your browser and go to:
+   http://localhost:3000
+
+The app will run locally on your machine.
+    `.trim();
+
+    alert(instructions);
   }
 
 
