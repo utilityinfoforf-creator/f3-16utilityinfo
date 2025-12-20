@@ -128,6 +128,37 @@
   </div>
 
   <script>
+    const API_BASE = "https://script.google.com/macros/s/AKfycbxvBjqw2zs8n8xop1V1flLaJFGLK8MfuzSQTDXPdzuByT4v0gtm6yu8ToaYrnAe7qJ7cQ/exec";
+
+    async function login() {
+      const idEl = document.getElementById('customerId') || document.getElementById('id');
+      const id = idEl ? idEl.value.trim() : '';
+      const msgEl = document.getElementById('transactionMsg') || document.getElementById('error') || document.getElementById('status') || document.getElementById('toggleMsg');
+
+      if (!id) {
+        if (msgEl) { msgEl.innerText = 'Enter Customer ID'; msgEl.className = 'error'; }
+        return;
+      }
+
+      try {
+        const res = await fetch(`${API_BASE}?id=${encodeURIComponent(id)}`);
+        const data = await res.json();
+
+        if (data.error) {
+          if (msgEl) { msgEl.innerText = data.error; msgEl.className = 'error'; }
+          return;
+        }
+
+        localStorage.setItem('customerId', id);
+        localStorage.setItem('customerName', data.name || '');
+        localStorage.setItem('customerEmail', data.email || '');
+
+        if (msgEl) { msgEl.innerText = 'Logged in'; msgEl.className = 'success'; }
+      } catch (err) {
+        if (msgEl) { msgEl.innerText = 'Network error'; msgEl.className = 'error'; }
+      }
+    }
+
     function goBack() {
       window.history.back();
     }
