@@ -24,69 +24,74 @@
 
     <!-- Dashboard Page -->
     <div id="dashboard" style="display:none;">
-      <div class="dashboard-header">
-        <h1>Welcome, <span id="name">User</span>! 👋</h1>
-        <p>Your Utility Dashboard</p>
+      <div class="language-toggle">
+        <button class="lang-btn active" onclick="switchLanguage('en')">English</button>
+        <button class="lang-btn" onclick="switchLanguage('bn')">বাংলা</button>
       </div>
 
-      <div class="warning-box">
+      <div class="dashboard-header">
+        <h1>Welcome, <span id="name">User</span>! 👋</h1>
+        <p id="dashboardSubtitle">Your Utility Dashboard</p>
+      </div>
+
+      <div class="warning-box" id="warningBox">
         ⚠️ If your electric meter balance goes below 200 tk, your line will be cut off.
       </div>
 
       <div class="dashboard-grid">
         <div class="info-card">
-          <h3>Electric Balance</h3>
+          <h3 id="label-electric">Electric Balance</h3>
           <div class="value" id="electricBalance">₹0.00</div>
         </div>
         <div class="info-card">
-          <h3>Water Bill Due</h3>
+          <h3 id="label-water">Water Bill Due</h3>
           <div class="value" id="waterBillDue">₹0.00</div>
         </div>
         <div class="info-card">
-          <h3>Gas Bill Due</h3>
+          <h3 id="label-gas">Gas Bill Due</h3>
           <div class="value" id="gasBillDue">₹0.00</div>
         </div>
         <div class="info-card">
-          <h3>Internet Connected</h3>
+          <h3 id="label-internet">Internet Connected</h3>
           <div class="value" id="internetConnected">N/A</div>
         </div>
         <div class="info-card">
-          <h3>Internet Bill Due</h3>
+          <h3 id="label-internet-bill">Internet Bill Due</h3>
           <div class="value" id="internetBillDue">₹0.00</div>
         </div>
         <div class="info-card">
-          <h3>Flat Number</h3>
+          <h3 id="label-flat">Flat Number</h3>
           <div class="value" id="flatNumber">N/A</div>
         </div>
         <div class="info-card">
-          <h3>Last Updated</h3>
+          <h3 id="label-updated">Last Updated</h3>
           <div class="value" id="lastUpdated">N/A</div>
         </div>
       </div>
 
       <div class="email-section">
-        <h3>📧 Email Notifications</h3>
+        <h3 id="label-email">📧 Email Notifications</h3>
         <div class="checkbox-group">
           <input type="checkbox" id="emailToggle" onchange="toggleEmail()">
-          <label for="emailToggle">Receive balance updates by email</label>
+          <label for="emailToggle" id="label-email-toggle">Receive balance updates by email</label>
         </div>
         <input id="emailAddress" type="email" placeholder="Enter your email address">
         <div id="toggleMsg"></div>
       </div>
 
       <div class="action-buttons">
-        <button class="btn btn-primary" onclick="goToPayment()">💳 Make Payment</button>
-        <button class="btn btn-secondary" onclick="goToTerms()">📋 Terms & Conditions</button>
-        <button class="btn btn-secondary" onclick="window.location.href='connection.html'">🌐 Request Internet Connection</button>
-        <button class="btn btn-secondary" onclick="viewUpdateHistory()">📋 Update History</button>
-        <button class="btn btn-danger" onclick="logout()">🚪 Logout</button>
+        <button class="btn btn-primary" onclick="goToPayment()" id="btn-payment">💳 Make Payment</button>
+        <button class="btn btn-secondary" onclick="goToTerms()" id="btn-terms">📋 Terms & Conditions</button>
+        <button class="btn btn-secondary" onclick="window.location.href='connection.html'" id="btn-internet">🌐 Request Internet Connection</button>
+        <button class="btn btn-secondary" onclick="viewUpdateHistory()" id="btn-history">📋 Update History</button>
+        <button class="btn btn-danger" onclick="logout()" id="btn-logout">🚪 Logout</button>
       </div>
 
       <!-- Update History Modal -->
       <div id="historyModal" class="modal" style="display:none;">
         <div class="modal-content">
           <div class="modal-header">
-            <h2>📋 Update History</h2>
+            <h2 id="modal-history-title">📋 Update History</h2>
             <button class="close-btn" onclick="closeUpdateHistory()">&times;</button>
           </div>
           <div id="historyContainer" class="history-container">
@@ -97,161 +102,7 @@
     </div>
   </div>
 
-<script>
-  const API_BASE = "https://script.google.com/macros/s/AKfycbxvBjqw2zs8n8xop1V1flLaJFGLK8MfuzSQTDXPdzuByT4v0gtm6yu8ToaYrnAe7qJ7cQ/exec";
-
-  function setToggleMessage(text, type) {
-    const el = document.getElementById("toggleMsg");
-    el.className = type === "error" ? "error" : type === "success" ? "success" : "";
-    el.innerText = text || "";
-  }
-
-  async function login() {
-    const id = document.getElementById("customerId").value.trim();
-    setToggleMessage("", "");
-    document.getElementById("emailAddress").classList.remove("input-error");
-
-    if (!id) { 
-      const errorEl = document.getElementById("error");
-      errorEl.innerText = "Enter Customer ID";
-      errorEl.style.display = "block";
-      return; 
-    }
-
-    try {
-      const res = await fetch(`${API_BASE}?id=${encodeURIComponent(id)}`);
-      const data = await res.json();
-
-      if (data.error) { 
-        const errorEl = document.getElementById("error");
-        errorEl.innerText = data.error;
-        errorEl.style.display = "block";
-        return; 
-      }
-
-      document.getElementById("name").innerText = data.name;
-      document.getElementById("electricBalance").innerText = data.electricBalance;
-      document.getElementById("waterBillDue").innerText = data.waterBillDue;
-      document.getElementById("gasBillDue").innerText = data.gasBillDue;
-      document.getElementById("internetConnected").innerText = data.internetConnected; // NEW
-      document.getElementById("internetBillDue").innerText = data.internetBillDue;     // NEW
-      document.getElementById("flatNumber").innerText = data.flatNumber;
-      document.getElementById("lastUpdated").innerText = data.lastUpdated;
-
-      if (data.subscribed) document.getElementById("emailToggle").checked = (String(data.subscribed) === "true");
-      document.getElementById("emailAddress").value = data.email || "";
-
-      document.getElementById("error").innerText = "";
-      document.getElementById("error").style.display = "none";
-      document.getElementById("login").style.display = "none";
-      document.getElementById("dashboard").style.display = "block";
-    } catch (err) {
-      const errorEl = document.getElementById("error");
-      errorEl.innerText = "Network error";
-      errorEl.style.display = "block";
-    }
-  }
-
-  async function toggleEmail() {
-    const id = document.getElementById("customerId").value.trim();
-    const enabled = document.getElementById("emailToggle").checked;
-    const emailInput = document.getElementById("emailAddress");
-    const email = emailInput.value.trim();
-
-    setToggleMessage("", "");
-    emailInput.classList.remove("input-error");
-
-    if (enabled && !email) {
-      emailInput.classList.add("input-error");
-      setToggleMessage("Please enter your email address to subscribe.", "error");
-      document.getElementById("emailToggle").checked = false;
-      return;
-    }
-
-    try {
-      const url = `${API_BASE}?id=${encodeURIComponent(id)}&subscribe=${enabled}&email=${encodeURIComponent(email)}`;
-      const res = await fetch(url);
-      const data = await res.json();
-
-      if (data.status) {
-        setToggleMessage(data.status, "success");
-        // Re-fetch to confirm saved state
-        const confirmRes = await fetch(`${API_BASE}?id=${encodeURIComponent(id)}`);
-        const confirmData = await confirmRes.json();
-        document.getElementById("emailToggle").checked = (String(confirmData.subscribed) === "true");
-        document.getElementById("emailAddress").value = confirmData.email || email;
-      } else {
-        setToggleMessage("Could not save changes.", "error");
-      }
-    } catch (err) {
-      setToggleMessage("Network error while saving subscription.", "error");
-    }
-  }
-
-  function logout() {
-    document.getElementById("dashboard").style.display = "none";
-    document.getElementById("login").style.display = "flex";
-    document.getElementById("error").innerText = "";
-    document.getElementById("error").style.display = "none";
-    document.getElementById("customerId").value = "";
-    document.getElementById("emailToggle").checked = false;
-    document.getElementById("emailAddress").value = "";
-    setToggleMessage("", "");
-    document.getElementById("emailAddress").classList.remove("input-error");
-  }
-
-  function goToPayment() {
-    window.location.href = "payment.html";
-  }
-
-  function goToTerms() {
-    window.location.href = "terms.html";
-  }
-
-  function backToDashboard() {
-    document.getElementById("dashboard").style.display = "block";
-  }
-
-  async function viewUpdateHistory() {
-    const id = document.getElementById("customerId").value.trim();
-    
-    try {
-      const res = await fetch(`${API_BASE}?id=${encodeURIComponent(id)}&history=true`);
-      const data = await res.json();
-
-      const historyContainer = document.getElementById("historyContainer");
-      
-      if (data.history && data.history.length > 0) {
-        historyContainer.innerHTML = data.history.map(item => `
-          <div class="history-item">
-            <div class="history-date">📅 ${item.date || 'N/A'}</div>
-            <div class="history-balance">💰 Balance: <strong>${item.balance || 'N/A'}</strong></div>
-            <div class="history-description">${item.description || 'Update'}</div>
-          </div>
-        `).join('');
-      } else {
-        historyContainer.innerHTML = '<p style="text-align: center; color: #666;">No update history available yet.</p>';
-      }
-
-      document.getElementById("historyModal").style.display = "flex";
-    } catch (err) {
-      alert("Failed to fetch update history. Please try again.");
-    }
-  }
-
-  function closeUpdateHistory() {
-    document.getElementById("historyModal").style.display = "none";
-  }
-
-  // Close modal when clicking outside
-  window.onclick = function(event) {
-    const modal = document.getElementById("historyModal");
-    if (event.target === modal) {
-      modal.style.display = "none";
-    }
-  }
-
-
-</script>
+<script src="script.js"></script>
+<script src="script.js"></script>
 </body>
 </html>
