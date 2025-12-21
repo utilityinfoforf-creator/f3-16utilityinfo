@@ -78,7 +78,21 @@
         <button class="btn btn-primary" onclick="goToPayment()">💳 Make Payment</button>
         <button class="btn btn-secondary" onclick="goToTerms()">📋 Terms & Conditions</button>
         <button class="btn btn-secondary" onclick="window.location.href='connection.html'">🌐 Request Internet Connection</button>
+        <button class="btn btn-secondary" onclick="viewUpdateHistory()">📋 Update History</button>
         <button class="btn btn-danger" onclick="logout()">🚪 Logout</button>
+      </div>
+
+      <!-- Update History Modal -->
+      <div id="historyModal" class="modal" style="display:none;">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h2>📋 Update History</h2>
+            <button class="close-btn" onclick="closeUpdateHistory()">&times;</button>
+          </div>
+          <div id="historyContainer" class="history-container">
+            <!-- History items will be populated here -->
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -196,6 +210,45 @@
 
   function backToDashboard() {
     document.getElementById("dashboard").style.display = "block";
+  }
+
+  async function viewUpdateHistory() {
+    const id = document.getElementById("customerId").value.trim();
+    
+    try {
+      const res = await fetch(`${API_BASE}?id=${encodeURIComponent(id)}&history=true`);
+      const data = await res.json();
+
+      const historyContainer = document.getElementById("historyContainer");
+      
+      if (data.history && data.history.length > 0) {
+        historyContainer.innerHTML = data.history.map(item => `
+          <div class="history-item">
+            <div class="history-date">📅 ${item.date || 'N/A'}</div>
+            <div class="history-balance">💰 Balance: <strong>${item.balance || 'N/A'}</strong></div>
+            <div class="history-description">${item.description || 'Update'}</div>
+          </div>
+        `).join('');
+      } else {
+        historyContainer.innerHTML = '<p style="text-align: center; color: #666;">No update history available yet.</p>';
+      }
+
+      document.getElementById("historyModal").style.display = "flex";
+    } catch (err) {
+      alert("Failed to fetch update history. Please try again.");
+    }
+  }
+
+  function closeUpdateHistory() {
+    document.getElementById("historyModal").style.display = "none";
+  }
+
+  // Close modal when clicking outside
+  window.onclick = function(event) {
+    const modal = document.getElementById("historyModal");
+    if (event.target === modal) {
+      modal.style.display = "none";
+    }
   }
 
 
