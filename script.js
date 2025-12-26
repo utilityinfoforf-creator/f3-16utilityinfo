@@ -272,3 +272,45 @@ window.addEventListener("load", function() {
     document.querySelectorAll(".lang-btn")[saved === "bn" ? 1 : 0].classList.add("active");
   }
 });
+async function sendVerificationCode() {
+  const id = document.getElementById("customerId").value.trim();
+  const email = document.getElementById("emailAddress").value.trim();
+  const t = translations[currentLanguage];
+
+  if (!id || !email) {
+    setToggleMessage(t.emailError, "error");
+    return;
+  }
+
+  try {
+    const res = await fetch(`${API_BASE}?action=request&customerId=${encodeURIComponent(id)}&email=${encodeURIComponent(email)}`);
+    const txt = await res.text();
+    setToggleMessage(txt, "success");
+  } catch (err) {
+    setToggleMessage("Network error while sending verification code.", "error");
+  }
+}
+
+async function verifyEmail() {
+  const id = document.getElementById("customerId").value.trim();
+  const code = document.getElementById("verificationCode").value.trim();
+
+  if (!id || !code) {
+    setToggleMessage("Please enter the verification code.", "error");
+    return;
+  }
+
+  try {
+    const res = await fetch(`${API_BASE}?action=confirm&customerId=${encodeURIComponent(id)}&code=${encodeURIComponent(code)}`);
+    const txt = await res.text();
+    setToggleMessage(txt, txt.includes("✅") ? "success" : "error");
+
+    // Refresh subscription info after verification
+    const confirmRes = await fetch(`${API_BASE}?id=${encodeURIComponent(id)}`);
+    const confirmData = await confirmRes.json();
+    document.getElementById("emailToggle").checked = (String(confirmData.subscribed) === "true");
+    document.getElementById("emailAddress").value = confirmData.email || "";
+  } catch (err) {
+    setToggleMessage("Network error while verifying code.", "error");
+  }
+}

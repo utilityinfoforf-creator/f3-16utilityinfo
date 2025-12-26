@@ -69,6 +69,7 @@
         </div>
       </div>
 
+      <!-- Email Verification Section -->
       <div class="email-section">
         <h3 id="label-email">📧 Email Notifications</h3>
         <div class="checkbox-group">
@@ -76,6 +77,12 @@
           <label for="emailToggle" id="label-email-toggle">Receive balance updates by email</label>
         </div>
         <input id="emailAddress" type="email" placeholder="Enter your email address">
+        <button onclick="sendVerificationCode()">Send Verification Code</button>
+
+        <!-- New: code entry -->
+        <input id="verificationCode" type="text" placeholder="Enter verification code" style="margin-top:10px;">
+        <button onclick="verifyEmail()">Verify Email</button>
+
         <div id="toggleMsg"></div>
       </div>
 
