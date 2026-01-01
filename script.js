@@ -59,15 +59,17 @@ const translations = {
 // Current language
 let currentLanguage = "en";
 
-// Language switch function
-function switchLanguage(lang) {
+// Language switch function (updated to accept event)
+function switchLanguage(lang, event) {
   currentLanguage = lang;
   
   // Update button active state
   document.querySelectorAll(".lang-btn").forEach(btn => {
     btn.classList.remove("active");
   });
-  event.target.classList.add("active");
+  if (event && event.target) {
+    event.target.classList.add("active");
+  }
 
   // Update all text elements
   updatePageLanguage();
@@ -180,7 +182,7 @@ async function toggleEmail() {
 
   try {
     const url = `${API_BASE}?id=${encodeURIComponent(id)}&subscribe=${enabled}&email=${encodeURIComponent(email)}`;
-    const res = await fetch(url);
+    const res = await res = await fetch(url);
     const data = await res.json();
 
     if (data.status) {
