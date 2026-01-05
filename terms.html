@@ -9,73 +9,53 @@
 <body>
   <div class="container">
     <div class="page-header">
-      <h1>📋 Terms & Conditions</h1>
-      <p>Please review our policies</p>
+      <h1 id="label-terms-title">📋 Terms & Conditions</h1>
+      <p id="label-terms-subtitle">Please review our policies</p>
     </div>
     
     <div class="card">
-      <h3>1. Service Usage</h3>
-      <p>Customers must provide accurate information when registering and using the utility portal. Any false or misleading information may result in service suspension.</p>
+      <h3 id="term-1-title">1. Service Usage</h3>
+      <p id="term-1-desc">Customers must provide accurate information when registering and using the utility portal. Any false or misleading information may result in service suspension.</p>
     </div>
 
     <div class="card">
-      <h3>2. Payments</h3>
-      <p>All payments must be made through approved channels (bKash, Nagad). Late payments may result in service interruption. We accept payments 24/7 for your convenience.</p>
+      <h3 id="term-2-title">2. Payments</h3>
+      <p id="term-2-desc">All payments must be made through approved channels (bKash, Nagad). Late payments may result in service interruption. We accept payments 24/7 for your convenience.</p>
     </div>
 
     <div class="card">
-      <h3>3. Balance Policy</h3>
-      <p>If your electric meter balance goes below -200, your line will be cut off until payment is made. It is your responsibility to maintain a positive balance to ensure continuous service.</p>
+      <h3 id="term-3-title">3. Balance Policy</h3>
+      <p id="term-3-desc">If your electric meter balance goes below -200, your line will be cut off until payment is made. It is your responsibility to maintain a positive balance to ensure continuous service.</p>
     </div>
 
-    <div class="card">
-      <h3>4. Privacy & Data Protection</h3>
-      <p>Your personal data (Customer ID, email) is used only for service updates and billing notifications. We do not share your information with third parties without your consent.</p>
-    </div>
-
-    <div class="card">
-      <h3>5. Changes to Terms</h3>
-      <p>We reserve the right to update these terms at any time. Updates will be communicated via the portal. Your continued use of the service constitutes acceptance of the updated terms.</p>
-    </div>
-
-    <button class="btn" onclick="goBack()">← Back to Dashboard</button>
+    <button class="btn" onclick="goBack()" id="btn-back-terms">← Back to Dashboard</button>
   </div>
 
+  <script src="script.js"></script>
   <script>
-    const API_BASE = "https://script.google.com/macros/s/AKfycbxvBjqw2zs8n8xop1V1flLaJFGLK8MfuzSQTDXPdzuByT4v0gtm6yu8ToaYrnAe7qJ7cQ/exec";
-
-    async function login() {
-      const idEl = document.getElementById('customerId') || document.getElementById('id');
-      const id = idEl ? idEl.value.trim() : '';
-      const msgEl = document.getElementById('transactionMsg') || document.getElementById('error') || document.getElementById('status') || document.getElementById('toggleMsg');
-
-      if (!id) {
-        if (msgEl) { msgEl.innerText = 'Enter Customer ID'; msgEl.className = 'error'; }
-        return;
-      }
-
-      try {
-        const res = await fetch(`${API_BASE}?id=${encodeURIComponent(id)}`);
-        const data = await res.json();
-
-        if (data.error) {
-          if (msgEl) { msgEl.innerText = data.error; msgEl.className = 'error'; }
-          return;
-        }
-
-        localStorage.setItem('customerId', id);
-        localStorage.setItem('customerName', data.name || '');
-        localStorage.setItem('customerEmail', data.email || '');
-
-        if (msgEl) { msgEl.innerText = 'Logged in'; msgEl.className = 'success'; }
-      } catch (err) {
-        if (msgEl) { msgEl.innerText = 'Network error'; msgEl.className = 'error'; }
-      }
-    }
-
     function goBack() {
-      window.history.back();
+      window.location.href = "index.html";
     }
+
+    // Extend updatePageLanguage for terms page
+    const oldUpdate = updatePageLanguage;
+    updatePageLanguage = function() {
+      oldUpdate();
+      if (currentLanguage === 'bn') {
+        document.getElementById('label-terms-title').innerText = "📋 শর্তাবলী";
+        document.getElementById('label-terms-subtitle').innerText = "দয়া করে আমাদের নীতিগুলো পর্যালোচনা করুন";
+        document.getElementById('term-1-title').innerText = "১. পরিষেবা ব্যবহার";
+        document.getElementById('term-1-desc').innerText = "গ্রাহকদের ইউটিলিটি পোর্টাল ব্যবহার করার সময় সঠিক তথ্য প্রদান করতে হবে।";
+        document.getElementById('term-2-title').innerText = "২. পেমেন্ট";
+        document.getElementById('term-2-desc').innerText = "সব পেমেন্ট অনুমোদিত চ্যানেলের (বিকাশ, নগদ) মাধ্যমে করতে হবে।";
+        document.getElementById('term-3-title').innerText = "৩. ব্যালেন্স নীতি";
+        document.getElementById('term-3-desc').innerText = "আপনার বিদ্যুৎ মিটার ব্যালেন্স -২০০ এর নিচে গেলে লাইন কাটা হবে।";
+        document.getElementById('btn-back-terms').innerText = "← ড্যাশবোর্ডে ফিরে যান";
+      }
+    };
+    
+    // Trigger language update on load
+    window.addEventListener("load", updatePageLanguage);
   </script>
 </body>
 </html>

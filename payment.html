@@ -9,28 +9,28 @@
 <body>
   <div class="container">
     <div class="page-header">
-      <h1>💳 Make a Payment</h1>
-      <p>Choose your payment method</p>
+      <h1 id="label-payment-title">💳 Make a Payment</h1>
+      <p id="label-payment-subtitle">Choose your payment method</p>
     </div>
 
     <!-- Login Section -->
-    <div id="loginSection" class="card">
-      <h3>Login Required</h3>
-      <p>Enter your Customer ID to proceed:</p>
+    <div id="login" class="card">
+      <h3 id="label-login-required">Login Required</h3>
+      <p id="label-login-instruction">Enter your Customer ID to proceed:</p>
       <div class="form-group">
         <input id="customerId" placeholder="Enter your Customer ID" type="text">
       </div>
       <div class="form-group">
-        <button onclick="login()">Login</button>
+        <button onclick="login()" id="btn-login-action">Login</button>
       </div>
-      <div id="transactionMsg"></div>
+      <div id="error" class="error" style="display:none;"></div>
     </div>
 
     <!-- Payment Section (hidden until login) -->
-    <div id="paymentSection" style="display:none;">
+    <div id="dashboard" style="display:none;">
       <div class="card">
-        <h3>Select Payment Method</h3>
-        <p>Choose how you'd like to pay:</p>
+        <h3 id="label-select-method">Select Payment Method</h3>
+        <p id="label-choose-how">Choose how you'd like to pay:</p>
         <div class="options">
           <button onclick="showSteps('bkash')">🏦 bKash</button>
           <button onclick="showSteps('nagad')">💸 Nagad</button>
@@ -41,101 +41,46 @@
 
       <!-- Transaction confirmation box -->
       <div class="card">
-        <h3>Confirm Your Payment</h3>
-        <p>Enter your transaction details:</p>
+        <h3 id="label-confirm-payment">Confirm Your Payment</h3>
+        <p id="label-enter-details">Enter your transaction details:</p>
         <div class="form-group">
           <input id="transactionNumber" placeholder="Enter Transaction Number" type="text">
         </div>
         <div class="form-group">
-          <button class="submit-btn" onclick="submitTransaction()">Submit Payment Confirmation</button>
+          <button class="submit-btn" onclick="submitTransaction()" id="btn-submit-payment">Submit Payment Confirmation</button>
         </div>
         <div id="confirmMsg"></div>
       </div>
 
-      <button class="btn btn-back" onclick="goBack()">← Back to Dashboard</button>
+      <button class="btn btn-back" onclick="goBack()" id="btn-back-dash">← Back to Dashboard</button>
     </div>
   </div>
 
+  <script src="script.js"></script>
   <script>
-    const API_BASE = "https://script.google.com/macros/s/AKfycbxvBjqw2zs8n8xop1V1flLaJFGLK8MfuzSQTDXPdzuByT4v0gtm6yu8ToaYrnAe7qJ7cQ/exec";
-
-    function setToggleMessage(text, type) {
-      const el = document.getElementById("toggleMsg");
-      if (el) {
-        el.className = type === "error" ? "error" : type === "success" ? "success" : "";
-        el.innerText = text || "";
-      }
-    }
-
-    async function login() {
-      const id = document.getElementById("customerId").value.trim();
-      setToggleMessage("", "");
-      const emailAddress = document.getElementById("emailAddress");
-      if (emailAddress) emailAddress.classList.remove("input-error");
-
-      if (!id) { 
-        const errorEl = document.getElementById("transactionMsg");
-        if (errorEl) {
-          errorEl.innerText = "Enter Customer ID";
-          errorEl.className = "error";
-        }
-        return; 
-      }
-
-      try {
-        const res = await fetch(`${API_BASE}?id=${encodeURIComponent(id)}`);
-        const data = await res.json();
-
-        if (data.error) { 
-          const errorEl = document.getElementById("transactionMsg");
-          if (errorEl) {
-            errorEl.innerText = data.error;
-            errorEl.className = "error";
-          }
-          return; 
-        }
-
-        localStorage.setItem("customerId", id);
-        localStorage.setItem("customerName", data.name);
-        localStorage.setItem("customerEmail", data.email || "");
-
-        document.getElementById("loginSection").style.display = "none";
-        document.getElementById("paymentSection").style.display = "block";
-        const errorEl = document.getElementById("transactionMsg");
-        if (errorEl) errorEl.innerText = "";
-      } catch (err) {
-        const errorEl = document.getElementById("transactionMsg");
-        if (errorEl) {
-          errorEl.innerText = "Network error";
-          errorEl.className = "error";
-        }
-      }
-    }
-
+    // Local additions for payment specific logic
     function showSteps(option) {
       const stepsDiv = document.getElementById("steps");
       let html = "";
-
       if (option === "bkash") {
         html = `
           <h3>bKash Payment Steps</h3>
-          <div class="step"><p><b>Step 1:</b> Open bKash app and log in</p><img src="bkash_step1.png" alt="Open bKash App"></div>
-          <div class="step"><p><b>Step 2:</b> Tap 'Send Money'</p><img src="bkash_step2.png" alt="Select Send Money"></div>
-          <div class="step"><p><b>Step 3:</b> Enter the number(01727389485)</p><img src="bkash_step3.png" alt="Enter The Number(01727389485)"></div>
-          <div class="step"><p><b>Step 4:</b> Enter amount and reference (your Customer ID)</p><img src="bkash_step4.png" alt="Enter Amount and Reference (Customer ID)"></div>
-          <div class="step"><p><b>Step 5:</b> Confirm and enter PIN</p><img src="bkash_step5.png" alt="Confirm and Enter PIN"></div>
+          <div class="step"><p><b>Step 1:</b> Open bKash app and log in</p></div>
+          <div class="step"><p><b>Step 2:</b> Tap 'Send Money'</p></div>
+          <div class="step"><p><b>Step 3:</b> Enter the number (01727389485)</p></div>
+          <div class="step"><p><b>Step 4:</b> Enter amount and reference (your Customer ID)</p></div>
+          <div class="step"><p><b>Step 5:</b> Confirm and enter PIN</p></div>
         `;
       } else if (option === "nagad") {
         html = `
           <h3>Nagad Payment Steps</h3>
-          <div class="step"><p><b>Step 1:</b> Open Nagad app and log in</p><img src="nagad_step1.png" alt="Open Nagad App"></div>
-          <div class="step"><p><b>Step 2:</b> Tap 'Bill Pay' or 'Payment'</p><img src="nagad_step2.png" alt="Select Bill Pay or Payment"></div>
-          <div class="step"><p><b>Step 3:</b> Enter merchant ID or choose service</p><img src="nagad_step3.png" alt="Enter Merchant ID"></div>
-          <div class="step"><p><b>Step 4:</b> Enter amount and reference (your Customer ID)</p><img src="nagad_step4.png" alt="Enter Amount and Reference (Customer ID)"></div>
-          <div class="step"><p><b>Step 5:</b> Confirm and enter PIN</p><img src="nagad_step5.png" alt="Confirm and Enter PIN"></div>
+          <div class="step"><p><b>Step 1:</b> Open Nagad app and log in</p></div>
+          <div class="step"><p><b>Step 2:</b> Tap 'Bill Pay' or 'Payment'</p></div>
+          <div class="step"><p><b>Step 3:</b> Enter merchant ID or choose service</p></div>
+          <div class="step"><p><b>Step 4:</b> Enter amount and reference (your Customer ID)</p></div>
+          <div class="step"><p><b>Step 5:</b> Confirm and enter PIN</p></div>
         `;
       }
-
       stepsDiv.innerHTML = html;
     }
 
@@ -153,22 +98,42 @@
       try {
         const res = await fetch(`${API_BASE}?id=${encodeURIComponent(id)}&transaction=${encodeURIComponent(txn)}`);
         const data = await res.json();
-        if (data.status) {
-          msgEl.innerText = data.status;
+        if (data.status || (typeof data === 'string' && data.includes("success"))) {
+          msgEl.innerText = data.status || data;
           msgEl.className = "success";
-        } else {
-          msgEl.innerText = "Could not submit transaction.";
+        } else if (data.error) {
+          msgEl.innerText = data.error;
           msgEl.className = "error";
         }
       } catch (err) {
-        msgEl.innerText = "Network error while submitting transaction.";
+        msgEl.innerText = "Network error";
         msgEl.className = "error";
       }
     }
 
     function goBack() {
-      window.history.back();
+      window.location.href = "index.html";
     }
+
+    // Extend updatePageLanguage for payment page
+    const oldUpdate = updatePageLanguage;
+    updatePageLanguage = function() {
+      oldUpdate();
+      const t = translations[currentLanguage];
+      if (currentLanguage === 'bn') {
+        document.getElementById('label-payment-title').innerText = "💳 পেমেন্ট করুন";
+        document.getElementById('label-payment-subtitle').innerText = "আপনার পেমেন্ট পদ্ধতি চয়ন করুন";
+        document.getElementById('label-login-required').innerText = "লগইন প্রয়োজন";
+        document.getElementById('label-login-instruction').innerText = "এগিয়ে যেতে আপনার কাস্টমার আইডি লিখুন:";
+        document.getElementById('btn-login-action').innerText = "লগইন";
+        document.getElementById('label-select-method').innerText = "পেমেন্ট পদ্ধতি নির্বাচন করুন";
+        document.getElementById('label-choose-how').innerText = "আপনি কিভাবে পেমেন্ট করতে চান তা চয়ন করুন:";
+        document.getElementById('label-confirm-payment').innerText = "আপনার পেমেন্ট নিশ্চিত করুন";
+        document.getElementById('label-enter-details').innerText = "আপনার লেনদেনের বিবরণ লিখুন:";
+        document.getElementById('btn-submit-payment').innerText = "পেমেন্ট নিশ্চিতকরণ জমা দিন";
+        document.getElementById('btn-back-dash').innerText = "← ড্যাশবোর্ডে ফিরে যান";
+      }
+    };
   </script>
 </body>
 </html>

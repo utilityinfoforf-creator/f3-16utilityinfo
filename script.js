@@ -1,20 +1,4 @@
-const API_BASE = "https://script.google.com/macros/s/AKfycbxvBjqw2zs8n8xop1V1flLaJFGLK8MfuzSQTDXPdzuByT4v0gtm6yu8ToaYrnAe7qJ7cQ/exec";
-
-// Language translations
-const translations = {
-  en: {
-    welcome: "Welcome, ",
-    subtitle: "Your Utility Dashboard",
-    warning: "⚠️ If your electric meter balance goes below 200 tk, your line will be cut off.",
-    electric: "Electric Balance",
-    water: "Water Bill Due",
-    gas: "Gas Bill Due",
-    internet: "Internet Connected",
-    internetBill: "Internet Bill Due",
-    flat: "Flat Number",
-    lastUpdated: "Last Updated",
-    emailNotif: "📧 Email Notifications",
-    emailToggle: "Receive balance updates by email",
+ilToggle: "Receive balance updates by email",
     emailPlaceholder: "Enter your email address",
     payment: "💳 Make Payment",
     terms: "📋 Terms & Conditions",
@@ -149,19 +133,39 @@ async function login() {
     if (data.subscribed) document.getElementById("emailToggle").checked = (String(data.subscribed) === "true");
     document.getElementById("emailAddress").value = data.email || "";
 
-    document.getElementById("error").innerText = "";
-    document.getElementById("error").style.display = "none";
-    document.getElementById("login").style.display = "none";
-    document.getElementById("dashboard").style.display = "block";
+    localStorage.setItem("customerId", id);
+    localStorage.setItem("customerName", data.name);
+    localStorage.setItem("customerEmail", data.email || "");
+
+    const errorEl = document.getElementById("error");
+    if (errorEl) {
+      errorEl.innerText = "";
+      errorEl.style.display = "none";
+    }
+    const loginEl = document.getElementById("login");
+    if (loginEl) loginEl.style.display = "none";
+    const dashEl = document.getElementById("dashboard");
+    if (dashEl) dashEl.style.display = "block";
     
     // Update language on login
     updatePageLanguage();
   } catch (err) {
     const errorEl = document.getElementById("error");
-    errorEl.innerText = "Network error";
-    errorEl.style.display = "block";
+    if (errorEl) {
+      errorEl.innerText = "Network error";
+      errorEl.style.display = "block";
+    }
   }
 }
+
+// Check for persistent login
+window.addEventListener("load", function() {
+  const savedId = localStorage.getItem("customerId");
+  if (savedId && document.getElementById("customerId")) {
+    document.getElementById("customerId").value = savedId;
+    login();
+  }
+});
 
 async function toggleEmail() {
   const id = document.getElementById("customerId").value.trim();
@@ -182,7 +186,7 @@ async function toggleEmail() {
 
   try {
     const url = `${API_BASE}?id=${encodeURIComponent(id)}&subscribe=${enabled}&email=${encodeURIComponent(email)}`;
-    const res = await res = await fetch(url);
+    const res = await fetch(url);
     const data = await res.json();
 
     if (data.status) {
