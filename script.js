@@ -1,7 +1,10 @@
+// Configuration (override these before this file runs if needed)
 // Fixed dashboard script with API_BASE set to the provided Google Apps Script web app URL.
 // Replace or redeploy the GAS if you change the web app URL.
-
 const API_BASE = "https://script.google.com/macros/s/AKfycbxvBjqw2zs8n8xop1V1flLaJFGLK8MfuzSQTDXPdzuByT4v0gtm6yu8ToaYrnAe7qJ7cQ/exec";
+
+// Pathao checkout base (preferably your server endpoint that creates a single-use Pathao checkout URL)
+const PATHAOPAY_BASE = typeof PATHAOPAY_BASE !== 'undefined' ? PATHAOPAY_BASE : 'https://payments.example.com/pathaopay';
 
 const translations = {
   en: {
@@ -28,7 +31,9 @@ const translations = {
     emailError: "Please enter your email address to subscribe.",
     emailSuccess: "Email updates enabled",
     emailDisabled: "Email updates disabled",
-    historyError: "Failed to fetch update history. Please try again."
+    historyError: "Failed to fetch update history. Please try again.",
+    pathaoModalTitle: "Pathao Pay — Choose Amount",
+    pathaoModalSubtitle: "Select a fixed payment amount to continue:"
   },
   bn: {
     welcome: "স্বাগতম, ",
@@ -54,7 +59,9 @@ const translations = {
     emailError: "আপনার ইমেইল ঠিকানা প্রবেশ করুন।",
     emailSuccess: "ইমেইল আপডেট সক্ষম",
     emailDisabled: "ইমেইল আপডেট অক্ষম",
-    historyError: "আপডেট ইতিহাস পেতে ব্যর্থ। আবার চেষ্টা করুন।"
+    historyError: "আপডেট ইতিহাস পেতে ব্যর্থ। আবার চেষ্টা করুন।",
+    pathaoModalTitle: "Pathao Pay — পরিমাণ নির্বাচন করুন",
+    pathaoModalSubtitle: "চালিয়ে যেতে একটি নির্দিষ্ট পরিমাণ নির্বাচন করুন:"
   }
 };
 
@@ -96,6 +103,10 @@ function updatePageLanguage() {
   setText("btn-logout", t.logout);
 
   setText("modal-history-title", t.historyTitle);
+
+  // Pathao modal translations (if modal exists on page)
+  setText("pathaoModalTitle", t.pathaoModalTitle);
+  setText("pathaoModalSubtitle", t.pathaoModalSubtitle);
 }
 
 function setToggleMessage(text, type) {
@@ -105,6 +116,22 @@ function setToggleMessage(text, type) {
   el.innerText = text || "";
 }
 
+// ----- Helpers for DOM/UI -----
+function el(id) { return document.getElementById(id); }
+function showError(targetEl, msg) {
+  if (!targetEl) return;
+  targetEl.style.display = '';
+  targetEl.className = 'error';
+  targetEl.textContent = msg;
+}
+function showSuccess(targetEl, msg) {
+  if (!targetEl) return;
+  targetEl.style.display = '';
+  targetEl.className = 'success';
+  targetEl.textContent = msg;
+}
+
+// ---- Login ----
 async function login() {
   const idEl = document.getElementById("customerId");
   if (!idEl) return;
@@ -124,6 +151,7 @@ async function login() {
   }
 
   try {
+    // Using GET because GAS web app commonly expects query params; adjust to your backend.
     const res = await fetch(`${API_BASE}?id=${encodeURIComponent(id)}`);
     if (!res.ok) throw new Error("Network response was not ok");
     const data = await res.json();
@@ -155,6 +183,7 @@ async function login() {
     if (emailToggleEl) emailToggleEl.checked = (String(data.subscribed) === "true");
     if (emailInput) emailInput.value = data.email || "";
 
+    // Persist minimal identity locally for UX (not a secure auth)
     localStorage.setItem("customerId", id);
     localStorage.setItem("customerName", data.name || "");
     localStorage.setItem("customerEmail", data.email || "");
@@ -179,6 +208,74 @@ async function login() {
   }
 }
 
+// ---- Submit transaction (for payment page) ----
+async function submitTransaction() {
+  // Uses POST to avoid putting transaction data in URL; GAS may need configuration to accept POST JSON.
+  const id = sessionStorage.getItem('customerId') || localStorage.getItem('customerId') || '';
+  const txnEl = el('transactionNumber');
+  const msgEl = el('confirmMsg');
+  const btn = el('btn-submit-payment');
+
+  if (msgEl) { msgEl.textContent = ''; msgEl.className = ''; msgEl.style.display = ''; }
+
+  if (!id) {
+    showError(msgEl, 'Please login first.');
+    return;
+  }
+  const txn = txnEl ? txnEl.value.trim() : '';
+  if (!txn) {
+    showError(msgEl, 'Please enter Transaction Number.');
+    return;
+  }
+  if (!/^[A-Za-z0-9\-]{3,60}$/.test(txn)) {
+    showError(msgEl, 'Invalid transaction number format.');
+    return;
+  }
+
+  if (btn) { btn.disabled = true; btn.dataset.origText = btn.innerText; btn.innerText = 'Submitting...'; }
+
+  try {
+    const res = await fetch(API_BASE, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'submitTransaction', customerId: id, transaction: txn })
+    });
+
+    if (!res.ok) {
+      let errMsg = `Request failed (${res.status})`;
+      try {
+        const body = await res.json();
+        errMsg = body.error || body.message || errMsg;
+      } catch (e) {}
+      showError(msgEl, errMsg);
+      return;
+    }
+
+    let data;
+    try { data = await res.json(); } catch (e) { data = null; }
+    if (data) {
+      if (data.status && /success/i.test(data.status)) {
+        showSuccess(msgEl, data.status);
+        if (txnEl) txnEl.value = '';
+      } else if (data.error) {
+        showError(msgEl, data.error);
+      } else {
+        showSuccess(msgEl, data.message || JSON.stringify(data));
+      }
+    } else {
+      const txt = await res.text();
+      if (/success/i.test(txt)) showSuccess(msgEl, txt);
+      else showError(msgEl, txt);
+    }
+  } catch (err) {
+    console.error('submitTransaction error', err);
+    showError(msgEl, 'Network error. Please try again.');
+  } finally {
+    if (btn) { btn.disabled = false; btn.innerText = btn.dataset.origText || 'Submit Payment Confirmation'; }
+  }
+}
+
+// ---- Email subscription toggle ----
 async function toggleEmail() {
   const id = (document.getElementById("customerId") || {}).value || "";
   const emailToggleEl = document.getElementById("emailToggle");
@@ -198,6 +295,7 @@ async function toggleEmail() {
   }
 
   try {
+    // Using GET to GAS; if your GAS expects POST adjust accordingly.
     const url = `${API_BASE}?id=${encodeURIComponent(id)}&subscribe=${enabled}&email=${encodeURIComponent(email)}`;
     const res = await fetch(url);
     if (!res.ok) throw new Error("Network response was not ok");
@@ -207,7 +305,8 @@ async function toggleEmail() {
       setToggleMessage(enabled ? t.emailSuccess : t.emailDisabled, "success");
       const confirmRes = await fetch(`${API_BASE}?id=${encodeURIComponent(id)}`);
       const confirmData = await confirmRes.json();
-      if (emailToggleEl) emailToggleEl.checked = (String(confirmData.subscribed) === "true");
+      const emailToggleEl2 = document.getElementById("emailToggle");
+      if (emailToggleEl2) emailToggleEl2.checked = (String(confirmData.subscribed) === "true");
       if (emailInput) emailInput.value = confirmData.email || email;
     } else {
       setToggleMessage("Could not save changes.", "error");
@@ -217,6 +316,7 @@ async function toggleEmail() {
   }
 }
 
+// ---- Logout / Navigation ----
 function logout() {
   const dashboard = document.getElementById("dashboard");
   if (dashboard) dashboard.style.display = "none";
@@ -235,6 +335,12 @@ function logout() {
   if (emailInput) emailInput.value = "";
   setToggleMessage("", "");
   if (emailInput) emailInput.classList.remove("input-error");
+
+  // Clear stored identity (optional)
+  localStorage.removeItem("customerId");
+  localStorage.removeItem("customerName");
+  localStorage.removeItem("customerEmail");
+  sessionStorage.removeItem("customerId");
 }
 
 function goToPayment() { window.location.href = "payment.html"; }
@@ -244,6 +350,7 @@ function backToDashboard() {
   if (dash) dash.style.display = "block";
 }
 
+// ---- Update history modal ----
 async function viewUpdateHistory() {
   const id = (document.getElementById("customerId") || {}).value.trim();
   const t = translations[currentLanguage] || translations.en;
@@ -285,6 +392,121 @@ window.addEventListener("click", function(event) {
   if (modal && event.target === modal) modal.style.display = "none";
 });
 
+// ---- Pathao Pay modal & helpers ----
+// These functions are safe to call from payment.html or from the dashboard if you include
+// the pathao modal markup on the page. Prefer server-side endpoint that creates a single-use checkout URL.
+function showPathaoModal() {
+  const modal = el('pathaoModal');
+  if (!modal) {
+    // fallback prompt (useful in pages without modal markup)
+    const amt = prompt('Enter amount (e.g. 500, 1000):');
+    if (amt) openPathaoPayment(amt);
+    return;
+  }
+  modal.style.display = 'flex';
+  modal.setAttribute('aria-hidden', 'false');
+  const firstBtn = modal.querySelector('#pathaoAmounts button');
+  if (firstBtn) firstBtn.focus();
+}
+
+function closePathaoModal() {
+  const modal = el('pathaoModal');
+  if (!modal) return;
+  modal.style.display = 'none';
+  modal.setAttribute('aria-hidden', 'true');
+}
+
+function openPathaoPayment(amount) {
+  // ensure numeric amount if you expect numbers
+  const parsed = Number(amount);
+  if (isNaN(parsed) || parsed <= 0) {
+    const err = el('confirmMsg') || el('error');
+    showError(err, 'Invalid amount selected.');
+    return;
+  }
+
+  const id = sessionStorage.getItem('customerId') || localStorage.getItem('customerId') || '';
+  const errorEl = el('error') || el('confirmMsg');
+
+  if (!id) {
+    showError(errorEl, 'Please login before proceeding to Pathao Pay.');
+    closePathaoModal();
+    if (el('login')) el('login').scrollIntoView({ behavior: 'smooth' });
+    return;
+  }
+
+  // Best practice: call your server to create a checkout session (single-use URL).
+  // Quick client-side construction (NOT recommended for production) -- replace with server request.
+  const params = new URLSearchParams({ amount: parsed, customerId: id });
+  const checkoutUrl = `${PATHAOPAY_BASE}/checkout?${params.toString()}`;
+
+  // Open popup (initiated by user click)
+  const width = 640, height = 800;
+  const left = (screen.width / 2) - (width / 2);
+  const top = (screen.height / 2) - (height / 2);
+  const popup = window.open(checkoutUrl, 'pathao_pay_window', `width=${width},height=${height},left=${left},top=${top},resizable=yes,scrollbars=yes`);
+
+  if (!popup) {
+    // popup blocked -> fall back to same-tab redirect
+    window.location.href = checkoutUrl;
+  } else {
+    // monitor popup close and give the user a hint to submit txn number
+    const t = setInterval(() => {
+      if (popup.closed) {
+        clearInterval(t);
+        const msg = el('confirmMsg');
+        if (msg) {
+          msg.className = 'success';
+          msg.textContent = 'Payment window closed. If payment completed, submit the transaction number here.';
+        }
+      }
+    }, 1000);
+  }
+
+  closePathaoModal();
+}
+
+// ---- showSteps hook for pages that display payment steps ----
+function showSteps(option) {
+  const stepsDiv = el('steps');
+  if (!stepsDiv) return;
+
+  if (option === 'pathaopay') {
+    showPathaoModal();
+    return;
+  }
+
+  if (option === 'bkash') {
+    stepsDiv.innerHTML = `
+      <h3>bKash Payment Steps</h3>
+      <div class="step"><p><b>Step 1:</b> Open bKash app and log in</p></div>
+      <div class="step"><p><b>Step 2:</b> Tap 'Send Money'</p></div>
+      <div class="step"><p><b>Step 3:</b> Enter the number (01727389485)</p></div>
+      <div class="step"><p><b>Step 4:</b> Enter amount and reference (your Customer ID)</p></div>
+      <div class="step"><p><b>Step 5:</b> Confirm and enter PIN</p></div>
+    `;
+  } else if (option === 'nagad') {
+    stepsDiv.innerHTML = `
+      <h3>Nagad Payment Steps</h3>
+      <div class="step"><p><b>Step 1:</b> Open Nagad app and log in</p></div>
+      <div class="step"><p><b>Step 2:</b> Tap 'Bill Pay' or 'Payment'</p></div>
+      <div class="step"><p><b>Step 3:</b> Enter merchant ID or choose service</p></div>
+      <div class="step"><p><b>Step 4:</b> Enter amount and reference (your Customer ID)</p></div>
+      <div class="step"><p><b>Step 5:</b> Confirm and enter PIN</p></div>
+    `;
+  } else {
+    stepsDiv.innerHTML = `<p>Payment steps for ${option} not available.</p>`;
+  }
+}
+
+// ---- Keyboard handlers / misc ----
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') {
+    const modal = el('pathaoModal');
+    if (modal && modal.style.display !== 'none') closePathaoModal();
+  }
+});
+
 window.addEventListener("load", function() {
   const savedLang = localStorage.getItem("preferredLanguage");
   if (savedLang) {
@@ -298,6 +520,7 @@ window.addEventListener("load", function() {
   const savedId = localStorage.getItem("customerId");
   if (savedId && document.getElementById("customerId")) {
     document.getElementById("customerId").value = savedId;
+    // call login to hydrate dashboard
     login();
   }
 });
