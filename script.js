@@ -1,10 +1,5 @@
 // Configuration (override these before this file runs if needed)
-// Fixed dashboard script with API_BASE set to the provided Google Apps Script web app URL.
-// Replace or redeploy the GAS if you change the web app URL.
 const API_BASE = "https://script.google.com/macros/s/AKfycbxvBjqw2zs8n8xop1V1flLaJFGLK8MfuzSQTDXPdzuByT4v0gtm6yu8ToaYrnAe7qJ7cQ/exec";
-
-// Pathao checkout base (preferably your server endpoint that creates a single-use Pathao checkout URL)
-const PATHAOPAY_BASE = typeof PATHAOPAY_BASE !== 'undefined' ? PATHAOPAY_BASE : 'https://payments.example.com/pathaopay';
 
 const translations = {
   en: {
@@ -31,9 +26,7 @@ const translations = {
     emailError: "Please enter your email address to subscribe.",
     emailSuccess: "Email updates enabled",
     emailDisabled: "Email updates disabled",
-    historyError: "Failed to fetch update history. Please try again.",
-    pathaoModalTitle: "Pathao Pay — Choose Amount",
-    pathaoModalSubtitle: "Select a fixed payment amount to continue:"
+    historyError: "Failed to fetch update history. Please try again."
   },
   bn: {
     welcome: "স্বাগতম, ",
@@ -42,7 +35,7 @@ const translations = {
     electric: "বিদ্যুৎ ব্যালেন্স",
     water: "পানির বিল বকেয়া",
     gas: "গ্যাস বিল বকেয়া",
-    internet: "ইন্টারনেট সংযুক্ত",
+    internet: "ইন্টার���েট সংযুক্ত",
     internetBill: "ইন্টারনেট বিল বকেয়া",
     flat: "ফ্ল্যাট নম্বর",
     lastUpdated: "শেষ আপডেট",
@@ -59,9 +52,7 @@ const translations = {
     emailError: "আপনার ইমেইল ঠিকানা প্রবেশ করুন।",
     emailSuccess: "ইমেইল আপডেট সক্ষম",
     emailDisabled: "ইমেইল আপডেট অক্ষম",
-    historyError: "আপডেট ইতিহাস পেতে ব্যর্থ। আবার চেষ্টা করুন।",
-    pathaoModalTitle: "Pathao Pay — পরিমাণ নির্বাচন করুন",
-    pathaoModalSubtitle: "চালিয়ে যেতে একটি নির্দিষ্ট পরিমাণ নির্বাচন করুন:"
+    historyError: "আপডেট ইতিহাস পেতে ব্যর্থ। আবার চেষ্টা করুন।"
   }
 };
 
@@ -103,10 +94,6 @@ function updatePageLanguage() {
   setText("btn-logout", t.logout);
 
   setText("modal-history-title", t.historyTitle);
-
-  // Pathao modal translations (if modal exists on page)
-  setText("pathaoModalTitle", t.pathaoModalTitle);
-  setText("pathaoModalSubtitle", t.pathaoModalSubtitle);
 }
 
 function setToggleMessage(text, type) {
@@ -151,7 +138,6 @@ async function login() {
   }
 
   try {
-    // Using GET because GAS web app commonly expects query params; adjust to your backend.
     const res = await fetch(`${API_BASE}?id=${encodeURIComponent(id)}`);
     if (!res.ok) throw new Error("Network response was not ok");
     const data = await res.json();
@@ -183,7 +169,6 @@ async function login() {
     if (emailToggleEl) emailToggleEl.checked = (String(data.subscribed) === "true");
     if (emailInput) emailInput.value = data.email || "";
 
-    // Persist minimal identity locally for UX (not a secure auth)
     localStorage.setItem("customerId", id);
     localStorage.setItem("customerName", data.name || "");
     localStorage.setItem("customerEmail", data.email || "");
@@ -210,7 +195,6 @@ async function login() {
 
 // ---- Submit transaction (for payment page) ----
 async function submitTransaction() {
-  // Uses POST to avoid putting transaction data in URL; GAS may need configuration to accept POST JSON.
   const id = sessionStorage.getItem('customerId') || localStorage.getItem('customerId') || '';
   const txnEl = el('transactionNumber');
   const msgEl = el('confirmMsg');
@@ -295,7 +279,6 @@ async function toggleEmail() {
   }
 
   try {
-    // Using GET to GAS; if your GAS expects POST adjust accordingly.
     const url = `${API_BASE}?id=${encodeURIComponent(id)}&subscribe=${enabled}&email=${encodeURIComponent(email)}`;
     const res = await fetch(url);
     if (!res.ok) throw new Error("Network response was not ok");
@@ -305,8 +288,7 @@ async function toggleEmail() {
       setToggleMessage(enabled ? t.emailSuccess : t.emailDisabled, "success");
       const confirmRes = await fetch(`${API_BASE}?id=${encodeURIComponent(id)}`);
       const confirmData = await confirmRes.json();
-      const emailToggleEl2 = document.getElementById("emailToggle");
-      if (emailToggleEl2) emailToggleEl2.checked = (String(confirmData.subscribed) === "true");
+      if (emailToggleEl) emailToggleEl.checked = (String(confirmData.subscribed) === "true");
       if (emailInput) emailInput.value = confirmData.email || email;
     } else {
       setToggleMessage("Could not save changes.", "error");
@@ -336,7 +318,7 @@ function logout() {
   setToggleMessage("", "");
   if (emailInput) emailInput.classList.remove("input-error");
 
-  // Clear stored identity (optional)
+  // Clear stored identity
   localStorage.removeItem("customerId");
   localStorage.removeItem("customerName");
   localStorage.removeItem("customerEmail");
@@ -392,169 +374,10 @@ window.addEventListener("click", function(event) {
   if (modal && event.target === modal) modal.style.display = "none";
 });
 
-// ---- Pathao Pay modal & helpers (REPLACED): creates modal on demand and ensures visibility ----
-function ensurePathaoModalExists() {
-  if (document.getElementById('pathaoModal')) return;
-
-  // Minimal styles for overlay/modal; added only once
-  if (!document.getElementById('pathaoModalStyles')) {
-    var style = document.createElement('style');
-    style.id = 'pathaoModalStyles';
-    style.textContent = `
-      #pathaoModal { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; background: rgba(0,0,0,0.5); z-index: 2147483647; }
-      #pathaoModal .pathao-modal { background: #fff; padding: 1rem; border-radius: 8px; width: 360px; max-width: 94%; box-shadow: 0 8px 24px rgba(0,0,0,0.2); border: 2px solid #000; }
-      #pathaoModal .pathao-modal h3 { margin: 0 0 .5rem 0; }
-      #pathaoModal .pathao-amounts { display:flex; gap:.5rem; flex-wrap:wrap; margin-top:.5rem; }
-      #pathaoModal .pathao-amounts button { flex:1 1 48%; padding:.6rem; cursor:pointer; background:#000; color:#fff; border:2px solid #000; border-radius:6px; font-weight:700; }
-      #pathaoModal .pathao-close { position: absolute; right: 12px; top: 12px; border: none; background: transparent; font-size: 1.2rem; cursor:pointer; }
-      @media (max-width:480px) {
-        #pathaoModal .pathao-modal { width: 92%; padding: .75rem; }
-        #pathaoModal .pathao-amounts button { flex-basis: 100%; }
-      }
-    `;
-    document.head.appendChild(style);
-  }
-
-  var overlay = document.createElement('div');
-  overlay.id = 'pathaoModal';
-  overlay.setAttribute('aria-hidden', 'true');
-
-  overlay.innerHTML = `
-    <div class="pathao-modal" role="dialog" aria-modal="true" aria-labelledby="pathaoModalTitle">
-      <button class="pathao-close" type="button" aria-label="Close">✕</button>
-      <h3 id="pathaoModalTitle">${translations[currentLanguage].pathaoModalTitle}</h3>
-      <p id="pathaoModalSubtitle">${translations[currentLanguage].pathaoModalSubtitle}</p>
-      <div class="pathao-amounts" id="pathaoAmounts">
-        <button type="button" data-amount="500">500 ৳</button>
-        <button type="button" data-amount="1000">1000 ৳</button>
-        <button type="button" data-amount="1500">1500 ৳</button>
-        <button type="button" data-amount="2000">2000 ৳</button>
-      </div>
-      <div style="margin-top:.75rem; text-align:right;">
-        <button type="button" id="pathaoCancelBtn" style="padding:.5rem .75rem;border-radius:6px;border:2px solid #000;background:#f0f0f0;cursor:pointer;">Cancel</button>
-      </div>
-    </div>
-  `;
-
-  document.body.appendChild(overlay);
-
-  // Attach handlers
-  overlay.querySelector('.pathao-close').addEventListener('click', closePathaoModal);
-  overlay.querySelector('#pathaoCancelBtn').addEventListener('click', closePathaoModal);
-  Array.from(overlay.querySelectorAll('#pathaoAmounts button')).forEach(function(btn) {
-    btn.addEventListener('click', function(e) {
-      var amount = e.currentTarget.getAttribute('data-amount');
-      openPathaoPayment(amount);
-    });
-  });
-  overlay.addEventListener('click', function(e) {
-    if (e.target === overlay) closePathaoModal();
-  });
-}
-
-function showPathaoModal() {
-  console.log('showPathaoModal called');
-  ensurePathaoModalExists();
-  var modal = document.getElementById('pathaoModal');
-  if (!modal) return console.error('Failed to create pathaoModal');
-  modal.style.display = 'flex';
-  modal.setAttribute('aria-hidden', 'false');
-  var first = modal.querySelector('#pathaoAmounts button');
-  if (first) first.focus();
-}
-
-function closePathaoModal() {
-  var modal = document.getElementById('pathaoModal');
-  if (!modal) return;
-  modal.style.display = 'none';
-  modal.setAttribute('aria-hidden', 'true');
-}
-
-function openPathaoPayment(amount) {
-  console.log('openPathaoPayment', amount);
-  var parsed = Number(amount);
-  if (isNaN(parsed) || parsed <= 0) {
-    var err = document.getElementById('confirmMsg') || document.getElementById('error');
-    if (err) { err.className = 'error'; err.textContent = 'Invalid amount selected.'; }
-    return;
-  }
-
-  var id = sessionStorage.getItem('customerId') || localStorage.getItem('customerId') || '';
-  var errorEl = document.getElementById('error') || document.getElementById('confirmMsg');
-
-  if (!id) {
-    if (errorEl) { errorEl.className = 'error'; errorEl.textContent = 'Please login before proceeding to Pathao Pay.'; }
-    closePathaoModal();
-    if (el('login')) el('login').scrollIntoView({ behavior: 'smooth' });
-    return;
-  }
-
-  // Preferred: request server to create checkout session. Quick fallback:
-  var params = new URLSearchParams({ amount: parsed, customerId: id });
-  var checkoutUrl = PATHAOPAY_BASE + '/checkout?'+params.toString();
-
-  var width = 640, height = 800;
-  var left = (screen.width/2)-(width/2);
-  var top = (screen.height/2)-(height/2);
-  var popup = window.open(checkoutUrl, 'pathao_pay_window', 'width='+width+',height='+height+',left='+left+',top='+top+',resizable=yes,scrollbars=yes');
-
-  if (!popup) {
-    // popup blocked -> redirect
-    window.location.href = checkoutUrl;
-  } else {
-    var t = setInterval(function() {
-      if (popup.closed) {
-        clearInterval(t);
-        var msg = el('confirmMsg');
-        if (msg) {
-          msg.className = 'success';
-          msg.textContent = 'Payment window closed. If your payment completed, submit the transaction number here.';
-        }
-      }
-    }, 1000);
-  }
-
-  closePathaoModal();
-}
-
-// ---- showSteps hook for pages that display payment steps ----
-function showSteps(option) {
-  const stepsDiv = el('steps');
-  if (!stepsDiv) return;
-
-  if (option === 'pathaopay') {
-    showPathaoModal();
-    return;
-  }
-
-  if (option === 'bkash') {
-    stepsDiv.innerHTML = `
-      <h3>bKash Payment Steps</h3>
-      <div class="step"><p><b>Step 1:</b> Open bKash app and log in</p></div>
-      <div class="step"><p><b>Step 2:</b> Tap 'Send Money'</p></div>
-      <div class="step"><p><b>Step 3:</b> Enter the number (01727389485)</p></div>
-      <div class="step"><p><b>Step 4:</b> Enter amount and reference (your Customer ID)</p></div>
-      <div class="step"><p><b>Step 5:</b> Confirm and enter PIN</p></div>
-    `;
-  } else if (option === 'nagad') {
-    stepsDiv.innerHTML = `
-      <h3>Nagad Payment Steps</h3>
-      <div class="step"><p><b>Step 1:</b> Open Nagad app and log in</p></div>
-      <div class="step"><p><b>Step 2:</b> Tap 'Bill Pay' or 'Payment'</p></div>
-      <div class="step"><p><b>Step 3:</b> Enter merchant ID or choose service</p></div>
-      <div class="step"><p><b>Step 4:</b> Enter amount and reference (your Customer ID)</p></div>
-      <div class="step"><p><b>Step 5:</b> Confirm and enter PIN</p></div>
-    `;
-  } else {
-    stepsDiv.innerHTML = `<p>Payment steps for ${option} not available.</p>`;
-  }
-}
-
-// ---- Keyboard handlers / misc ----
 document.addEventListener('keydown', function(e) {
   if (e.key === 'Escape') {
-    const modal = el('pathaoModal');
-    if (modal && modal.style.display !== 'none') closePathaoModal();
+    const modal = el('historyModal');
+    if (modal && modal.style.display !== 'none') closeUpdateHistory();
   }
 });
 
@@ -571,7 +394,6 @@ window.addEventListener("load", function() {
   const savedId = localStorage.getItem("customerId");
   if (savedId && document.getElementById("customerId")) {
     document.getElementById("customerId").value = savedId;
-    // call login to hydrate dashboard
     login();
   }
 });

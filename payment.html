@@ -1,33 +1,55 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Make Payment - Utility Dashboard</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="stylesheet" href="styles.css">
+
+  <!-- Full CSS (Pathao removed) -->
   <style>
-    /* Minimal modal styles — include in styles.css as appropriate */
-    .modal-overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.5);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 1000;
+    /* Global Reset & Base */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh; padding: 20px; color: #111; }
+    .container { max-width: 900px; margin: 0 auto; }
+
+    /* Page Headers */
+    .page-header { color: #fff; margin-bottom: 30px; text-align: center; }
+    .page-header h1 { font-size: 32px; margin-bottom: 10px; }
+    .page-header p { font-size: 16px; opacity: 0.9; }
+
+    /* Cards & Form */
+    .card { background: #fff; padding: 20px; border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin-bottom: 20px;
+      border: 2px solid #000; transition: all 0.3s; }
+    .card h3 { color: #000; margin-bottom: 15px; }
+    .card p { color: #555; margin-bottom: 15px; }
+    .form-group { margin-bottom: 16px; }
+    input[type="text"], input[type="email"] {
+      width: 100%; padding: 12px 15px; border: 2px solid #000;
+      border-radius: 8px; font-size: 16px; transition: all 0.2s;
     }
-    .modal {
-      background: #fff;
-      padding: 1rem;
-      border-radius: 8px;
-      width: 320px;
-      max-width: 90%;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+    input:focus { outline: none; border-color: #000; box-shadow: 0 0 0 3px rgba(0,0,0,0.06); }
+    button { cursor: pointer; }
+
+    /* Options */
+    .options { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-top: 10px; }
+    .options button { width: 100%; padding: 12px; background: #000; color: #fff; border: 2px solid #000; border-radius: 8px; font-size: 15px; font-weight: 600; }
+    .options button:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(102, 126, 234, 0.18); }
+
+    .steps { margin-top: 20px; background: #fff; padding: 20px; border-radius: 12px; border: 2px solid #000; }
+    .step { margin-bottom: 12px; padding: 12px; background: #f8f9fa; border: 2px solid #000; border-radius: 6px; }
+    .submit-btn { background: #000; color: #fff; padding: 12px; border: 2px solid #000; border-radius: 8px; font-weight: 600; width: 100%; }
+
+    .error { color: #dc3545; margin-top: 10px; padding: 10px; background: #ffe9e9; border-radius: 6px; border-left: 4px solid #dc3545; }
+    .success { color: #28a745; margin-top: 10px; padding: 10px; background: #d4edda; border-radius: 6px; border-left: 4px solid #28a745; }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .options { grid-template-columns: 1fr; }
+      .card { padding: 15px; }
     }
-    .modal h3 { margin-top: 0; }
-    .amounts { display:flex; gap:0.5rem; flex-wrap:wrap; margin-top:0.5rem; }
-    .amounts button { flex:1 1 48%; }
-    .modal .close { float: right; border: none; background: transparent; font-size: 1.2rem; cursor: pointer; }
   </style>
 </head>
 <body>
@@ -42,8 +64,7 @@
       <h3 id="label-login-required">Login Required</h3>
       <p id="label-login-instruction">Enter your Customer ID to proceed:</p>
       <div class="form-group">
-        <label for="customerId" class="sr-only">Customer ID</label>
-        <input id="customerId" name="customerId" placeholder="Enter your Customer ID" type="text" autocomplete="username">
+        <input id="customerId" name="customerId" placeholder="Enter your Customer ID" type="text" autocomplete="off">
       </div>
       <div class="form-group">
         <button type="button" onclick="login()" id="btn-login-action">Login</button>
@@ -59,7 +80,7 @@
         <div class="options">
           <button type="button" onclick="showSteps('bkash')">🏦 bKash</button>
           <button type="button" onclick="showSteps('nagad')">💸 Nagad</button>
-          <button type="button" onclick="showSteps('pathaopay')">🚗 Pathao Pay</button>
+          <!-- Pathao option removed -->
         </div>
       </div>
 
@@ -70,8 +91,7 @@
         <h3 id="label-confirm-payment">Confirm Your Payment</h3>
         <p id="label-enter-details">Enter your transaction details:</p>
         <div class="form-group">
-          <label for="transactionNumber" class="sr-only">Transaction Number</label>
-          <input id="transactionNumber" name="transactionNumber" placeholder="Enter Transaction Number" type="text">
+          <input id="transactionNumber" name="transactionNumber" placeholder="Enter Transaction Number" type="text" autocomplete="off">
         </div>
         <div class="form-group">
           <button type="button" class="submit-btn" onclick="submitTransaction()" id="btn-submit-payment">Submit Payment Confirmation</button>
@@ -79,207 +99,165 @@
         <div id="confirmMsg" role="status" aria-live="polite"></div>
       </div>
 
-      <button type="button" class="btn btn-back" onclick="goBack()" id="btn-back-dash">← Back to Dashboard</button>
-    </div>
-  </div>
-
-  <!-- Pathao Pay modal (hidden by default) -->
-  <div id="pathaoModal" class="modal-overlay" style="display:none;" aria-hidden="true">
-    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="pathaoModalTitle">
-      <button class="close" type="button" aria-label="Close" onclick="closePathaoModal()">✕</button>
-      <h3 id="pathaoModalTitle">Pathao Pay — Choose Amount</h3>
-      <p id="pathaoModalSubtitle">Select a fixed payment amount to continue:</p>
-      <div class="amounts" id="pathaoAmounts">
-        <!-- Buttons generated by JS or you can hardcode here -->
-        <button type="button" onclick="openPathaoPayment(500)">500 ৳</button>
-        <button type="button" onclick="openPathaoPayment(1000)">1000 ৳</button>
-        <button type="button" onclick="openPathaoPayment(1500)">1500 ৳</button>
-        <button type="button" onclick="openPathaoPayment(2000)">2000 ৳</button>
-      </div>
-      <div style="margin-top:.75rem;">
-        <button type="button" onclick="closePathaoModal()">Cancel</button>
+      <div style="margin-top:10px;">
+        <button type="button" class="btn-back" onclick="goBack()" id="btn-back-dash">← Back to Dashboard</button>
       </div>
     </div>
   </div>
 
-  <script src="script.js"></script>
+  <!-- JavaScript (Pathao code removed) -->
   <script>
-    // ---- CONFIG ----
-    // Replace with your real Pathao Pay checkout endpoint.
-    // Prefer server-side creation of the checkout session and returning a single-use URL.
-    const PATHAOPAY_BASE = typeof PATHAOPAY_BASE !== 'undefined' ? PATHAOPAY_BASE : 'https://payments.example.com/pathaopay';
+    // --- CONFIG ---
+    const API_BASE = "https://script.google.com/macros/s/AKfycbxvBjqw2zs8n8xop1V1flLaJFGLK8MfuzSQTDXPdzuByT4v0gtm6yu8ToaYrnAe7qJ7cQ/exec";
 
-    // ---- Existing helpers (ensure these exist in script.js or define them) ----
-    // login(), submitTransaction(), goBack(), updatePageLanguage, translations, currentLanguage, etc.
-    // We'll provide only the Pathao-specific additions and safe guards here.
-
-    // Extend showSteps to handle pathaopay selection (keeps bkash/nagad logic)
-    const originalShowSteps = typeof showSteps === 'function' ? showSteps : function(option) {
-      const stepsDiv = document.getElementById("steps");
-      stepsDiv.innerHTML = `<p>Payment steps for ${option} not available.</p>`;
-    };
-
-    function showSteps(option) {
-      if (option === 'pathaopay') {
-        // Open the Pathao modal
-        showPathaoModal();
-        return;
-      }
-      // fallback to original for other options
-      originalShowSteps(option);
+    // --- Utility helpers ---
+    function el(id) { return document.getElementById(id); }
+    function showError(targetEl, msg) {
+      if (!targetEl) return;
+      targetEl.style.display = '';
+      targetEl.className = 'error';
+      targetEl.textContent = msg;
+    }
+    function showSuccess(targetEl, msg) {
+      if (!targetEl) return;
+      targetEl.style.display = '';
+      targetEl.className = 'success';
+      targetEl.textContent = msg;
+    }
+    function clearMessage(targetEl) {
+      if (!targetEl) return;
+      targetEl.style.display = 'none';
+      targetEl.textContent = '';
+      targetEl.className = '';
     }
 
-    // Show modal
-    function showPathaoModal() {
-      document.getElementById('pathaoModal').style.display = 'flex';
-      document.getElementById('pathaoModal').setAttribute('aria-hidden', 'false');
-      // focus first button for keyboard users
-      const firstBtn = document.querySelector('#pathaoAmounts button');
-      if (firstBtn) firstBtn.focus();
-    }
+    // --- Login (simple) ---
+    function login() {
+      const idEl = el('customerId');
+      if (!idEl) return;
+      const id = idEl.value.trim();
+      const errorEl = el('error');
 
-    // Close modal
-    function closePathaoModal() {
-      document.getElementById('pathaoModal').style.display = 'none';
-      document.getElementById('pathaoModal').setAttribute('aria-hidden', 'true');
-    }
-
-    // Open payment page for chosen amount
-    function openPathaoPayment(amount) {
-      // require login / customer id
-      const id = sessionStorage.getItem('customerId') || localStorage.getItem('customerId');
       if (!id) {
-        // not logged in — show friendly error and close modal
-        const errorEl = document.getElementById('error') || document.getElementById('confirmMsg');
-        if (errorEl) {
-          errorEl.style.display = '';
-          errorEl.className = 'error';
-          errorEl.textContent = 'Please login before proceeding to Pathao Pay.';
-        } else {
-          alert('Please login before proceeding to Pathao Pay.');
-        }
-        closePathaoModal();
-        // Ideally show login form or scroll to it
-        document.getElementById('login').scrollIntoView({behavior:'smooth'});
+        showError(errorEl, 'Please enter your Customer ID.');
         return;
       }
 
-      // Construct checkout URL. Best practice: create a server endpoint that
-      // returns a single-use checkout URL for Pathao Pay; do NOT trust client-only params.
-      // Example: server /create-pathaopay-session?customerId=...&amount=...
-      // For this demo we build a URL (replace with server-side flow).
-      const params = new URLSearchParams({
-        amount: amount,
-        customerId: id
-      });
-
-      const checkoutUrl = `${PATHAOPAY_BASE}/checkout?${params.toString()}`;
-
-      // Open a popup window. Some browsers block popups unless initiated by user click — this is OK here.
-      const width = 640, height = 800;
-      const left = (screen.width / 2) - (width / 2);
-      const top = (screen.height / 2) - (height / 2);
-      const popup = window.open(
-        checkoutUrl,
-        'pathao_pay_window',
-        `toolbar=no, location=no, directories=no, status=no, menubar=no, scrollbars=yes, resizable=yes, copyhistory=no, width=${width}, height=${height}, top=${top}, left=${left}`
-      );
-
-      if (!popup) {
-        // Popup blocked — fallback to same tab
-        window.location.href = checkoutUrl;
-      } else {
-        // Optionally monitor popup for close and then refresh transaction status
-        const checkPopup = setInterval(() => {
-          if (popup.closed) {
-            clearInterval(checkPopup);
-            // Optionally refresh user transactions or show a message
-            // e.g., fetch transaction status from server and show in confirmMsg
-            const msg = document.getElementById('confirmMsg');
-            if (msg) {
-              msg.className = 'success';
-              msg.textContent = 'Payment window closed. If your payment completed, submit the transaction number here.';
-            }
-          }
-        }, 1000);
+      // Basic format guard
+      if (!/^[A-Za-z0-9\-]{2,50}$/.test(id)) {
+        showError(errorEl, 'Invalid Customer ID format.');
+        return;
       }
 
-      closePathaoModal();
+      // Persist customer id in sessionStorage for this session
+      sessionStorage.setItem('customerId', id);
+      localStorage.setItem('customerId', id); // optional for UX
+
+      // Hide login, show dashboard
+      if (el('login')) el('login').style.display = 'none';
+      if (el('dashboard')) el('dashboard').style.display = 'block';
+      clearMessage(errorEl);
+
+      console.log('Logged in as', id);
     }
 
-    // i18n extension (safe guard if updatePageLanguage already exists)
-    (function augmentI18n() {
-      if (typeof updatePageLanguage === 'function') {
-        const oldUpdate = updatePageLanguage;
-        updatePageLanguage = function() {
-          oldUpdate();
-          const t = typeof translations === 'object' ? translations : {};
-          if (typeof currentLanguage === 'string' && currentLanguage === 'bn') {
-            const setIf = (id, text) => {
-              const el = document.getElementById(id);
-              if (el) el.innerText = text;
-            };
-            setIf('label-payment-title', '💳 পেমেন্ট করুন');
-            setIf('label-payment-subtitle', 'আপনার পেমেন্ট পদ্ধতি চয়ন করুন');
-            setIf('label-login-required', 'লগইন প্রয়োজন');
-            setIf('label-login-instruction', 'এগিয়ে যেতে আপনার কাস্টমার আইডি লিখুন:');
-            setIf('btn-login-action', 'লগইন');
-            setIf('label-select-method', 'পেমেন্ট পদ্ধতি নির্বাচন করুন');
-            setIf('label-choose-how', 'আপনি কিভাবে পেমেন্ট করতে চান তা চয়ন করুন:');
-            setIf('label-confirm-payment', 'আপনার পেমেন্ট নিশ্চিত করুন');
-            setIf('label-enter-details', 'আপনার লেনদেনের বিবরণ লিখুন:');
-            setIf('btn-submit-payment', 'পেমেন্ট নিশ্চিতকরণ জমা দিন');
-            setIf('btn-back-dash', '← ড্যাশবোর্ডে ফিরে যান');
+    // --- Payment steps display ---
+    function showSteps(option) {
+      const stepsDiv = el('steps');
+      if (!stepsDiv) return;
 
-            // Pathao modal translations
-            setIf('pathaoModalTitle', 'Pathao Pay — পরিমাণ নির্বাচন করুন');
-            setIf('pathaoModalSubtitle', 'চালিয়ে যাওয়ার জন্য একটি নির্দিষ্ট পরিমাণ নির্বাচন করুন:');
-
-            // Update amount buttons text if needed
-            // e.g., iterate through amount buttons and append localized currency if desired
-          }
-        };
+      if (option === 'bkash') {
+        stepsDiv.innerHTML = `
+          <h3>bKash Payment Steps</h3>
+          <div class="step"><p><b>Step 1:</b> Open bKash app and log in</p></div>
+          <div class="step"><p><b>Step 2:</b> Tap 'Send Money'</p></div>
+          <div class="step"><p><b>Step 3:</b> Enter the number (01727389485)</p></div>
+          <div class="step"><p><b>Step 4:</b> Enter amount and reference (your Customer ID)</p></div>
+          <div class="step"><p><b>Step 5:</b> Confirm and enter PIN</p></div>
+        `;
+      } else if (option === 'nagad') {
+        stepsDiv.innerHTML = `
+          <h3>Nagad Payment Steps</h3>
+          <div class="step"><p><b>Step 1:</b> Open Nagad app and log in</p></div>
+          <div class="step"><p><b>Step 2:</b> Tap 'Bill Pay' or 'Payment'</p></div>
+          <div class="step"><p><b>Step 3:</b> Enter merchant ID or choose service</p></div>
+          <div class="step"><p><b>Step 4:</b> Enter amount and reference (your Customer ID)</p></div>
+          <div class="step"><p><b>Step 5:</b> Confirm and enter PIN</p></div>
+        `;
+      } else {
+        stepsDiv.innerHTML = `<p>Payment steps for ${option} not available.</p>`;
       }
-    })();
+    }
 
-    // Helpful: prevent Enter from unexpectedly submitting things since we use buttons
-    document.addEventListener('keydown', function(e) {
-      if (e.key === 'Escape') {
-        // close modal on Escape
-        const modal = document.getElementById('pathaoModal');
-        if (modal && modal.style.display !== 'none') closePathaoModal();
+    // --- Submit Transaction (confirmation) ---
+    async function submitTransaction() {
+      const id = sessionStorage.getItem('customerId') || localStorage.getItem('customerId') || '';
+      const txnEl = el('transactionNumber');
+      const msgEl = el('confirmMsg');
+      const btn = el('btn-submit-payment');
+
+      clearMessage(msgEl);
+
+      if (!id) {
+        showError(msgEl, 'Please login first.');
+        return;
+      }
+      const txn = txnEl ? txnEl.value.trim() : '';
+      if (!txn) {
+        showError(msgEl, 'Please enter Transaction Number.');
+        return;
+      }
+      if (!/^[A-Za-z0-9\-]{3,60}$/.test(txn)) {
+        showError(msgEl, 'Invalid transaction number format.');
+        return;
+      }
+
+      if (btn) { btn.disabled = true; btn.dataset.origText = btn.innerText; btn.innerText = 'Submitting...'; }
+
+      try {
+        const res = await fetch(API_BASE, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'submitTransaction', customerId: id, transaction: txn })
+        });
+
+        if (!res.ok) throw new Error('Network response was not ok');
+
+        const data = await res.json();
+        if (data.status) {
+          showSuccess(msgEl, data.status);
+          if (txnEl) txnEl.value = '';
+        } else if (data.error) {
+          showError(msgEl, data.error);
+        } else {
+          showSuccess(msgEl, JSON.stringify(data));
+        }
+      } catch (err) {
+        console.error('submitTransaction error', err);
+        showError(msgEl, 'Network error. Please try again.');
+      } finally {
+        if (btn) { btn.disabled = false; btn.innerText = btn.dataset.origText || 'Submit Payment Confirmation'; }
+      }
+    }
+
+    // --- Misc ---
+    function goBack() { window.location.href = 'index.html'; }
+
+    // Initialize on DOM ready
+    window.addEventListener('DOMContentLoaded', function() {
+      const savedId = localStorage.getItem('customerId');
+      if (savedId && el('customerId')) {
+        el('customerId').value = savedId;
+        login();
       }
     });
 
-    // --- Minimal login example if none provided in script.js ---
-    if (typeof login !== 'function') {
-      function login() {
-        const input = document.getElementById('customerId');
-        const id = input.value.trim();
-        const errorEl = document.getElementById('error');
-
-        if (!id) {
-          errorEl.style.display = '';
-          errorEl.className = 'error';
-          errorEl.textContent = 'Please enter your Customer ID.';
-          return;
-        }
-        // Basic validation example
-        if (!/^[A-Za-z0-9\-]{2,50}$/.test(id)) {
-          errorEl.style.display = '';
-          errorEl.className = 'error';
-          errorEl.textContent = 'Invalid Customer ID format.';
-          return;
-        }
-
-        // Prefer sessionStorage for ephemeral IDs (change to server session for production)
-        sessionStorage.setItem('customerId', id);
-
-        document.getElementById('login').style.display = 'none';
-        document.getElementById('dashboard').style.display = '';
-        errorEl.style.display = 'none';
+    // Close modal on Escape (no pathao modal present, but keep safety)
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+        // nothing to close (Pathao removed)
       }
-    }
+    });
   </script>
 </body>
 </html>
