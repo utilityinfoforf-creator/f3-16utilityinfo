@@ -264,6 +264,9 @@ function goToPathaoPay(amount) {
 
 // ---- Submit transaction (for payment page) ----
 async function submitTransaction() {
+  // Debug log to confirm handler is invoked
+  console.log("submitTransaction called");
+
   const id = sessionStorage.getItem('customerId') || localStorage.getItem('customerId') || '';
   const txnEl = el('transactionNumber');
   const msgEl = el('confirmMsg');
@@ -273,15 +276,18 @@ async function submitTransaction() {
 
   if (!id) {
     showError(msgEl, 'Please login first.');
+    console.warn('submitTransaction: no customer id in storage');
     return;
   }
   const txn = txnEl ? txnEl.value.trim() : '';
   if (!txn) {
     showError(msgEl, 'Please enter Transaction Number.');
+    console.warn('submitTransaction: no transaction entered');
     return;
   }
   if (!/^[A-Za-z0-9\-]{3,60}$/.test(txn)) {
     showError(msgEl, 'Invalid transaction number format.');
+    console.warn('submitTransaction: invalid transaction format', txn);
     return;
   }
 
@@ -301,6 +307,7 @@ async function submitTransaction() {
         errMsg = body.error || body.message || errMsg;
       } catch (e) {}
       showError(msgEl, errMsg);
+      console.error('submitTransaction: server returned non-OK', res.status, errMsg);
       return;
     }
 
@@ -328,6 +335,177 @@ async function submitTransaction() {
   }
 }
 
-// ... (rest of script remains unchanged) ...
-// The rest of your functions (toggleEmail, logout, history modal, load handler) remain the same
-// to keep file concise I did not repeat them here; keep the rest of your original script below this line.
+// ---- Email subscription toggle ----
+async function toggleEmail() {
+  const id = (document.getElementById("customerId") || {}).value || "";
+  const emailToggleEl = document.getElementById("emailToggle");
+  const enabled = emailToggleEl ? emailToggleEl.checked : false;
+  const emailInput = document.getElementById("emailAddress");
+  const email = emailInput ? emailInput.value.trim() : "";
+  const t = translations[currentLanguage] || translations.en;
+
+  setToggleMessage("", "");
+  if (emailInput) emailInput.classList.remove("input-error");
+
+  if (enabled && !email) {
+    if (emailInput) emailInput.classList.add("input-error");
+    setToggleMessage(t.emailError, "error");
+    if (emailToggleEl) emailToggleEl.checked = false;
+    return;
+  }
+
+  try {
+    const url = `${API_BASE}?id=${encodeURIComponent(id)}&subscribe=${enabled}&email=${encodeURIComponent(email)}`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error("Network response was not ok");
+    const data = await res.json();
+
+    if (data.status) {
+      setToggleMessage(enabled ? t.emailSuccess : t.emailDisabled, "success");
+      const confirmRes = await fetch(`${API_BASE}?id=${encodeURIComponent(id)}`);
+      const confirmData = await confirmRes.json();
+      if (emailToggleEl) emailToggleEl.checked = (String(confirmData.subscribed) === "true");
+      if (emailInput) emailInput.value = confirmData.email || email;
+    } else {
+      setToggleMessage("Could not save changes.", "error");
+    }
+  } catch (err) {
+    setToggleMessage("Network error while saving subscription.", "error");
+  }
+}
+
+// ---- Logout / Navigation ----
+function logout() {
+  const dashboard = document.getElementById("dashboard");
+  if (dashboard) dashboard.style.display = "none";
+  const loginEl = document.getElementById("login");
+  if (loginEl) loginEl.style.display = "flex";
+  const errorEl = document.getElementById("error");
+  if (errorEl) {
+    errorEl.innerText = "";
+    errorEl.style.display = "none";
+  }
+  const idEl = document.getElementById("customerId");
+  if (idEl) idEl.value = "";
+  const emailToggleEl = document.getElementById("emailToggle");
+  if (emailToggleEl) emailToggleEl.checked = false;
+  const emailInput = document.getElementById("emailAddress");
+  if (emailInput) emailInput.value = "";
+  setToggleMessage("", "");
+  if (emailInput) emailInput.classList.remove("input-error");
+
+  // Clear stored identity
+  localStorage.removeItem("customerId");
+  localStorage.removeItem("customerName");
+  localStorage.removeItem("customerEmail");
+  sessionStorage.removeItem("customerId");
+}
+
+function goToPayment() { window.location.href = "payment.html"; }
+function goToTerms() { window.location.href = "terms.html"; }
+function backToDashboard() {
+  const dash = document.getElementById("dashboard");
+  if (dash) dash.style.display = "block";
+}
+
+// ---- Update history modal ----
+async function viewUpdateHistory() {
+  const id = (document.getElementById("customerId") || {}).value.trim();
+  const t = translations[currentLanguage] || translations.en;
+
+  try {
+    const res = await fetch(`${API_BASE}?id=${encodeURIComponent(id)}&history=true`);
+    if (!res.ok) throw new Error("Network response was not ok");
+    const data = await res.json();
+
+    const historyContainer = document.getElementById("historyContainer");
+    if (!historyContainer) return;
+
+    if (data.history && data.history.length > 0) {
+      historyContainer.innerHTML = data.history.map(item => `
+        <div class="history-item">
+          <div class="history-date">📅 ${item.date || 'N/A'}</div>
+          <div class="history-balance">💰 Balance: <strong>${item.balance || 'N/A'}</strong></div>
+          <div class="history-description">${item.description || 'Update'}</div>
+        </div>
+      `).join('');
+    } else {
+      historyContainer.innerHTML = `<p style="text-align: center; color: #666;">${t.noHistory}</p>`;
+    }
+
+    const modal = document.getElementById("historyModal");
+    if (modal) modal.style.display = "flex";
+  } catch (err) {
+    alert(t.historyError);
+  }
+}
+
+function closeUpdateHistory() {
+  const modal = document.getElementById("historyModal");
+  if (modal) modal.style.display = "none";
+}
+
+window.addEventListener("click", function(event) {
+  const modal = document.getElementById("historyModal");
+  if (modal && event.target === modal) modal.style.display = "none";
+});
+
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') {
+    const modal = el('historyModal');
+    if (modal && modal.style.display !== 'none') closeUpdateHistory();
+  }
+});
+
+// Ensure functions used from HTML inline handlers are available on window (global scope)
+window.login = login;
+window.showSteps = showSteps;
+window.goToPathaoPay = goToPathaoPay;
+window.submitTransaction = submitTransaction;
+window.toggleEmail = toggleEmail;
+window.logout = logout;
+window.viewUpdateHistory = viewUpdateHistory;
+window.closeUpdateHistory = closeUpdateHistory;
+window.backToDashboard = backToDashboard;
+
+// On load: language, auto-login if saved, and prefill transaction if returned via URL
+window.addEventListener("load", function() {
+  const savedLang = localStorage.getItem("preferredLanguage");
+  if (savedLang) {
+    currentLanguage = savedLang;
+    document.querySelectorAll(".lang-btn").forEach(btn => btn.classList.remove("active"));
+    const langBtns = document.querySelectorAll(".lang-btn");
+    if (langBtns.length > 0) langBtns[savedLang === "bn" ? 1 : 0].classList.add("active");
+  }
+  updatePageLanguage();
+
+  const savedId = localStorage.getItem("customerId");
+  if (savedId && document.getElementById("customerId")) {
+    document.getElementById("customerId").value = savedId;
+    login();
+  }
+
+  // If opened with ?transaction=...&customerId=... prefill the transaction field and auto-login if customerId provided.
+  const params = new URLSearchParams(window.location.search);
+  const tx = params.get('transaction');
+  const cid = params.get('customerId');
+  if (cid && document.getElementById('customerId')) {
+    document.getElementById('customerId').value = cid;
+    sessionStorage.setItem('customerId', cid);
+    localStorage.setItem('customerId', cid);
+    // hide login and show dashboard UI if present
+    const loginEl = document.getElementById('login');
+    if (loginEl) loginEl.style.display = 'none';
+    const dashEl = document.getElementById('dashboard');
+    if (dashEl) dashEl.style.display = 'block';
+  }
+  if (tx && document.getElementById('transactionNumber')) {
+    document.getElementById('transactionNumber').value = tx;
+    const msgEl = document.getElementById('confirmMsg');
+    if (msgEl) showSuccess(msgEl, 'Transaction reference has been prefilled. Verify the transaction ID and press "Submit Payment Confirmation".');
+    // clear query params from URL
+    if (history.replaceState) {
+      history.replaceState(null, '', window.location.pathname);
+    }
+  }
+});
