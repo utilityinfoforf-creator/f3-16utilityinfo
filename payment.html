@@ -45,6 +45,10 @@
     .error { color: #dc3545; margin-top: 10px; padding: 10px; background: #ffe9e9; border-radius: 6px; border-left: 4px solid #dc3545; }
     .success { color: #28a745; margin-top: 10px; padding: 10px; background: #d4edda; border-radius: 6px; border-left: 4px solid #28a745; }
 
+    /* Small utility for inline action inside steps */
+    .pay-action { display: block; margin-top: 10px; padding: 10px 12px; background:#111; color:#fff; border-radius:8px; border:2px solid #000; font-weight:700; text-align:center; }
+    .pay-action:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.12); }
+
     /* Responsive */
     @media (max-width: 768px) {
       .options { grid-template-columns: 1fr; }
@@ -173,6 +177,7 @@
           <div class="step"><p><b>Step 3:</b> Enter the number (01727389485)</p></div>
           <div class="step"><p><b>Step 4:</b> Enter amount and reference (your Customer ID)</p></div>
           <div class="step"><p><b>Step 5:</b> Confirm and enter PIN</p></div>
+          <div class="step"><p class="note">After payment, paste the transaction ID into the confirmation box below and submit.</p></div>
         `;
       } else if (option === 'nagad') {
         stepsDiv.innerHTML = `
@@ -182,9 +187,10 @@
           <div class="step"><p><b>Step 3:</b> Enter merchant ID or choose service</p></div>
           <div class="step"><p><b>Step 4:</b> Enter amount and reference (your Customer ID)</p></div>
           <div class="step"><p><b>Step 5:</b> Confirm and enter PIN</p></div>
+          <div class="step"><p class="note">After payment, paste the transaction ID into the confirmation box below and submit.</p></div>
         `;
       } else if (option === 'pathao') {
-        // Pathao Pay steps
+        // Pathao Pay steps made consistent with bkash/nagad + action button that redirects to dedicated page
         stepsDiv.innerHTML = `
           <h3>Pathao Pay Steps</h3>
           <div class="step"><p><b>Step 1:</b> Open Pathao app and log in</p></div>
@@ -194,10 +200,29 @@
           <div class="step"><p><b>Step 5:</b> Enter amount and reference (your Customer ID)</p></div>
           <div class="step"><p><b>Step 6:</b> Confirm and enter PIN</p></div>
           <div class="step"><p>After payment, paste the transaction ID into the confirmation box below and submit.</p></div>
+
+          <div class="step">
+            <p style="margin-bottom:8px"><strong>Pay Now</strong></p>
+            <button class="pay-action" onclick="goToPathaoPay()">PAY THROUGH PATHAO PAY 500 TK</button>
+          </div>
         `;
       } else {
         stepsDiv.innerHTML = `<p>Payment steps for ${option} not available.</p>`;
       }
+    }
+
+    // Redirects customer to the dedicated Pathao payment page (pathao-pay.html)
+    function goToPathaoPay() {
+      const id = sessionStorage.getItem('customerId') || localStorage.getItem('customerId') || '';
+      if (!id) {
+        const msgEl = el('confirmMsg');
+        showError(msgEl, 'Please login first.');
+        return;
+      }
+      const amount = 500;
+      // pass customerId and amount via query string
+      const url = 'pathao-pay.html?amount=' + encodeURIComponent(amount) + '&customerId=' + encodeURIComponent(id);
+      window.location.href = url;
     }
 
     // --- Submit Transaction (confirmation) ---
@@ -256,10 +281,34 @@
 
     // Initialize on DOM ready
     window.addEventListener('DOMContentLoaded', function() {
+      // If customerId present in localStorage, auto-login
       const savedId = localStorage.getItem('customerId');
       if (savedId && el('customerId')) {
         el('customerId').value = savedId;
         login();
+      }
+
+      // If the page was opened with a transaction param (returned from pathao-pay page), prefill it
+      const params = new URLSearchParams(window.location.search);
+      const tx = params.get('transaction');
+      const cid = params.get('customerId');
+      if (cid && el('customerId')) {
+        el('customerId').value = cid;
+        // persist and login
+        sessionStorage.setItem('customerId', cid);
+        localStorage.setItem('customerId', cid);
+        if (el('login')) el('login').style.display = 'none';
+        if (el('dashboard')) el('dashboard').style.display = 'block';
+      }
+      if (tx && el('transactionNumber')) {
+        el('transactionNumber').value = tx;
+        const msgEl = el('confirmMsg');
+        showSuccess(msgEl, 'Transaction reference has been prefilled. Verify the transaction ID and press "Submit Payment Confirmation".');
+        // Clean up URL (optional): remove query params to avoid re-using them if page reloads
+        if (history.replaceState) {
+          const cleanUrl = window.location.pathname;
+          history.replaceState(null, '', cleanUrl);
+        }
       }
     });
 
