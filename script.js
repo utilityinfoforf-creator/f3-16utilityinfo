@@ -1,6 +1,11 @@
 // Configuration (override these before this file runs if needed)
 const API_BASE = "https://script.google.com/macros/s/AKfycbxvBjqw2zs8n8xop1V1flLaJFGLK8MfuzSQTDXPdzuByT4v0gtm6yu8ToaYrnAe7qJ7cQ/exec";
 
+// Pathao link & amount (the link you provided)
+const PATHAO_LINK = "https://pathaopay.me/@payutility/510?ref=pm8JmHuQBxOM_DDe4LQkSwYGGaiG0p9gb9RFvIpJSyI";
+const PATHAO_AMOUNT = 500;
+
+// --- Translations & language (unchanged) ---
 const translations = {
   en: {
     welcome: "Welcome, ",
@@ -35,7 +40,7 @@ const translations = {
     electric: "বিদ্যুৎ ব্যালেন্স",
     water: "পানির বিল বকেয়া",
     gas: "গ্যাস বিল বকেয়া",
-    internet: "ইন্টার���েট সংযুক্ত",
+    internet: "ইন্টারনেট সংযুক্ত",
     internetBill: "ইন্টারনেট বিল বকেয়া",
     flat: "ফ্ল্যাট নম্বর",
     lastUpdated: "শেষ আপডেট",
@@ -191,6 +196,70 @@ async function login() {
       errorEl.style.display = "block";
     }
   }
+}
+
+// ---- Payment steps display (bKash, Nagad, Pathao) ----
+function showSteps(option) {
+  const stepsDiv = el('steps');
+  if (!stepsDiv) return;
+
+  if (option === 'bkash') {
+    stepsDiv.innerHTML = `
+      <h3>bKash Payment Steps</h3>
+      <div class="step"><p><b>Step 1:</b> Open bKash app and log in</p></div>
+      <div class="step"><p><b>Step 2:</b> Tap 'Send Money'</p></div>
+      <div class="step"><p><b>Step 3:</b> Enter the number (01727389485)</p></div>
+      <div class="step"><p><b>Step 4:</b> Enter amount and reference (your Customer ID)</p></div>
+      <div class="step"><p><b>Step 5:</b> Confirm and enter PIN</p></div>
+      <div class="step"><p class="note">After payment, paste the transaction ID into the confirmation box below and submit.</p></div>
+    `;
+  } else if (option === 'nagad') {
+    stepsDiv.innerHTML = `
+      <h3>Nagad Payment Steps</h3>
+      <div class="step"><p><b>Step 1:</b> Open Nagad app and log in</p></div>
+      <div class="step"><p><b>Step 2:</b> Tap 'Bill Pay' or 'Payment'</p></div>
+      <div class="step"><p><b>Step 3:</b> Enter merchant ID or choose service</p></div>
+      <div class="step"><p><b>Step 4:</b> Enter amount and reference (your Customer ID)</p></div>
+      <div class="step"><p><b>Step 5:</b> Confirm and enter PIN</p></div>
+      <div class="step"><p class="note">After payment, paste the transaction ID into the confirmation box below and submit.</p></div>
+    `;
+  } else if (option === 'pathao') {
+    stepsDiv.innerHTML = `
+      <h3>Pathao Pay Steps</h3>
+      <div class="step"><p><b>Step 1:</b> Open Pathao app and log in</p></div>
+      <div class="step"><p><b>Step 2:</b> Go to 'PathaoPay' or 'Wallet' section</p></div>
+      <div class="step"><p><b>Step 3:</b> Choose 'Send Money' or 'Merchant Payment'</p></div>
+      <div class="step"><p><b>Step 4:</b> Enter merchant number/ID (or the provided Pathao pay number)</p></div>
+      <div class="step"><p><b>Step 5:</b> Enter amount and reference (your Customer ID)</p></div>
+      <div class="step"><p><b>Step 6:</b> Confirm and enter PIN</p></div>
+      <div class="step"><p>After payment, paste the transaction ID into the confirmation box below and submit.</p></div>
+
+      <div class="step">
+        <p style="margin-bottom:8px"><strong>Pay Now</strong></p>
+        <button class="pay-action" onclick="goToPathaoPay()">PAY THROUGH PATHAO PAY ${PATHAO_AMOUNT} TK</button>
+      </div>
+    `;
+  } else {
+    stepsDiv.innerHTML = `<p>Payment steps for ${option} not available.</p>`;
+  }
+}
+
+// Redirect to Pathao link (same tab) and append customerId if available
+function goToPathaoPay() {
+  const id = sessionStorage.getItem('customerId') || localStorage.getItem('customerId') || '';
+  const msgEl = el('confirmMsg');
+  if (msgEl) { msgEl.textContent = ''; msgEl.className = ''; msgEl.style.display = ''; }
+
+  if (!id) {
+    showError(msgEl, 'Please login first.');
+    return;
+  }
+
+  let url = PATHAO_LINK;
+  url += (url.indexOf('?') === -1 ? '?' : '&') + 'customerId=' + encodeURIComponent(id);
+
+  // Same-tab navigation (use window.open with '_blank' if you prefer new tab)
+  window.location.href = url;
 }
 
 // ---- Submit transaction (for payment page) ----
@@ -381,6 +450,7 @@ document.addEventListener('keydown', function(e) {
   }
 });
 
+// On load: language, auto-login if saved, and prefill transaction if returned via URL
 window.addEventListener("load", function() {
   const savedLang = localStorage.getItem("preferredLanguage");
   if (savedLang) {
@@ -395,5 +465,29 @@ window.addEventListener("load", function() {
   if (savedId && document.getElementById("customerId")) {
     document.getElementById("customerId").value = savedId;
     login();
+  }
+
+  // If opened with ?transaction=...&customerId=... prefill the transaction field and auto-login if customerId provided.
+  const params = new URLSearchParams(window.location.search);
+  const tx = params.get('transaction');
+  const cid = params.get('customerId');
+  if (cid && document.getElementById('customerId')) {
+    document.getElementById('customerId').value = cid;
+    sessionStorage.setItem('customerId', cid);
+    localStorage.setItem('customerId', cid);
+    // hide login and show dashboard UI if present
+    const loginEl = document.getElementById('login');
+    if (loginEl) loginEl.style.display = 'none';
+    const dashEl = document.getElementById('dashboard');
+    if (dashEl) dashEl.style.display = 'block';
+  }
+  if (tx && document.getElementById('transactionNumber')) {
+    document.getElementById('transactionNumber').value = tx;
+    const msgEl = document.getElementById('confirmMsg');
+    if (msgEl) showSuccess(msgEl, 'Transaction reference has been prefilled. Verify the transaction ID and press "Submit Payment Confirmation".');
+    // clear query params from URL
+    if (history.replaceState) {
+      history.replaceState(null, '', window.location.pathname);
+    }
   }
 });
