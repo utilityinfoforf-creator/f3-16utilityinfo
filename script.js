@@ -1,5 +1,5 @@
 // Configuration (override these before this file runs if needed)
-const API_BASE = "https://script.google.com/macros/s/AKfycbxvBjqw2zs8n8xop1V1flLaJFGLK8MfuzSQTDXPdzuByT4v0gtm6yu8ToaYrnAe7qJ7cQ/exec";
+const API_BASE = "https://script.google.com/macros/s/AKfycbzUQeJKLBRCjQG928fnIdJ7Tlg-JR0072ENK-K2_07NBOxWsH9zs0qd5CrcoQW_Mbz3lA/exec";
 
 // Pathao links you provided
 const PATHAO_LINK_500 = "https://pathaopay.me/@payutility/510?ref=pm8JmHuQBxOM_DDe4LQkSwYGGaiG0p9gb9RFvIpJSyI";
@@ -7,7 +7,11 @@ const PATHAO_LINK_1000 = "https://pathaopay.me/@payutility/1010?ref=P6jLYaOWKpmF
 const PATHAO_AMOUNT_500 = 500;
 const PATHAO_AMOUNT_1000 = 1000;
 
-// --- Translations & language (unchanged) ---
+// Fallback behavior: try 'application/json' first; if network/CORS error occurs,
+// automatically retry once using 'text/plain' to avoid preflight (some Apps Script setups accept this).
+const ENABLE_TEXT_PLAIN_FALLBACK = true;
+
+// --- Translations & language ---
 const translations = {
   en: {
     welcome: "Welcome, ",
@@ -40,7 +44,7 @@ const translations = {
     subtitle: "আপনার ইউটিলিটি ড্যাশবোর্ড",
     warning: "⚠️ আপনার বিদ্যুৎ মিটার ব্যালেন্স ২০০ টাকার নিচে গেলে আপনার লাইন কাটা হবে।",
     electric: "বিদ্যুৎ ব্যালেন্স",
-    water: "পানির বিল বকেয়া",
+    water: "পান��র বিল বকেয়া",
     gas: "গ্যাস বিল বকেয়া",
     internet: "ইন্টারনেট সংযুক্ত",
     internetBill: "ইন্টারনেট বিল বকেয়া",
@@ -65,6 +69,28 @@ const translations = {
 
 let currentLanguage = "en";
 
+// ----- Helpers for DOM/UI -----
+function el(id) { return document.getElementById(id); }
+function showError(targetEl, msg) {
+  if (!targetEl) return;
+  targetEl.style.display = '';
+  targetEl.className = 'error';
+  targetEl.textContent = msg;
+}
+function showSuccess(targetEl, msg) {
+  if (!targetEl) return;
+  targetEl.style.display = '';
+  targetEl.className = 'success';
+  targetEl.textContent = msg;
+}
+function setToggleMessage(text, type) {
+  const elMsg = document.getElementById("toggleMsg");
+  if (!elMsg) return;
+  elMsg.className = type === "error" ? "error" : type === "success" ? "success" : "";
+  elMsg.innerText = text || "";
+}
+
+// ----- Language functions -----
 function switchLanguage(lang, event) {
   currentLanguage = lang;
   document.querySelectorAll(".lang-btn").forEach(btn => btn.classList.remove("active"));
@@ -72,7 +98,6 @@ function switchLanguage(lang, event) {
   updatePageLanguage();
   localStorage.setItem("preferredLanguage", lang);
 }
-
 function updatePageLanguage() {
   const t = translations[currentLanguage] || translations.en;
   const setText = (id, text, prop = "innerText") => {
@@ -103,29 +128,7 @@ function updatePageLanguage() {
   setText("modal-history-title", t.historyTitle);
 }
 
-function setToggleMessage(text, type) {
-  const el = document.getElementById("toggleMsg");
-  if (!el) return;
-  el.className = type === "error" ? "error" : type === "success" ? "success" : "";
-  el.innerText = text || "";
-}
-
-// ----- Helpers for DOM/UI -----
-function el(id) { return document.getElementById(id); }
-function showError(targetEl, msg) {
-  if (!targetEl) return;
-  targetEl.style.display = '';
-  targetEl.className = 'error';
-  targetEl.textContent = msg;
-}
-function showSuccess(targetEl, msg) {
-  if (!targetEl) return;
-  targetEl.style.display = '';
-  targetEl.className = 'success';
-  targetEl.textContent = msg;
-}
-
-// ---- Login ----
+// ----- Login -----
 async function login() {
   const idEl = document.getElementById("customerId");
   if (!idEl) return;
@@ -159,8 +162,8 @@ async function login() {
     }
 
     const setText = (id, value) => {
-      const el = document.getElementById(id);
-      if (el) el.innerText = value || "";
+      const e = document.getElementById(id);
+      if (e) e.innerText = value || "";
     };
 
     setText("name", data.name || "");
@@ -176,6 +179,7 @@ async function login() {
     if (emailToggleEl) emailToggleEl.checked = (String(data.subscribed) === "true");
     if (emailInput) emailInput.value = data.email || "";
 
+    sessionStorage.setItem("customerId", id);
     localStorage.setItem("customerId", id);
     localStorage.setItem("customerName", data.name || "");
     localStorage.setItem("customerEmail", data.email || "");
@@ -197,6 +201,7 @@ async function login() {
       errorEl.innerText = "Network error";
       errorEl.style.display = "block";
     }
+    console.error("login error", err);
   }
 }
 
@@ -262,9 +267,9 @@ function goToPathaoPay(amount) {
   window.location.href = url;
 }
 
-// ---- Submit transaction (for payment page) ----
-async function submitTransaction() {
-  // Debug log to confirm handler is invoked
+// ===== submitTransaction (robust, logs, retries with text/plain fallback) =====
+async function submitTransaction(event) {
+  if (event && typeof event.preventDefault === 'function') event.preventDefault();
   console.log("submitTransaction called");
 
   const id = sessionStorage.getItem('customerId') || localStorage.getItem('customerId') || '';
@@ -293,28 +298,47 @@ async function submitTransaction() {
 
   if (btn) { btn.disabled = true; btn.dataset.origText = btn.innerText; btn.innerText = 'Submitting...'; }
 
+  const payload = { action: 'submitTransaction', customerId: id, transaction: txn };
+
+  // Helper to parse response text/JSON and return { ok, status, bodyText, json }
+  async function parseResponse(res) {
+    const status = res.status;
+    let bodyText = '';
+    try { bodyText = await res.text(); } catch (e) { bodyText = ''; }
+    let json = null;
+    try { json = JSON.parse(bodyText); } catch (e) { /* not JSON */ }
+    return { ok: res.ok, status, bodyText, json };
+  }
+
+  // Try fetch with application/json first
   try {
+    console.log('submitTransaction -> POST (application/json) to', API_BASE, 'payload:', payload);
     const res = await fetch(API_BASE, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'submitTransaction', customerId: id, transaction: txn })
+      body: JSON.stringify(payload),
+      credentials: 'omit'
     });
 
+    const parsed = await parseResponse(res);
+    console.log('submitTransaction -> response', parsed.status, parsed.bodyText, parsed.json);
+
     if (!res.ok) {
-      let errMsg = `Request failed (${res.status})`;
-      try {
-        const body = await res.json();
-        errMsg = body.error || body.message || errMsg;
-      } catch (e) {}
-      showError(msgEl, errMsg);
-      console.error('submitTransaction: server returned non-OK', res.status, errMsg);
-      return;
+      // If CORS/preflight issue or server error and fallback is enabled, try text/plain
+      if (ENABLE_TEXT_PLAIN_FALLBACK) {
+        console.warn('submitTransaction: primary request failed or non-ok. Attempting text/plain fallback.');
+        return await submitTransaction_textPlainFallback(payload, btn, txnEl, msgEl);
+      } else {
+        const errMsg = (parsed.json && (parsed.json.error || parsed.json.message)) || parsed.bodyText || `Request failed (${parsed.status})`;
+        showError(msgEl, errMsg);
+        return;
+      }
     }
 
-    let data;
-    try { data = await res.json(); } catch (e) { data = null; }
-    if (data) {
-      if (data.status && /success/i.test(data.status)) {
+    // Success or JSON reply handling
+    if (parsed.json) {
+      const data = parsed.json;
+      if (data.status && /success/i.test(String(data.status))) {
         showSuccess(msgEl, data.status);
         if (txnEl) txnEl.value = '';
       } else if (data.error) {
@@ -323,13 +347,75 @@ async function submitTransaction() {
         showSuccess(msgEl, data.message || JSON.stringify(data));
       }
     } else {
-      const txt = await res.text();
-      if (/success/i.test(txt)) showSuccess(msgEl, txt);
-      else showError(msgEl, txt);
+      // Not JSON - server returned text
+      if (/success/i.test(parsed.bodyText)) {
+        showSuccess(msgEl, parsed.bodyText);
+        if (txnEl) txnEl.value = '';
+      } else {
+        showError(msgEl, parsed.bodyText || 'Unknown server response');
+      }
     }
   } catch (err) {
-    console.error('submitTransaction error', err);
-    showError(msgEl, 'Network error. Please try again.');
+    console.error('submitTransaction exception (application/json):', err);
+    // If network/CORS, try text/plain fallback if enabled
+    if (ENABLE_TEXT_PLAIN_FALLBACK) {
+      console.warn('submitTransaction: attempting text/plain fallback due to exception.');
+      try {
+        await submitTransaction_textPlainFallback(payload, btn, txnEl, msgEl);
+      } catch (fbErr) {
+        console.error('submitTransaction fallback also failed:', fbErr);
+        showError(msgEl, 'Network or CORS error. Check console for details.');
+      }
+    } else {
+      showError(msgEl, 'Network error. Please try again.');
+    }
+  } finally {
+    if (btn) { btn.disabled = false; btn.innerText = btn.dataset.origText || 'Submit Payment Confirmation'; }
+  }
+}
+
+// Helper: fallback POST using Content-Type: text/plain to avoid preflight
+async function submitTransaction_textPlainFallback(payload, btn, txnEl, msgEl) {
+  try {
+    console.log('submitTransaction_textPlainFallback -> POST (text/plain) to', API_BASE, 'payload:', payload);
+    const res = await fetch(API_BASE, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify(payload),
+      credentials: 'omit'
+    });
+    const bodyText = await res.text();
+    let json = null;
+    try { json = JSON.parse(bodyText); } catch (e) { /* not JSON */ }
+
+    console.log('submitTransaction_textPlainFallback -> response', res.status, bodyText, json);
+
+    if (!res.ok) {
+      const errMsg = (json && (json.error || json.message)) || bodyText || `Request failed (${res.status})`;
+      showError(msgEl, errMsg);
+      return;
+    }
+
+    if (json) {
+      if (json.status && /success/i.test(String(json.status))) {
+        showSuccess(msgEl, json.status);
+        if (txnEl) txnEl.value = '';
+      } else if (json.error) {
+        showError(msgEl, json.error);
+      } else {
+        showSuccess(msgEl, json.message || JSON.stringify(json));
+      }
+    } else {
+      if (/success/i.test(bodyText)) {
+        showSuccess(msgEl, bodyText);
+        if (txnEl) txnEl.value = '';
+      } else {
+        showError(msgEl, bodyText || 'Unknown server response');
+      }
+    }
+  } catch (err) {
+    console.error('submitTransaction_textPlainFallback exception:', err);
+    throw err;
   } finally {
     if (btn) { btn.disabled = false; btn.innerText = btn.dataset.origText || 'Submit Payment Confirmation'; }
   }
@@ -370,6 +456,7 @@ async function toggleEmail() {
       setToggleMessage("Could not save changes.", "error");
     }
   } catch (err) {
+    console.error('toggleEmail error', err);
     setToggleMessage("Network error while saving subscription.", "error");
   }
 }
@@ -436,6 +523,7 @@ async function viewUpdateHistory() {
     const modal = document.getElementById("historyModal");
     if (modal) modal.style.display = "flex";
   } catch (err) {
+    console.error('viewUpdateHistory error', err);
     alert(t.historyError);
   }
 }
@@ -457,7 +545,7 @@ document.addEventListener('keydown', function(e) {
   }
 });
 
-// Ensure functions used from HTML inline handlers are available on window (global scope)
+// Ensure functions used by inline onclick or other scripts are available globally
 window.login = login;
 window.showSteps = showSteps;
 window.goToPathaoPay = goToPathaoPay;
@@ -467,6 +555,7 @@ window.logout = logout;
 window.viewUpdateHistory = viewUpdateHistory;
 window.closeUpdateHistory = closeUpdateHistory;
 window.backToDashboard = backToDashboard;
+window.switchLanguage = switchLanguage;
 
 // On load: language, auto-login if saved, and prefill transaction if returned via URL
 window.addEventListener("load", function() {
@@ -508,4 +597,15 @@ window.addEventListener("load", function() {
       history.replaceState(null, '', window.location.pathname);
     }
   }
+
+  // Bind submit button safely (in case HTML used inline onclick previously)
+  (function bindSubmitButton() {
+    const btn = document.getElementById('btn-submit-payment');
+    if (!btn) return;
+    // remove inline onclick to avoid double-calls
+    try { btn.onclick = null; } catch (e) {}
+    btn.removeEventListener('click', submitTransaction);
+    btn.addEventListener('click', submitTransaction);
+    console.log('submitTransaction event listener bound to #btn-submit-payment');
+  })();
 });
