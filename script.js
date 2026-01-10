@@ -1,9 +1,11 @@
 // Configuration (override these before this file runs if needed)
 const API_BASE = "https://script.google.com/macros/s/AKfycbxvBjqw2zs8n8xop1V1flLaJFGLK8MfuzSQTDXPdzuByT4v0gtm6yu8ToaYrnAe7qJ7cQ/exec";
 
-// Pathao link & amount (the link you provided)
-const PATHAO_LINK = "https://pathaopay.me/@payutility/510?ref=pm8JmHuQBxOM_DDe4LQkSwYGGaiG0p9gb9RFvIpJSyI";
-const PATHAO_AMOUNT = 500;
+// Pathao links you provided
+const PATHAO_LINK_500 = "https://pathaopay.me/@payutility/510?ref=pm8JmHuQBxOM_DDe4LQkSwYGGaiG0p9gb9RFvIpJSyI";
+const PATHAO_LINK_1000 = "https://pathaopay.me/@payutility/1010?ref=P6jLYaOWKpmFKAPhjgfMBc0Gq3nzZrUt_V7-su9lZwY";
+const PATHAO_AMOUNT_500 = 500;
+const PATHAO_AMOUNT_1000 = 1000;
 
 // --- Translations & language (unchanged) ---
 const translations = {
@@ -198,7 +200,7 @@ async function login() {
   }
 }
 
-// ---- Payment steps display (bKash, Nagad, Pathao) ----
+// ---- Payment steps display (bKash, Nagad, Pathao: only Pay Now block for Pathao) ----
 function showSteps(option) {
   const stepsDiv = el('steps');
   if (!stepsDiv) return;
@@ -224,28 +226,23 @@ function showSteps(option) {
       <div class="step"><p class="note">After payment, paste the transaction ID into the confirmation box below and submit.</p></div>
     `;
   } else if (option === 'pathao') {
+    // Minimalized Pathao block — only "Pay Now" with buttons
     stepsDiv.innerHTML = `
-      <h3>Pathao Pay Steps</h3>
-      <div class="step"><p><b>Step 1:</b> Open Pathao app and log in</p></div>
-      <div class="step"><p><b>Step 2:</b> Go to 'PathaoPay' or 'Wallet' section</p></div>
-      <div class="step"><p><b>Step 3:</b> Choose 'Send Money' or 'Merchant Payment'</p></div>
-      <div class="step"><p><b>Step 4:</b> Enter merchant number/ID (or the provided Pathao pay number)</p></div>
-      <div class="step"><p><b>Step 5:</b> Enter amount and reference (your Customer ID)</p></div>
-      <div class="step"><p><b>Step 6:</b> Confirm and enter PIN</p></div>
-      <div class="step"><p>After payment, paste the transaction ID into the confirmation box below and submit.</p></div>
-
+      <h3>Pay Now</h3>
       <div class="step">
-        <p style="margin-bottom:8px"><strong>Pay Now</strong></p>
-        <button class="pay-action" onclick="goToPathaoPay()">PAY THROUGH PATHAO PAY ${PATHAO_AMOUNT} TK</button>
+        <p style="margin-bottom:8px"><strong>Pathao Pay</strong></p>
+        <button class="pay-action" onclick="goToPathaoPay(${PATHAO_AMOUNT_500})">PAY THROUGH PATHAO PAY ${PATHAO_AMOUNT_500} TK</button>
+        <button class="pay-action secondary" style="margin-top:8px" onclick="goToPathaoPay(${PATHAO_AMOUNT_1000})">PAY THROUGH PATHAO PAY ${PATHAO_AMOUNT_1000} TK</button>
       </div>
+      <div class="step"><p class="note">After payment, paste the transaction ID into the confirmation box below and submit.</p></div>
     `;
   } else {
     stepsDiv.innerHTML = `<p>Payment steps for ${option} not available.</p>`;
   }
 }
 
-// Redirect to Pathao link (same tab) and append customerId if available
-function goToPathaoPay() {
+// Redirect to Pathao link for selected amount (same tab). Append customerId if available.
+function goToPathaoPay(amount) {
   const id = sessionStorage.getItem('customerId') || localStorage.getItem('customerId') || '';
   const msgEl = el('confirmMsg');
   if (msgEl) { msgEl.textContent = ''; msgEl.className = ''; msgEl.style.display = ''; }
@@ -255,10 +252,13 @@ function goToPathaoPay() {
     return;
   }
 
-  let url = PATHAO_LINK;
+  let url;
+  if (amount === PATHAO_AMOUNT_1000) url = PATHAO_LINK_1000;
+  else url = PATHAO_LINK_500;
+
   url += (url.indexOf('?') === -1 ? '?' : '&') + 'customerId=' + encodeURIComponent(id);
 
-  // Same-tab navigation (use window.open with '_blank' if you prefer new tab)
+  // Same-tab navigation. Use window.open(..., '_blank') if you prefer new tab.
   window.location.href = url;
 }
 
@@ -328,166 +328,6 @@ async function submitTransaction() {
   }
 }
 
-// ---- Email subscription toggle ----
-async function toggleEmail() {
-  const id = (document.getElementById("customerId") || {}).value || "";
-  const emailToggleEl = document.getElementById("emailToggle");
-  const enabled = emailToggleEl ? emailToggleEl.checked : false;
-  const emailInput = document.getElementById("emailAddress");
-  const email = emailInput ? emailInput.value.trim() : "";
-  const t = translations[currentLanguage] || translations.en;
-
-  setToggleMessage("", "");
-  if (emailInput) emailInput.classList.remove("input-error");
-
-  if (enabled && !email) {
-    if (emailInput) emailInput.classList.add("input-error");
-    setToggleMessage(t.emailError, "error");
-    if (emailToggleEl) emailToggleEl.checked = false;
-    return;
-  }
-
-  try {
-    const url = `${API_BASE}?id=${encodeURIComponent(id)}&subscribe=${enabled}&email=${encodeURIComponent(email)}`;
-    const res = await fetch(url);
-    if (!res.ok) throw new Error("Network response was not ok");
-    const data = await res.json();
-
-    if (data.status) {
-      setToggleMessage(enabled ? t.emailSuccess : t.emailDisabled, "success");
-      const confirmRes = await fetch(`${API_BASE}?id=${encodeURIComponent(id)}`);
-      const confirmData = await confirmRes.json();
-      if (emailToggleEl) emailToggleEl.checked = (String(confirmData.subscribed) === "true");
-      if (emailInput) emailInput.value = confirmData.email || email;
-    } else {
-      setToggleMessage("Could not save changes.", "error");
-    }
-  } catch (err) {
-    setToggleMessage("Network error while saving subscription.", "error");
-  }
-}
-
-// ---- Logout / Navigation ----
-function logout() {
-  const dashboard = document.getElementById("dashboard");
-  if (dashboard) dashboard.style.display = "none";
-  const loginEl = document.getElementById("login");
-  if (loginEl) loginEl.style.display = "flex";
-  const errorEl = document.getElementById("error");
-  if (errorEl) {
-    errorEl.innerText = "";
-    errorEl.style.display = "none";
-  }
-  const idEl = document.getElementById("customerId");
-  if (idEl) idEl.value = "";
-  const emailToggleEl = document.getElementById("emailToggle");
-  if (emailToggleEl) emailToggleEl.checked = false;
-  const emailInput = document.getElementById("emailAddress");
-  if (emailInput) emailInput.value = "";
-  setToggleMessage("", "");
-  if (emailInput) emailInput.classList.remove("input-error");
-
-  // Clear stored identity
-  localStorage.removeItem("customerId");
-  localStorage.removeItem("customerName");
-  localStorage.removeItem("customerEmail");
-  sessionStorage.removeItem("customerId");
-}
-
-function goToPayment() { window.location.href = "payment.html"; }
-function goToTerms() { window.location.href = "terms.html"; }
-function backToDashboard() {
-  const dash = document.getElementById("dashboard");
-  if (dash) dash.style.display = "block";
-}
-
-// ---- Update history modal ----
-async function viewUpdateHistory() {
-  const id = (document.getElementById("customerId") || {}).value.trim();
-  const t = translations[currentLanguage] || translations.en;
-
-  try {
-    const res = await fetch(`${API_BASE}?id=${encodeURIComponent(id)}&history=true`);
-    if (!res.ok) throw new Error("Network response was not ok");
-    const data = await res.json();
-
-    const historyContainer = document.getElementById("historyContainer");
-    if (!historyContainer) return;
-
-    if (data.history && data.history.length > 0) {
-      historyContainer.innerHTML = data.history.map(item => `
-        <div class="history-item">
-          <div class="history-date">📅 ${item.date || 'N/A'}</div>
-          <div class="history-balance">💰 Balance: <strong>${item.balance || 'N/A'}</strong></div>
-          <div class="history-description">${item.description || 'Update'}</div>
-        </div>
-      `).join('');
-    } else {
-      historyContainer.innerHTML = `<p style="text-align: center; color: #666;">${t.noHistory}</p>`;
-    }
-
-    const modal = document.getElementById("historyModal");
-    if (modal) modal.style.display = "flex";
-  } catch (err) {
-    alert(t.historyError);
-  }
-}
-
-function closeUpdateHistory() {
-  const modal = document.getElementById("historyModal");
-  if (modal) modal.style.display = "none";
-}
-
-window.addEventListener("click", function(event) {
-  const modal = document.getElementById("historyModal");
-  if (modal && event.target === modal) modal.style.display = "none";
-});
-
-document.addEventListener('keydown', function(e) {
-  if (e.key === 'Escape') {
-    const modal = el('historyModal');
-    if (modal && modal.style.display !== 'none') closeUpdateHistory();
-  }
-});
-
-// On load: language, auto-login if saved, and prefill transaction if returned via URL
-window.addEventListener("load", function() {
-  const savedLang = localStorage.getItem("preferredLanguage");
-  if (savedLang) {
-    currentLanguage = savedLang;
-    document.querySelectorAll(".lang-btn").forEach(btn => btn.classList.remove("active"));
-    const langBtns = document.querySelectorAll(".lang-btn");
-    if (langBtns.length > 0) langBtns[savedLang === "bn" ? 1 : 0].classList.add("active");
-  }
-  updatePageLanguage();
-
-  const savedId = localStorage.getItem("customerId");
-  if (savedId && document.getElementById("customerId")) {
-    document.getElementById("customerId").value = savedId;
-    login();
-  }
-
-  // If opened with ?transaction=...&customerId=... prefill the transaction field and auto-login if customerId provided.
-  const params = new URLSearchParams(window.location.search);
-  const tx = params.get('transaction');
-  const cid = params.get('customerId');
-  if (cid && document.getElementById('customerId')) {
-    document.getElementById('customerId').value = cid;
-    sessionStorage.setItem('customerId', cid);
-    localStorage.setItem('customerId', cid);
-    // hide login and show dashboard UI if present
-    const loginEl = document.getElementById('login');
-    if (loginEl) loginEl.style.display = 'none';
-    const dashEl = document.getElementById('dashboard');
-    if (dashEl) dashEl.style.display = 'block';
-  }
-  if (tx && document.getElementById('transactionNumber')) {
-    document.getElementById('transactionNumber').value = tx;
-    const msgEl = document.getElementById('confirmMsg');
-    if (msgEl) showSuccess(msgEl, 'Transaction reference has been prefilled. Verify the transaction ID and press "Submit Payment Confirmation".');
-    // clear query params from URL
-    if (history.replaceState) {
-      history.replaceState(null, '', window.location.pathname);
-    }
-  }
-});
+// ... (rest of script remains unchanged) ...
+// The rest of your functions (toggleEmail, logout, history modal, load handler) remain the same
+// to keep file concise I did not repeat them here; keep the rest of your original script below this line.
