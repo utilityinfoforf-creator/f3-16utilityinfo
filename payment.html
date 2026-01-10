@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Make Payment - Utility Dashboard</title>
 
-  <!-- Full CSS (Pathao removed) -->
+  <!-- Full CSS -->
   <style>
     /* Global Reset & Base */
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -80,7 +80,7 @@
         <div class="options">
           <button type="button" onclick="showSteps('bkash')">🏦 bKash</button>
           <button type="button" onclick="showSteps('nagad')">💸 Nagad</button>
-          <!-- Pathao option removed -->
+          <button type="button" onclick="showSteps('pathao')">🛵 Pathao Pay</button>
         </div>
       </div>
 
@@ -105,7 +105,6 @@
     </div>
   </div>
 
-  <!-- JavaScript (Pathao code removed) -->
   <script>
     // --- CONFIG ---
     const API_BASE = "https://script.google.com/macros/s/AKfycbxvBjqw2zs8n8xop1V1flLaJFGLK8MfuzSQTDXPdzuByT4v0gtm6yu8ToaYrnAe7qJ7cQ/exec";
@@ -184,6 +183,18 @@
           <div class="step"><p><b>Step 4:</b> Enter amount and reference (your Customer ID)</p></div>
           <div class="step"><p><b>Step 5:</b> Confirm and enter PIN</p></div>
         `;
+      } else if (option === 'pathao') {
+        // Pathao Pay steps
+        stepsDiv.innerHTML = `
+          <h3>Pathao Pay Steps</h3>
+          <div class="step"><p><b>Step 1:</b> Open Pathao app and log in</p></div>
+          <div class="step"><p><b>Step 2:</b> Go to 'PathaoPay' or 'Wallet' section</p></div>
+          <div class="step"><p><b>Step 3:</b> Choose 'Send Money' or 'Merchant Payment'</p></div>
+          <div class="step"><p><b>Step 4:</b> Enter merchant number/ID (or the provided Pathao pay number)</p></div>
+          <div class="step"><p><b>Step 5:</b> Enter amount and reference (your Customer ID)</p></div>
+          <div class="step"><p><b>Step 6:</b> Confirm and enter PIN</p></div>
+          <div class="step"><p>After payment, paste the transaction ID into the confirmation box below and submit.</p></div>
+        `;
       } else {
         stepsDiv.innerHTML = `<p>Payment steps for ${option} not available.</p>`;
       }
@@ -252,10 +263,10 @@
       }
     });
 
-    // Close modal on Escape (no pathao modal present, but keep safety)
+    // Close modal on Escape (kept for safety)
     document.addEventListener('keydown', function(e) {
       if (e.key === 'Escape') {
-        // nothing to close (Pathao removed)
+        // nothing to close (no modal)
       }
     });
   </script>
