@@ -6,13 +6,15 @@
   <title>WANT TO YOUR METER OR CUSTOMER NUMBER HERE IT IS</title>
   <link rel="stylesheet" href="styles.css">
   <style>
-    /* Local overrides to make fonts bigger and bolder for this page */
+    /* Page-specific typography overrides to make fonts bigger & bolder */
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       color: #111;
-      font-size: 18px; /* base size a bit larger */
+      font-size: 18px;
       line-height: 1.45;
     }
+
+    .container { max-width: 980px; margin: 0 auto; padding: 20px; }
 
     .card h1 {
       font-size: 30px;
@@ -29,7 +31,7 @@
       width: 100%;
       border-collapse: collapse;
       margin-top: 12px;
-      font-size: 17px; /* larger table text */
+      font-size: 17px;
     }
 
     thead th {
@@ -50,22 +52,35 @@
       color: #222;
     }
 
-    /* Improve row spacing for readability */
-    tbody tr { background: #fff; }
     tbody tr:nth-child(odd) { background: #fbfbfb; }
 
-    /* Make footer text slightly larger/bolder */
     footer p {
       font-size: 15px;
       font-weight: 700;
       color: #666;
     }
 
-    /* Ensure container spacing */
-    .container { max-width: 980px; margin: 0 auto; padding: 20px; }
+    /* IFrame / form card */
+    .iframe-card {
+      background: #fff;
+      padding: 12px;
+      border-radius: 10px;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+      border: 2px solid #000;
+      max-width: 100%;
+    }
+    .iframe-wrap {
+      display: flex;
+      justify-content: center;
+      margin-top: 20px;
+    }
+    .iframe-fallback {
+      text-align: center;
+      margin-top: 12px;
+      font-size: 15px;
+    }
 
-    /* Responsive adjustments */
-    @media (max-width: 600px) {
+    @media (max-width: 700px) {
       body { font-size: 16px; }
       .card h1 { font-size: 24px; }
       thead th { font-size: 16px; }
@@ -74,7 +89,7 @@
   </style>
 </head>
 <body>
-  <main class="container" style="background:transparent; padding-top:20px;">
+  <main class="container" style="background:transparent; padding-top:10px;">
     <section class="card" style="padding:18px;">
       <h1 style="margin-bottom:12px;">WANT TO YOUR METER OR CUSTOMER NUMBER HERE IT IS</h1>
       <p style="margin-bottom:12px;">Below is the list of customer numbers, meter numbers and flat numbers. Use Ctrl+F (or your browser find) to quickly locate a specific customer or meter.</p>
@@ -105,6 +120,33 @@
             <tr><td>35035432</td><td>80181117</td><td>8B</td></tr>
           </tbody>
         </table>
+      </div>
+
+      <!-- Cash collection request form embedded on this page -->
+      <div style="margin-top:28px;">
+        <h2 style="font-size:22px; margin-bottom:8px;">Request Cash Collection</h2>
+        <p style="color:#444; margin-bottom:12px;">If you want someone to come to your door and collect the bill in cash, please fill the form below.</p>
+
+        <div class="iframe-wrap">
+          <div class="iframe-card" style="width:100%;">
+            <iframe
+              src="https://docs.google.com/forms/d/e/1FAIpQLSf2Iinj_u1UtPpHOBfHlUm-zUhEGx9QgzIWs67IhlyKJ4uCaQ/viewform?embedded=true"
+              width="100%"
+              height="800"
+              frameborder="0"
+              marginheight="0"
+              marginwidth="0"
+              style="border-radius:8px; min-width:600px; max-width:100%;"
+              title="Cash Collection Request Form">
+              Loading…
+            </iframe>
+
+            <div class="iframe-fallback">
+              If the form doesn't load, open it directly:
+              <a href="https://forms.gle/utwqTRLCH2aughE5A" target="_blank" rel="noopener noreferrer">Open Cash Collection Form</a>
+            </div>
+          </div>
+        </div>
       </div>
     </section>
 

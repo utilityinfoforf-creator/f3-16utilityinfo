@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Request Cash Collection - F-16 House Utility</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    /* Small page-specific overrides */
+    .headline { font-weight: 700; }
+    .intro {
+      padding: 18px;
+      color: #222;
+      font-size: 18px;
+      line-height: 1.5;
+    }
+    .iframe-wrap {
+      display: flex;
+      justify-content: center;
+      margin: 20px 0;
+    }
+    .iframe-card {
+      background: #fff;
+      padding: 12px;
+      border-radius: 10px;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+      border: 2px solid #000;
+      max-width: 920px;
+      width: 100%;
+    }
+    .iframe-fallback {
+      text-align: center;
+      margin-top: 12px;
+      font-size: 15px;
+    }
+    @media (max-width: 700px) {
+      .intro { font-size: 16px; }
+    }
+  </style>
+</head>
+<body>
+  <nav style="background-color:#333; padding:0 20px;">
+    <div style="max-width:1100px; margin:0 auto; display:flex; align-items:center; justify-content:space-between; height:60px;">
+      <div class="headline" style="color:#fff; font-size:18px;">WELCOME TO F-16 HOUSE UTILITY WEBSITE</div>
+      <ul style="list-style:none; display:flex; margin:0; padding:0;">
+        <li style="margin-left:10px;"><a href="index.html" style="color:#fff; text-decoration:none; padding:14px 20px; display:block;">Home</a></li>
+        <li style="margin-left:10px;"><a href="meter.html" style="color:#fff; text-decoration:none; padding:14px 20px; display:block;">Meter / Customer Numbers</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <main class="container" style="padding-top:24px;">
+    <section class="card" style="padding:20px;">
+      <h1 style="margin-bottom:12px; font-size:26px;">REQUEST CASH COLLECTION</h1>
+      <p class="intro">
+        By filling this form you are requesting that a representative will come to your door and collect the bill in cash.
+        Please complete the form below — include your Customer ID and contact details so our team can reach you.
+      </p>
+
+      <div class="iframe-wrap">
+        <div class="iframe-card">
+          <iframe
+            src="https://docs.google.com/forms/d/e/1FAIpQLSf2Iinj_u1UtPpHOBfHlUm-zUhEGx9QgzIWs67IhlyKJ4uCaQ/viewform?embedded=true"
+            width="880"
+            height="800"
+            frameborder="0"
+            marginheight="0"
+            marginwidth="0"
+            style="width:100%; max-width:100%; border-radius:8px;"
+            title="Cash Collection Request Form">
+            Loading…
+          </iframe>
+          <div class="iframe-fallback">
+            If the form doesn't load, open it directly:
+            <a href="https://forms.gle/utwqTRLCH2aughE5A" target="_blank" rel="noopener noreferrer">Open Cash Collection Form</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <footer style="text-align:center; margin-top:24px; padding:16px; background:#f2f2f2; border-top:1px solid #ddd;">
+      <p style="margin:0; color:#666; font-size:14px;">Powered by F-16 UTILITY CORPORATIONS</p>
+    </footer>
+  </main>
+</body>
+</html>
