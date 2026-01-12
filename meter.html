@@ -5,55 +5,111 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>WANT TO YOUR METER OR CUSTOMER NUMBER HERE IT IS</title>
   <link rel="stylesheet" href="styles.css">
+  <style>
+    /* Local overrides to make fonts bigger and bolder for this page */
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      color: #111;
+      font-size: 18px; /* base size a bit larger */
+      line-height: 1.45;
+    }
+
+    .card h1 {
+      font-size: 30px;
+      font-weight: 800;
+      color: #111;
+    }
+
+    .card p {
+      font-size: 18px;
+      color: #333;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 12px;
+      font-size: 17px; /* larger table text */
+    }
+
+    thead th {
+      background: #f2f2f2;
+      padding: 12px;
+      border: 1px solid #000;
+      text-align: left;
+      font-weight: 800;
+      font-size: 18px;
+      letter-spacing: 0.5px;
+    }
+
+    tbody td {
+      padding: 12px;
+      border: 1px solid #000;
+      font-weight: 700;
+      font-size: 16px;
+      color: #222;
+    }
+
+    /* Improve row spacing for readability */
+    tbody tr { background: #fff; }
+    tbody tr:nth-child(odd) { background: #fbfbfb; }
+
+    /* Make footer text slightly larger/bolder */
+    footer p {
+      font-size: 15px;
+      font-weight: 700;
+      color: #666;
+    }
+
+    /* Ensure container spacing */
+    .container { max-width: 980px; margin: 0 auto; padding: 20px; }
+
+    /* Responsive adjustments */
+    @media (max-width: 600px) {
+      body { font-size: 16px; }
+      .card h1 { font-size: 24px; }
+      thead th { font-size: 16px; }
+      tbody td { font-size: 15px; padding: 10px; }
+    }
+  </style>
 </head>
 <body>
-  <nav style="background-color:#333; padding:0 20px;">
-    <div style="max-width:900px; margin:0 auto; display:flex; align-items:center; justify-content:space-between; height:56px;">
-      <div class="headline" style="color:#fff; font-weight:700;">WELCOME TO F-16 HOUSE UTILITY WEBSITE</div>
-      <ul style="list-style:none; display:flex; margin:0; padding:0;">
-        <li style="margin-left:10px;"><a href="index.html" style="color:#fff; text-decoration:none; padding:14px 20px; display:block;">Home</a></li>
-        <li style="margin-left:10px;"><a href="form.html" style="color:#fff; text-decoration:none; padding:14px 20px; display:block;">Paying My Bill by Cash</a></li>
-        <li style="margin-left:10px;"><a href="meter.html" style="color:#fff; text-decoration:none; padding:14px 20px; display:block;">Meter / Customer Numbers</a></li>
-      </ul>
-    </div>
-  </nav>
-
   <main class="container" style="background:transparent; padding-top:20px;">
     <section class="card" style="padding:18px;">
       <h1 style="margin-bottom:12px;">WANT TO YOUR METER OR CUSTOMER NUMBER HERE IT IS</h1>
-      <p style="margin-bottom:12px; color:#444;">Below is the list of customer numbers, meter numbers and flat numbers. Use Ctrl+F (or your browser find) to quickly locate a specific customer or meter.</p>
+      <p style="margin-bottom:12px;">Below is the list of customer numbers, meter numbers and flat numbers. Use Ctrl+F (or your browser find) to quickly locate a specific customer or meter.</p>
 
       <div style="overflow:auto;">
-        <table style="border-collapse:collapse; width:100%; min-width:640px;">
+        <table style="min-width:640px;">
           <thead>
             <tr>
-              <th style="text-align:left; padding:10px; border:1px solid #000; background:#f2f2f2;">CUSTOMER NUMBER</th>
-              <th style="text-align:left; padding:10px; border:1px solid #000; background:#f2f2f2;">METER NUMBER</th>
-              <th style="text-align:left; padding:10px; border:1px solid #000; background:#f2f2f2;">FLAT NUMBER</th>
+              <th>CUSTOMER NUMBER</th>
+              <th>METER NUMBER</th>
+              <th>FLAT NUMBER</th>
             </tr>
           </thead>
           <tbody>
-            <tr><td style="padding:8px; border:1px solid #000;">35270575</td><td style="padding:8px; border:1px solid #000;">80181116</td><td style="padding:8px; border:1px solid #000;">1B</td></tr>
-            <tr><td style="padding:8px; border:1px solid #000;">33028710</td><td style="padding:8px; border:1px solid #000;">80181113</td><td style="padding:8px; border:1px solid #000;">2F</td></tr>
-            <tr><td style="padding:8px; border:1px solid #000;">35325684</td><td style="padding:8px; border:1px solid #000;">80184979</td><td style="padding:8px; border:1px solid #000;">2B</td></tr>
-            <tr><td style="padding:8px; border:1px solid #000;">35325650</td><td style="padding:8px; border:1px solid #000;">80184982</td><td style="padding:8px; border:1px solid #000;">3F</td></tr>
-            <tr><td style="padding:8px; border:1px solid #000;">35325631</td><td style="padding:8px; border:1px solid #000;">80184983</td><td style="padding:8px; border:1px solid #000;">3B</td></tr>
-            <tr><td style="padding:8px; border:1px solid #000;">35325701</td><td style="padding:8px; border:1px solid #000;">80138339</td><td style="padding:8px; border:1px solid #000;">4F</td></tr>
-            <tr><td style="padding:8px; border:1px solid #000;">35325699</td><td style="padding:8px; border:1px solid #000;">80138340</td><td style="padding:8px; border:1px solid #000;">4B</td></tr>
-            <tr><td style="padding:8px; border:1px solid #000;">35325646</td><td style="padding:8px; border:1px solid #000;">80184984</td><td style="padding:8px; border:1px solid #000;">5F</td></tr>
-            <tr><td style="padding:8px; border:1px solid #000;">35035428</td><td style="padding:8px; border:1px solid #000;">80181118</td><td style="padding:8px; border:1px solid #000;">5B</td></tr>
-            <tr><td style="padding:8px; border:1px solid #000;">35325665</td><td style="padding:8px; border:1px solid #000;">80184981</td><td style="padding:8px; border:1px solid #000;">6F</td></tr>
-            <tr><td style="padding:8px; border:1px solid #000;">35325671</td><td style="padding:8px; border:1px solid #000;">80184980</td><td style="padding:8px; border:1px solid #000;">6B</td></tr>
-            <tr><td style="padding:8px; border:1px solid #000;">35117657</td><td style="padding:8px; border:1px solid #000;">80181115</td><td style="padding:8px; border:1px solid #000;">7F</td></tr>
-            <tr><td style="padding:8px; border:1px solid #000;">35117661</td><td style="padding:8px; border:1px solid #000;">80181114</td><td style="padding:8px; border:1px solid #000;">7B</td></tr>
-            <tr><td style="padding:8px; border:1px solid #000;">35035432</td><td style="padding:8px; border:1px solid #000;">80181117</td><td style="padding:8px; border:1px solid #000;">8B</td></tr>
+            <tr><td>35270575</td><td>80181116</td><td>1B</td></tr>
+            <tr><td>33028710</td><td>80181113</td><td>2F</td></tr>
+            <tr><td>35325684</td><td>80184979</td><td>2B</td></tr>
+            <tr><td>35325650</td><td>80184982</td><td>3F</td></tr>
+            <tr><td>35325631</td><td>80184983</td><td>3B</td></tr>
+            <tr><td>35325701</td><td>80138339</td><td>4F</td></tr>
+            <tr><td>35325699</td><td>80138340</td><td>4B</td></tr>
+            <tr><td>35325646</td><td>80184984</td><td>5F</td></tr>
+            <tr><td>35035428</td><td>80181118</td><td>5B</td></tr>
+            <tr><td>35325665</td><td>80184981</td><td>6F</td></tr>
+            <tr><td>35325671</td><td>80184980</td><td>6B</td></tr>
+            <tr><td>35117657</td><td>80181115</td><td>7F</td></tr>
+            <tr><td>35117661</td><td>80181114</td><td>7B</td></tr>
+            <tr><td>35035432</td><td>80181117</td><td>8B</td></tr>
           </tbody>
         </table>
       </div>
     </section>
 
     <footer style="text-align:center; margin-top:24px; padding:16px; background:#f2f2f2; border-top:1px solid #ddd;">
-      <p style="margin:0; color:#666; font-size:14px;">Powered by F-16 UTILITY CORPORATIONS</p>
+      <p style="margin:0;">Powered by F-16 UTILITY CORPORATIONS</p>
     </footer>
   </main>
 </body>
