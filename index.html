@@ -27,6 +27,8 @@
       <div class="language-toggle">
         <button class="lang-btn active" onclick="switchLanguage('en')">English</button>
         <button class="lang-btn" onclick="switchLanguage('bn')">বাংলা</button>
+        <!-- Logout moved here -->
+        <button class="lang-btn" style="margin-left:8px; background:#dc3545; color:#fff; border-color:#dc3545;" onclick="logout()" id="btn-logout-top">🚪 Logout</button>
       </div>
 
       <div class="dashboard-header">
@@ -87,7 +89,7 @@
         <button class="btn btn-secondary" onclick="window.location.href='connection.html'" id="btn-internet">🌐 Request Internet Connection</button>
         <button class="btn btn-secondary" onclick="viewUpdateHistory()" id="btn-history">📋 Update History</button>
         <button class="btn btn-secondary" onclick="window.location.href='meter.html'">📋 Meter / Customer Numbers</button>
-        <button class="btn btn-danger" onclick="logout()" id="btn-logout">🚪 Logout</button>
+        <!-- Logout removed from here (moved to top) -->
       </div>
 
       <!-- Update History Modal -->
