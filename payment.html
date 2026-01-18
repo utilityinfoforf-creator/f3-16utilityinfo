@@ -4,70 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Make Payment - Utility Dashboard</title>
-
-  <!-- Full CSS -->
-  <style>
-    /* Global Reset & Base */
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      min-height: 100vh; padding: 20px; color: #111; }
-    .container { max-width: 900px; margin: 0 auto; }
-
-    /* Page Headers */
-    .page-header { color: #fff; margin-bottom: 30px; text-align: center; }
-    .page-header h1 { font-size: 32px; margin-bottom: 10px; }
-    .page-header p { font-size: 16px; opacity: 0.9; }
-
-    /* Cards & Form */
-    .card { background: #fff; padding: 20px; border-radius: 12px;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin-bottom: 20px;
-      border: 2px solid #000; transition: all 0.3s; }
-    .card h3 { color: #000; margin-bottom: 15px; }
-    .card p { color: #555; margin-bottom: 15px; }
-    .form-group { margin-bottom: 16px; }
-    input[type="text"], input[type="email"] {
-      width: 100%; padding: 12px 15px; border: 2px solid #000;
-      border-radius: 8px; font-size: 16px; transition: all 0.2s;
-    }
-    input:focus { outline: none; border-color: #000; box-shadow: 0 0 0 3px rgba(0,0,0,0.06); }
-    button { cursor: pointer; }
-
-    /* Options */
-    .options { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-top: 10px; }
-    .options button { width: 100%; padding: 12px; background: #000; color: #fff; border: 2px solid #000; border-radius: 8px; font-size: 15px; font-weight: 600; }
-    .options button:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(102, 126, 234, 0.18); }
-
-    .steps { margin-top: 20px; background: #fff; padding: 20px; border-radius: 12px; border: 2px solid #000; }
-    .step { margin-bottom: 12px; padding: 12px; background: #f8f9fa; border: 2px solid #000; border-radius: 6px; }
-    .submit-btn { background: #000; color: #fff; padding: 12px; border: 2px solid #000; border-radius: 8px; font-weight: 600; width: 100%; }
-
-    .error { color: #dc3545; margin-top: 10px; padding: 10px; background: #ffe9e9; border-radius: 6px; border-left: 4px solid #dc3545; }
-    .success { color: #28a745; margin-top: 10px; padding: 10px; background: #d4edda; border-radius: 6px; border-left: 4px solid #28a745; }
-
-    /* Small utility for inline action inside steps */
-    .pay-action { display: block; margin-top: 10px; padding: 12px; background:#111; color:#fff; border-radius:8px; border:2px solid #000; font-weight:700; text-align:center; width:100%; }
-    .pay-action.secondary { background: #333; }
-
-    /* Accept notice */
-    .accept-note {
-      margin-top: 12px;
-      padding: 10px 12px;
-      background: #fff5ea;
-      border: 1px dashed rgba(0,0,0,0.08);
-      color: #111;
-      border-radius: 8px;
-      text-align: center;
-      font-weight: 600;
-    }
-    .accept-note small { display:block; font-weight:400; margin-top:6px; color:#555; }
-
-    /* Responsive */
-    @media (max-width: 768px) {
-      .options { grid-template-columns: 1fr; }
-      .card { padding: 15px; }
-    }
-  </style>
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
   <div class="container">

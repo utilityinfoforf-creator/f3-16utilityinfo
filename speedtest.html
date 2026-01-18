@@ -5,32 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Speed Test • Fast.com</title>
   <meta name="description" content="Run an internet speed test powered by Fast.com inside your portal.">
-  <style>
-    :root{
-      --bg:#f7f9fc; --text:#111418; --card:#ffffff; --border:#e4e7ec; --accent:#2d6cdf;
-    }
-    body.dark{
-      --bg:#0f1216; --text:#e8eaed; --card:#111418; --border:#23262c; --accent:#5b8cff;
-    }
-    *{box-sizing:border-box}
-    body{margin:0;background:var(--bg);color:var(--text);font:14px/1.5 system-ui, -apple-system, Segoe UI, Roboto, sans-serif}
-    header{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border)}
-    .brand{font-weight:600}
-    .container{max-width:960px;margin:24px auto;padding:0 20px}
-    .card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px}
-    .actions{display:flex;gap:10px;margin:12px 0 16px}
-    button,a.btn{
-      background:var(--accent);color:#fff;border:0;border-radius:10px;padding:10px 14px;text-decoration:none;display:inline-flex;align-items:center;gap:8px;cursor:pointer
-    }
-    .hint{font-size:12px;color:#6b7280}
-    /* Responsive iframe */
-    .iframe-wrap{position:relative;width:100%;padding-top:66%} /* 3:2 ratio */
-    .iframe-wrap iframe{position:absolute;top:0;left:0;width:100%;height:100%;border:0;border-radius:12px}
-    /* Dark mode toggle */
-    .toggle{background:transparent;color:var(--text);border:1px solid var(--border);border-radius:10px;padding:8px 12px}
-  </style>
+  <link rel="stylesheet" href="styles.css">
 </head>
-<body>
+<body class="speedtest-page">
   <header>
     <div class="brand">Speed Test</div>
     <button class="toggle" id="themeToggle">Toggle dark mode</button>
