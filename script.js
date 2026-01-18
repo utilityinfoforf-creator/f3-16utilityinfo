@@ -497,8 +497,13 @@ function backToDashboard() {
 
 // ---- Update history modal ----
 async function viewUpdateHistory() {
-  const id = (document.getElementById("customerId") || {}).value.trim();
+  const id = sessionStorage.getItem('customerId') || localStorage.getItem('customerId') || '';
   const t = translations[currentLanguage] || translations.en;
+
+  if (!id) {
+    alert('Please login first');
+    return;
+  }
 
   try {
     const res = await fetch(`${API_BASE}?id=${encodeURIComponent(id)}&history=true`);
