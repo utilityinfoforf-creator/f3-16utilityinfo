@@ -506,9 +506,18 @@ async function viewUpdateHistory() {
   }
 
   try {
-    const res = await fetch(`${API_BASE}?id=${encodeURIComponent(id)}&history=true`);
-    if (!res.ok) throw new Error("Network response was not ok");
+    // Try with GET request first (original method)
+    let res = await fetch(`${API_BASE}?id=${encodeURIComponent(id)}&history=true`);
+    
+    if (!res.ok) {
+      throw new Error("Initial request failed");
+    }
+    
     const data = await res.json();
+    
+    if (data.error) {
+      throw new Error(data.error);
+    }
 
     const historyContainer = document.getElementById("historyContainer");
     if (!historyContainer) return;
@@ -528,8 +537,16 @@ async function viewUpdateHistory() {
     const modal = document.getElementById("historyModal");
     if (modal) modal.style.display = "flex";
   } catch (err) {
-    console.error('viewUpdateHistory error', err);
-    alert(t.historyError);
+    console.error('viewUpdateHistory error:', err);
+    const t = translations[currentLanguage] || translations.en;
+    const errorEl = document.getElementById("historyContainer");
+    if (errorEl) {
+      errorEl.innerHTML = `<p style="text-align: center; color: #dc3545;">${t.historyError || 'Failed to fetch update history. Please check your internet connection and try again.'}</p>`;
+      const modal = document.getElementById("historyModal");
+      if (modal) modal.style.display = "flex";
+    } else {
+      alert(t.historyError || 'Failed to fetch update history.');
+    }
   }
 }
 
