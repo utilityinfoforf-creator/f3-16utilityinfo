@@ -505,12 +505,22 @@ async function viewUpdateHistory() {
     return;
   }
 
+  const historyContainer = document.getElementById("historyContainer");
+  if (!historyContainer) return;
+
+  // Show loading message
+  historyContainer.innerHTML = '<p style="text-align: center; color: #666;">Loading update history...</p>';
+
   try {
-    // Try with GET request first (original method)
-    let res = await fetch(`${API_BASE}?id=${encodeURIComponent(id)}&history=true`);
+    const res = await fetch(`${API_BASE}?id=${encodeURIComponent(id)}&history=true`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      }
+    });
     
     if (!res.ok) {
-      throw new Error("Initial request failed");
+      throw new Error(`HTTP error! status: ${res.status}`);
     }
     
     const data = await res.json();
@@ -518,9 +528,6 @@ async function viewUpdateHistory() {
     if (data.error) {
       throw new Error(data.error);
     }
-
-    const historyContainer = document.getElementById("historyContainer");
-    if (!historyContainer) return;
 
     if (data.history && data.history.length > 0) {
       historyContainer.innerHTML = data.history.map(item => `
@@ -533,21 +540,20 @@ async function viewUpdateHistory() {
     } else {
       historyContainer.innerHTML = `<p style="text-align: center; color: #666;">${t.noHistory}</p>`;
     }
-
-    const modal = document.getElementById("historyModal");
-    if (modal) modal.style.display = "flex";
   } catch (err) {
     console.error('viewUpdateHistory error:', err);
-    const t = translations[currentLanguage] || translations.en;
-    const errorEl = document.getElementById("historyContainer");
-    if (errorEl) {
-      errorEl.innerHTML = `<p style="text-align: center; color: #dc3545;">${t.historyError || 'Failed to fetch update history. Please check your internet connection and try again.'}</p>`;
-      const modal = document.getElementById("historyModal");
-      if (modal) modal.style.display = "flex";
-    } else {
-      alert(t.historyError || 'Failed to fetch update history.');
-    }
+    
+    // Show helpful message for CORS errors
+    historyContainer.innerHTML = `
+      <div style="text-align: center; color: #666; padding: 20px;">
+        <p style="margin-bottom: 10px;">⚠️ Update history feature is currently unavailable.</p>
+        <p style="font-size: 13px; color: #999;">Please contact support if you need assistance.</p>
+      </div>
+    `;
   }
+
+  const modal = document.getElementById("historyModal");
+  if (modal) modal.style.display = "flex";
 }
 
 function closeUpdateHistory() {
