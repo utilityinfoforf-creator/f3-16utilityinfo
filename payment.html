@@ -76,19 +76,6 @@
       <p id="label-payment-subtitle">Choose your payment method</p>
     </div>
 
-    <!-- Login Section -->
-    <div id="login" class="card" style="display:flex; flex-direction:column;">
-      <h3 id="label-login-required">Login Required</h3>
-      <p id="label-login-instruction">Enter your Customer ID to proceed:</p>
-      <div class="form-group">
-        <input id="customerId" name="customerId" placeholder="Enter your Customer ID" type="text" autocomplete="off">
-      </div>
-      <div class="form-group">
-        <button type="button" onclick="login()" id="btn-login-action">Login</button>
-      </div>
-      <div id="error" class="error" style="display:none;"></div>
-    </div>
-
     <!-- Payment Section (hidden until login) -->
     <div id="dashboard" style="display:none;">
       <div class="card">
@@ -130,5 +117,20 @@
 
   <!-- Single centralized JS file (script.js) -->
   <script src="script.js"></script>
+  <script>
+    // Check if user is logged in on payment page load
+    window.addEventListener('DOMContentLoaded', function() {
+      const customerId = localStorage.getItem('customerId');
+      if (!customerId) {
+        window.location.href = 'login.html?redirect=payment.html';
+      } else {
+        // User is logged in, hide login and show dashboard
+        const loginEl = document.getElementById('login');
+        const dashEl = document.getElementById('dashboard');
+        if (loginEl) loginEl.style.display = 'none';
+        if (dashEl) dashEl.style.display = 'block';
+      }
+    });
+  </script>
 </body>
 </html>
