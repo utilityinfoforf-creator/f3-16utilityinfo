@@ -1,11 +1,8 @@
 /***** Google Apps Script - Server side for Utility Dashboard *****
-     Updated: Pathao-related server code removed / verified
-     - Added improved email templates for payment confirmation and balance update
-     - Sends balance update email to subscribed users when balance changes
-     Deploy as a Web App:
-       Execute as: Me
-       Who has access: Anyone, even anonymous
-*/
+   Deploy as a Web App:
+     Execute as: Me
+     Who has access: Anyone, even anonymous
+*****/
 
 /***** FORM SUBMISSION: updates DashboardData *****/
 function onFormSubmit(e) {
@@ -13,9 +10,7 @@ function onFormSubmit(e) {
   var dashSheet = ss.getSheetByName("DashboardData");
   var lookupSheet = ss.getSheetByName("FlatLookup");
 
-  // Get submitted row as actual objects (first element is a Date object)
   var submittedRange = e.range.getValues()[0];
-  // [Timestamp, CustomerID, Name, ElectricBalance, WaterBillDue, GasBillDue]
   var timestamp = submittedRange[0];
   var customerId = String(submittedRange[1] || '').trim();
   var name = submittedRange[2];
@@ -23,11 +18,7 @@ function onFormSubmit(e) {
   var waterBillDue = submittedRange[4];
   var gasBillDue = submittedRange[5];
 
-  var formattedTime = Utilities.formatDate(
-    timestamp,
-    Session.getScriptTimeZone(),
-    "EEEE, dd MMM yyyy hh:mm a"
-  );
+  var formattedTime = Utilities.formatDate(timestamp, Session.getScriptTimeZone(), "EEEE, dd MMM yyyy hh:mm a");
 
   // Lookup FlatNumber
   var flatNumber = "";
@@ -39,6 +30,11 @@ function onFormSubmit(e) {
         break;
       }
     }
+  }
+
+  // Ensure header exists
+  if (dashSheet.getLastRow() === 0) {
+    dashSheet.appendRow(["CustomerID", "Name", "ElectricBalance", "WaterBillDue", "GasBillDue", "LastUpdated", "FlatNumber", "InternetConnected", "InternetBillDue"]);
   }
 
   // Upsert into DashboardData
@@ -57,22 +53,13 @@ function onFormSubmit(e) {
     }
   }
   if (!found) {
-    dashSheet.appendRow([
-      customerId,
-      name,
-      electricBalance,
-      waterBillDue,
-      gasBillDue,
-      formattedTime,
-      flatNumber
-    ]);
+    dashSheet.appendRow([customerId, name, electricBalance, waterBillDue, gasBillDue, formattedTime, flatNumber, "Unknown", "0"]);
   }
 
-  // Log this update to history (and send balance update email if subscribed)
   logBalanceChange_(ss, customerId, electricBalance);
 }
 
-/***** WEB APP: GET for data, subscription toggle + email + HISTORY + VERIFICATION *****/
+/***** WEB APP: GET *****/
 function doGet(e) {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var dashSheet = ss.getSheetByName("DashboardData");
@@ -84,57 +71,38 @@ function doGet(e) {
 
   if (!id) return jsonWithCORS_({ error: "Missing Customer ID" });
 
-  // Handle history request
   if (e.parameter.history === "true") {
     var history = getCustomerHistory_(ss, id);
     return jsonWithCORS_({ history: history });
   }
 
-  // Handle email verification request
   if (e.parameter.action === "request") {
-    return jsonWithCORS_(requestEmailVerification(id, email));
+    return jsonWithCORS_(requestEmailVerification_(id, email));
   }
 
-  // Handle email verification confirmation
   if (e.parameter.action === "confirm") {
-    return jsonWithCORS_(confirmEmailVerification(id, e.parameter.code));
+    return jsonWithCORS_(confirmEmailVerification_(id, e.parameter.code));
   }
 
-  // Handle subscription toggle
   if (subscribe !== undefined) {
     upsertSubscription_(subsSheet, id, email, subscribe);
-    return jsonWithCORS_({
-      status: subscribe === "true"
-        ? "Email updates enabled"
-        : "Email updates disabled"
-    });
+    return jsonWithCORS_({ status: subscribe === "true" ? "Email updates enabled" : "Email updates disabled" });
   }
 
-  // Normal balance + internet status lookup
   var data = dashSheet.getDataRange().getValues();
   for (var i = 1; i < data.length; i++) {
     if (String(data[i][0]).trim() === id) {
       var subInfo = getSubscription_(subsSheet, id);
-
       var lastUpdatedRaw = data[i][5];
-      var lastUpdatedStr = "";
-      if (lastUpdatedRaw) {
-        if (lastUpdatedRaw instanceof Date) {
-          lastUpdatedStr = Utilities.formatDate(
-            lastUpdatedRaw,
-            Session.getScriptTimeZone(),
-            "EEEE, dd MMM yyyy hh:mm a"
-          );
-        } else {
-          lastUpdatedStr = String(lastUpdatedRaw);
-        }
-      }
+      var lastUpdatedStr = lastUpdatedRaw instanceof Date
+        ? Utilities.formatDate(lastUpdatedRaw, Session.getScriptTimeZone(), "EEEE, dd MMM yyyy hh:mm a")
+        : String(lastUpdatedRaw);
 
       return jsonWithCORS_({
-        name: data[i][1],
-        electricBalance: data[i][2],
-        waterBillDue: data[i][3],
-        gasBillDue: data[i][4],
+        name: data[i][1] || "",
+        electricBalance: data[i][2] || "0",
+        waterBillDue: data[i][3] || "0",
+        gasBillDue: data[i][4] || "0",
         internetConnected: data[i][7] || "Unknown",
         internetBillDue: data[i][8] || "0",
         lastUpdated: lastUpdatedStr,
@@ -147,38 +115,24 @@ function doGet(e) {
   return jsonWithCORS_({ error: "Customer not found" });
 }
 
-/***** WEB APP: POST routing (handles JSON API calls and Telegram webhook) *****/
+/***** WEB APP: POST *****/
 function doPost(e) {
   try {
     var raw = e.postData && e.postData.contents ? e.postData.contents : null;
     if (!raw) return jsonWithCORS_({ error: "No payload" });
 
     var payload = JSON.parse(raw);
-
-    // Telegram webhook handling preserved (if present elsewhere in project)
-    if (payload && payload.message) {
-      if (typeof handleTelegramPayload_ === 'function') {
-        handleTelegramPayload_(payload);
-        return jsonWithCORS_({ ok: true });
-      } else {
-        return jsonWithCORS_({ error: 'Telegram handler not available' });
-      }
-    }
-
     var action = payload.action || '';
     var ss = SpreadsheetApp.getActiveSpreadsheet();
 
     if (action === 'submitTransaction') {
       var customerId = String(payload.customerId || '').trim();
       var transaction = String(payload.transaction || '').trim();
-      if (!customerId || !transaction) {
-        return jsonWithCORS_({ error: 'Missing customerId or transaction' });
-      }
+      if (!customerId || !transaction) return jsonWithCORS_({ error: 'Missing customerId or transaction' });
       var result = confirmPayment_(ss, customerId, transaction);
       return jsonWithCORS_({ status: result });
     }
 
-    // Unknown action
     return jsonWithCORS_({ error: 'Unknown action' });
   } catch (err) {
     return jsonWithCORS_({ error: 'Invalid request: ' + (err.message || err) });
@@ -199,81 +153,29 @@ function confirmPayment_(ss, id, transactionNumber) {
     if (String(data[i][0]).trim() === id) {
       var name = data[i][1];
       var flatNumber = data[i][6] || "";
-
       var now = new Date();
-      var formattedTime = Utilities.formatDate(
-        now,
-        Session.getScriptTimeZone(),
-        "EEEE, dd MMM yyyy hh:mm a"
-      );
+      var formattedTime = Utilities.formatDate(now, Session.getScriptTimeZone(), "EEEE, dd MMM yyyy hh:mm a");
 
       logSheet.appendRow([formattedTime, id, name, flatNumber, transactionNumber]);
 
-      // Notify admin via improved email template (HTML + plain text fallback)
       try {
-        var adminEmail = "mridhamdraihan589@gmail.com"; // replace with your admin email
-        var subject = "Payment Confirmation Received — " + (flatNumber || id);
-
-        // Plain-text body (fallback)
-        var plainBody =
-          "Hello,\n\n" +
-          "A payment confirmation has been submitted by a tenant. Please review and verify the payment details below:\n\n" +
-          "Tenant name: " + (name || id) + "\n" +
-          "Customer ID: " + id + "\n" +
-          "Flat number: " + (flatNumber || "N/A") + "\n" +
-          "Transaction number: " + transactionNumber + "\n" +
-          "Received at: " + formattedTime + "\n\n" +
-          "Next steps:\n" +
-          "1. Please check your payment gateway / bank account for the transaction proof.\n" +
-          "2. Once verified, mark the payment as received in the Dashboard.\n\n" +
-          "If you did not expect this notification or require assistance, reply to this email or contact the property manager.\n\n" +
-          "Regards,\n" +
-          "F3-16 Utility Corporations\n";
-
-        // HTML body (for prettier email clients)
-        var htmlBody =
-          '<div style="font-family: Arial, Helvetica, sans-serif; color: #111;">' +
-            '<h2 style="margin:0 0 8px 0;">Payment Confirmation Received</h2>' +
-            '<p style="margin:0 0 12px 0;">A tenant has submitted a payment confirmation. Please review and verify the details below.</p>' +
-
-            '<table style="border-collapse:collapse; width:100%; max-width:600px;">' +
-              '<tr><td style="padding:8px; border:1px solid #e6e6e6; font-weight:700; width:180px;">Tenant</td><td style="padding:8px; border:1px solid #e6e6e6;">' + (name || id) + '</td></tr>' +
-              '<tr><td style="padding:8px; border:1px solid #e6e6e6; font-weight:700;">Customer ID</td><td style="padding:8px; border:1px solid #e6e6e6;">' + id + '</td></tr>' +
-              '<tr><td style="padding:8px; border:1px solid #e6e6e6; font-weight:700;">Flat Number</td><td style="padding:8px; border:1px solid #e6e6e6;">' + (flatNumber || "N/A") + '</td></tr>' +
-              '<tr><td style="padding:8px; border:1px solid #e6e6e6; font-weight:700;">Transaction #</td><td style="padding:8px; border:1px solid #e6e6e6;">' + transactionNumber + '</td></tr>' +
-              '<tr><td style="padding:8px; border:1px solid #e6e6e6; font-weight:700;">Received at</td><td style="padding:8px; border:1px solid #e6e6e6;">' + formattedTime + '</td></tr>' +
-            '</table>' +
-
-            '<p style="margin:12px 0 0 0;"><strong>Next steps</strong></p>' +
-            '<ol style="margin:6px 0 12px 24px;">' +
-              '<li>Verify the transaction against Pathao / bank records.</li>' +
-              '<li>If valid, update the tenant\'s record in the Dashboard.</li>' +
-              '<li>If there is a problem, contact the tenant for proof of payment.</li>' +
-            '</ol>' +
-
-            '<p style="margin:0;">If you need help, reply to this email or contact the property manager.</p>' +
-            '<p style="margin:12px 0 0 0; font-weight:700;">F3-16 Utility Corporations</p>' +
-          '</div>';
-
         MailApp.sendEmail({
-          to: adminEmail,
-          subject: subject,
-          replyTo: adminEmail,
-          body: plainBody,
-          htmlBody: htmlBody,
-          name: "F3-16 UTILITY CORPORATIONS"
+          to: "mridhamdraihan589@gmail.com",
+          subject: "Payment Confirmation Received — " + (flatNumber || id),
+          body: "Tenant: " + (name || id) + "\nFlat: " + flatNumber + "\nCustomer ID: " + id + "\nTransaction: " + transactionNumber + "\nTime: " + formattedTime,
+          name: "F3-16 Utility Corporations"
         });
-      } catch (mailErr) {
-        Logger.log("Mail send failed: " + mailErr);
+        return "✅ Payment confirmation submitted and email sent.";
+      } catch (err) {
+        Logger.log("❌ Email failed: " + err.message);
+        return "Payment logged, but email failed: " + err.message;
       }
-
-      return "Payment confirmation submitted successfully.";
     }
   }
-  return "Customer not found in DashboardData.";
+  return "❌ Customer not found in DashboardData.";
 }
 
-/***** HISTORY TRACKING - NEW FUNCTIONS *****/
+/***** HISTORY TRACKING *****/
 function getOrCreateHistorySheet_(ss) {
   var sheet = ss.getSheetByName("BalanceHistory");
   if (!sheet) {
@@ -283,24 +185,15 @@ function getOrCreateHistorySheet_(ss) {
   return sheet;
 }
 
-/***** GET CUSTOMER HISTORY *****/
 function getCustomerHistory_(ss, customerId) {
   var historySheet = getOrCreateHistorySheet_(ss);
   var data = historySheet.getDataRange().getValues();
   var history = [];
-  
-  // Skip header row (index 0) and collect all entries for this customer
   for (var i = 1; i < data.length; i++) {
     if (String(data[i][1]).trim() === String(customerId).trim()) {
-      history.push({
-        date: data[i][0] ? String(data[i][0]) : 'N/A',
-        balance: data[i][2] ? String(data[i][2]) : 'N/A',
-        description: data[i][3] ? String(data[i][3]) : 'Balance update'
-      });
+      history.push({ date: String(data[i][0]), balance: String(data[i][2]), description: String(data[i][3]) });
     }
   }
-  
-  // Return most recent entries first (reverse order)
   return history.reverse();
 }
 
@@ -326,7 +219,6 @@ function logBalanceChange_(ss, customerId, electricBalance) {
     var subsSheet = getOrCreateSubsSheet_(ss);
     var subInfo = getSubscription_(subsSheet, customerId);
     if (subInfo && subInfo.subscribed === "true" && subInfo.email) {
-      // Compose and send balance update
       sendBalanceUpdateEmail_(subInfo.email, {
         customerId: customerId,
         balance: electricBalance,
@@ -355,7 +247,7 @@ function sendBalanceUpdateEmail_(toEmail, info) {
     "This is an automated notification to inform you of a recent update to your utility account balance.\n\n" +
     "Flat: " + flat + "\n" +
     "Customer ID: " + (info.customerId || "") + "\n" +
-    "Electric balance: \u09F3 " + balance + "\n" +
+    "Electric balance: ৳ " + balance + "\n" +
     "Updated at: " + time + "\n\n" +
     "If this update is unexpected or you have questions, please reply to this email or contact the property manager.\n\n" +
     "Regards,\n" +
@@ -364,15 +256,15 @@ function sendBalanceUpdateEmail_(toEmail, info) {
   var htmlBody =
     '<div style="font-family: Arial, Helvetica, sans-serif; color: #111;">' +
       '<h2 style="margin:0 0 8px 0;">Account Balance Update</h2>' +
-      '<p style="margin:0 0 12px 0;">Hello ' + tenantName + ',</p>' +
-      '<p style="margin:0 0 12px 0;">This is an automated notification to inform you of a recent update to your utility account balance.</p>' +
+      '<p>Hello ' + tenantName + ',</p>' +
+      '<p>This is an automated notification to inform you of a recent update to your utility account balance.</p>' +
       '<table style="border-collapse:collapse; width:100%; max-width:600px;">' +
-        '<tr><td style="padding:8px; border:1px solid #e6e6e6; font-weight:700; width:180px;">Flat</td><td style="padding:8px; border:1px solid #e6e6e6;">' + flat + '</td></tr>' +
+        '<tr><td style="padding:8px; border:1px solid #e6e6e6; font-weight:700;">Flat</td><td style="padding:8px; border:1px solid #e6e6e6;">' + flat + '</td></tr>' +
         '<tr><td style="padding:8px; border:1px solid #e6e6e6; font-weight:700;">Customer ID</td><td style="padding:8px; border:1px solid #e6e6e6;">' + (info.customerId || "") + '</td></tr>' +
-        '<tr><td style="padding:8px; border:1px solid #e6e6e6; font-weight:700;">Electric balance</td><td style="padding:8px; border:1px solid #e6e6e6;">\u09F3 ' + balance + '</td></tr>' +
+        '<tr><td style="padding:8px; border:1px solid #e6e6e6; font-weight:700;">Electric balance</td><td style="padding:8px; border:1px solid #e6e6e6;">৳ ' + balance + '</td></tr>' +
         '<tr><td style="padding:8px; border:1px solid #e6e6e6; font-weight:700;">Updated at</td><td style="padding:8px; border:1px solid #e6e6e6;">' + time + '</td></tr>' +
       '</table>' +
-      '<p style="margin:12px 0 0 0;">If you have any questions, reply to this email or contact the property manager.</p>' +
+      '<p>If you have any questions, reply to this email or contact the property manager.</p>' +
       '<p style="margin:12px 0 0 0; font-weight:700;">F3-16 Utility Corporations</p>' +
     '</div>';
 
@@ -400,6 +292,7 @@ function getCustomerName_(ss, customerId) {
   }
   return "";
 }
+
 function getCustomerFlat_(ss, customerId) {
   if (!customerId) return "";
   var dashSheet = ss.getSheetByName("DashboardData");
@@ -425,11 +318,7 @@ function getOrCreateSubsSheet_(ss) {
     return String(h).toLowerCase().trim();
   });
 
-  var hasCustomerId = headers.indexOf("customerid") !== -1;
-  var hasEmail = headers.indexOf("email") !== -1;
-  var hasSubscribed = headers.indexOf("subscribed") !== -1;
-
-  if (!(hasCustomerId && hasEmail && hasSubscribed)) {
+  if (!(headers.includes("customerid") && headers.includes("email") && headers.includes("subscribed"))) {
     sheet.clear();
     sheet.appendRow(["CustomerID", "Email", "Subscribed"]);
   }
@@ -452,41 +341,94 @@ function getSubscription_(subsSheet, id) {
 
 function upsertSubscription_(subsSheet, id, email, subscribe) {
   var data = subsSheet.getDataRange().getValues();
-
-  var subNormRaw = String(subscribe || "false").trim().toLowerCase();
-  var subNorm = (subNormRaw === "true") ? "true" : "false";
+  var subNorm = (String(subscribe || "false").trim().toLowerCase() === "true") ? "true" : "false";
   var emailNorm = String(email || "").trim();
 
   for (var i = 1; i < data.length; i++) {
     if (String(data[i][0]).trim() === id) {
-      if (emailNorm) {
-        subsSheet.getRange(i + 1, 2).setValue(emailNorm);
-      }
+      if (emailNorm) subsSheet.getRange(i + 1, 2).setValue(emailNorm);
       subsSheet.getRange(i + 1, 3).setValue(subNorm);
       return;
     }
   }
-
   subsSheet.appendRow([id, emailNorm, subNorm]);
 }
 
-function json_(obj) {
-  return ContentService
-    .createTextOutput(JSON.stringify(obj))
-    .setMimeType(ContentService.MimeType.JSON);
-}
-
-/***** JSON WITH CORS HEADERS *****/
 function jsonWithCORS_(obj) {
   var output = ContentService.createTextOutput(JSON.stringify(obj));
   output.setMimeType(ContentService.MimeType.JSON);
-  output.addHeader('Access-Control-Allow-Origin', '*');
-  output.addHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  output.addHeader('Access-Control-Allow-Headers', 'Content-Type');
-  output.addHeader('Access-Control-Max-Age', '86400');
   return output;
 }
 
-/***** TELEGRAM BOT INTERACTIVE FLOW (unchanged) *****/
-/* ... keep handleTelegramPayload_, sendMessage, lookupCustomer, testMail, sendBalanceEmails, etc. ... */
-/* (No Pathao-related server code remains.) */
+/***** EMAIL VERIFICATION FUNCTIONS *****/
+function requestEmailVerification_(customerId, email) {
+  if (!email) return { error: "Email address required" };
+
+  var verificationSheet = getOrCreateVerificationSheet_();
+  var verificationCode = Utilities.getUuid().substring(0, 8).toUpperCase();
+  var timestamp = new Date();
+
+  verificationSheet.appendRow([customerId, email, verificationCode, timestamp]);
+
+  try {
+    MailApp.sendEmail({
+      to: email,
+      subject: "Email Verification Code — F3-16 Utility",
+      body: "Hello,\n\nYour email verification code is: " + verificationCode + "\nThis code will expire in 24 hours.\n\nRegards,\nF3-16 Utility Corporations"
+    });
+    return { status: "Verification code sent to " + email };
+  } catch (err) {
+    return { error: "Failed to send verification email: " + err.message };
+  }
+}
+
+/***** EMAIL VERIFICATION FUNCTIONS *****/
+function confirmEmailVerification_(customerId, code) {
+  if (!code) {
+    return { error: "Verification code required" };
+  }
+
+  var verificationSheet = getOrCreateVerificationSheet_();
+  var data = verificationSheet.getDataRange().getValues();
+
+  for (var i = 1; i < data.length; i++) {
+    if (String(data[i][0]).trim() === customerId) {
+      var storedCode = String(data[i][2] || "").trim();
+      var timestamp = data[i][3];
+      var email = String(data[i][1] || "").trim();
+
+      // Check if code matches
+      if (storedCode !== String(code).trim()) {
+        return { error: "Invalid verification code" };
+      }
+
+      // Check if code is not expired (24 hours)
+      var now = new Date();
+      var timeDiff = (now - new Date(timestamp)) / (1000 * 60 * 60); // hours
+      if (timeDiff > 24) {
+        return { error: "Verification code has expired" };
+      }
+
+      // Code is valid - update subscription
+      var subsSheet = getOrCreateSubsSheet_(SpreadsheetApp.getActiveSpreadsheet());
+      upsertSubscription_(subsSheet, customerId, email, "true");
+
+      // Clear the verification code
+      verificationSheet.getRange(i + 1, 3).setValue("");
+
+      return { status: "✅ Email verified and subscription enabled" };
+    }
+  }
+
+  return { error: "Customer not found" };
+}
+
+function getOrCreateVerificationSheet_() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = ss.getSheetByName("EmailVerification");
+  if (!sheet) {
+    sheet = ss.insertSheet("EmailVerification");
+    sheet.appendRow(["CustomerID", "Email", "VerificationCode", "Timestamp"]);
+  }
+  return sheet;
+}
