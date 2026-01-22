@@ -37,7 +37,20 @@ const translations = {
     emailError: "Please enter your email address to subscribe.",
     emailSuccess: "Email updates enabled",
     emailDisabled: "Email updates disabled",
-    historyError: "Failed to fetch update history. Please try again."
+    historyError: "Failed to fetch update history. Please try again.",
+    notifications: "🔔 Notifications & Alerts",
+    lowBalanceAlert: "Low Balance Warning",
+    lowBalanceDesc: "Your balance is below 200 tk",
+    outageAlert: "Service Status",
+    outageDesc: "All services running normally",
+    paymentConfirm: "Payment Confirmation",
+    paymentConfirmDesc: "Last payment received successfully",
+    reporting: "📊 Reporting & Analytics",
+    exportReport: "📑 Export Usage Report",
+    printBills: "🖨️ Print Bills",
+    comparative: "📊 Monthly Comparison",
+    comparativeTitle: "📊 Monthly Comparison Analysis",
+    noComparativeData: "No comparative data available yet."
   },
   bn: {
     welcome: "স্বাগতম, ",
@@ -63,7 +76,20 @@ const translations = {
     emailError: "আপনার ইমেইল ঠিকানা প্রবেশ করুন।",
     emailSuccess: "ইমেইল আপডেট সক্ষম",
     emailDisabled: "ইমেইল আপডেট অক্ষম",
-    historyError: "আপডেট ইতিহাস পেতে ব্যর্থ। আবার চেষ্টা করুন।"
+    historyError: "আপডেট ইতিহাস পেতে ব্যর্থ। আবার চেষ্টা করুন.",
+    notifications: "🔔 বিজ্ঞপ্তি এবং সতর্কতা",
+    lowBalanceAlert: "কম ব্যালেন্স সতর্কতা",
+    lowBalanceDesc: "আপনার ব্যালেন্স ২০০ টাকার নিচে",
+    outageAlert: "সেবা অবস্থা",
+    outageDesc: "সব সেবা সাধারণত চলছে",
+    paymentConfirm: "পেমেন্ট নিশ্চিতকরণ",
+    paymentConfirmDesc: "শেষ পেমেন্ট সফলভাবে গৃহীত",
+    reporting: "📊 রিপোর্টিং এবং বিশ্লেষণ",
+    exportReport: "📑 ব্যবহার রিপোর্ট রপ্তানি করুন",
+    printBills: "🖨️ বিল প্রিন্ট করুন",
+    comparative: "📊 মাসিক তুলনা",
+    comparativeTitle: "📊 মাসিক তুলনা বিশ্লেষণ",
+    noComparativeData: "এখনও কোনও তুলনামূলক ডেটা উপলব্ধ নেই।"
   }
 };
 
@@ -126,6 +152,22 @@ function updatePageLanguage() {
   setText("btn-logout", t.logout);
 
   setText("modal-history-title", t.historyTitle);
+  
+  // Notifications & Alerts translations
+  setText("label-notifications", t.notifications);
+  setText("label-low-balance-alert", t.lowBalanceAlert);
+  setText("label-low-balance-desc", t.lowBalanceDesc);
+  setText("label-outage-alert", t.outageAlert);
+  setText("label-outage-desc", t.outageDesc);
+  setText("label-payment-confirm", t.paymentConfirm);
+  setText("label-payment-confirm-desc", t.paymentConfirmDesc);
+  
+  // Reporting translations
+  setText("label-reporting", t.reporting);
+  setText("btn-export-report", t.exportReport);
+  setText("btn-print-bills", t.printBills);
+  setText("btn-comparative", t.comparative);
+  setText("modal-comparative-title", t.comparativeTitle);
 }
 
 // ----- Login -----
@@ -574,6 +616,197 @@ document.addEventListener('keydown', function(e) {
 });
 
 // Ensure functions used by inline onclick or other scripts are available globally
+// ---- Export Usage Report (CSV) ----
+function exportUsageReport() {
+  const id = sessionStorage.getItem('customerId') || localStorage.getItem('customerId') || '';
+  const name = localStorage.getItem('customerName') || 'User';
+  
+  if (!id) {
+    alert('Please login first.');
+    return;
+  }
+  
+  // Sample data - replace with actual data from API
+  const csv = `Customer ID,Customer Name,Bill Type,Amount,Date\n${id},${name},Electric,0.00,${new Date().toLocaleDateString()}\n${id},${name},Water,0.00,${new Date().toLocaleDateString()}\n${id},${name},Gas,0.00,${new Date().toLocaleDateString()}`;
+  
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const link = document.createElement('a');
+  link.href = window.URL.createObjectURL(blob);
+  link.download = `usage-report-${id}-${new Date().toISOString().slice(0,10)}.csv`;
+  link.click();
+}
+
+// ---- Print Bills ----
+function printBills() {
+  const id = sessionStorage.getItem('customerId') || localStorage.getItem('customerId') || '';
+  const name = localStorage.getItem('customerName') || 'User';
+  const email = localStorage.getItem('customerEmail') || 'N/A';
+  
+  if (!id) {
+    alert('Please login first.');
+    return;
+  }
+  
+  const printContent = `
+    <html>
+      <head>
+        <title>Bill Invoice - ${id}</title>
+        <style>
+          body { font-family: Arial, sans-serif; padding: 20px; background: #f5f5f5; }
+          .invoice { background: white; padding: 30px; max-width: 600px; margin: auto; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+          .header { text-align: center; border-bottom: 2px solid #000; padding-bottom: 15px; }
+          .header h1 { margin: 0; font-size: 28px; }
+          .customer-info { margin: 20px 0; }
+          .bill-items { width: 100%; border-collapse: collapse; margin: 20px 0; }
+          .bill-items th { background: #f0f0f0; border: 1px solid #000; padding: 10px; text-align: left; }
+          .bill-items td { border: 1px solid #e0e0e0; padding: 10px; }
+          .total-row { font-weight: bold; background: #f9f9f9; }
+          .footer { text-align: center; margin-top: 30px; border-top: 1px solid #e0e0e0; padding-top: 15px; font-size: 12px; color: #666; }
+        </style>
+      </head>
+      <body>
+        <div class="invoice">
+          <div class="header">
+            <h1>⚡ Utility Bill Invoice</h1>
+          </div>
+          <div class="customer-info">
+            <p><strong>Customer ID:</strong> ${id}</p>
+            <p><strong>Customer Name:</strong> ${name}</p>
+            <p><strong>Email:</strong> ${email}</p>
+            <p><strong>Date:</strong> ${new Date().toLocaleDateString()}</p>
+          </div>
+          <table class="bill-items">
+            <thead>
+              <tr>
+                <th>Bill Type</th>
+                <th>Amount</th>
+                <th>Due Date</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Electric</td>
+                <td>₹0.00</td>
+                <td>${new Date().toLocaleDateString()}</td>
+                <td>Pending</td>
+              </tr>
+              <tr>
+                <td>Water</td>
+                <td>₹0.00</td>
+                <td>${new Date().toLocaleDateString()}</td>
+                <td>Pending</td>
+              </tr>
+              <tr>
+                <td>Gas</td>
+                <td>₹0.00</td>
+                <td>${new Date().toLocaleDateString()}</td>
+                <td>Pending</td>
+              </tr>
+              <tr class="total-row">
+                <td colspan="3">Total Due</td>
+                <td>₹0.00</td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="footer">
+            <p>This is an automated bill. Please contact support for disputes.</p>
+            <p>Payment ID Reference: ${id}</p>
+          </div>
+        </div>
+        <script>
+          window.print();
+          setTimeout(() => window.close(), 500);
+        <\/script>
+      </body>
+    </html>
+  `;
+  
+  const printWindow = window.open('', '_blank');
+  printWindow.document.write(printContent);
+  printWindow.document.close();
+}
+
+// ---- Comparative Analysis (Month-to-Month) ----
+function viewComparativeAnalysis() {
+  const id = sessionStorage.getItem('customerId') || localStorage.getItem('customerId') || '';
+  const t = translations[currentLanguage] || translations.en;
+  
+  if (!id) {
+    alert('Please login first.');
+    return;
+  }
+  
+  const comparativeContainer = document.getElementById("comparativeContainer");
+  if (!comparativeContainer) return;
+  
+  // Show loading message
+  comparativeContainer.innerHTML = '<p style="text-align: center; color: #666;">Loading comparative analysis...</p>';
+  
+  // Sample data - replace with actual API call
+  const currentDate = new Date();
+  const months = [];
+  for (let i = 5; i >= 0; i--) {
+    const date = new Date(currentDate.getFullYear(), currentDate.getMonth() - i, 1);
+    months.push(date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' }));
+  }
+  
+  const analysisData = [
+    { month: months[0], electric: Math.random() * 1500, water: Math.random() * 500, gas: Math.random() * 300 },
+    { month: months[1], electric: Math.random() * 1500, water: Math.random() * 500, gas: Math.random() * 300 },
+    { month: months[2], electric: Math.random() * 1500, water: Math.random() * 500, gas: Math.random() * 300 },
+    { month: months[3], electric: Math.random() * 1500, water: Math.random() * 500, gas: Math.random() * 300 },
+    { month: months[4], electric: Math.random() * 1500, water: Math.random() * 500, gas: Math.random() * 300 },
+    { month: months[5], electric: Math.random() * 1500, water: Math.random() * 500, gas: Math.random() * 300 }
+  ];
+  
+  if (analysisData && analysisData.length > 0) {
+    comparativeContainer.innerHTML = `
+      <table class="comparative-table">
+        <thead>
+          <tr>
+            <th>Month</th>
+            <th>Electric (₹)</th>
+            <th>Water (₹)</th>
+            <th>Gas (₹)</th>
+            <th>Total (₹)</th>
+            <th>Trend</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${analysisData.map((data, idx) => {
+            const total = (data.electric + data.water + data.gas).toFixed(2);
+            const trend = idx > 0 ? (total > (analysisData[idx-1].electric + analysisData[idx-1].water + analysisData[idx-1].gas).toFixed(2) ? '📈' : '📉') : '➡️';
+            return `
+              <tr>
+                <td>${data.month}</td>
+                <td>₹${data.electric.toFixed(2)}</td>
+                <td>₹${data.water.toFixed(2)}</td>
+                <td>₹${data.gas.toFixed(2)}</td>
+                <td><strong>₹${total}</strong></td>
+                <td>${trend}</td>
+              </tr>
+            `;
+          }).join('')}
+        </tbody>
+      </table>
+      <div class="analysis-summary">
+        <p><strong>💡 Summary:</strong> Your average monthly usage is increasing. Consider reducing consumption to save on bills.</p>
+      </div>
+    `;
+  } else {
+    comparativeContainer.innerHTML = `<p style="text-align: center; color: #666;">${t.noComparativeData}</p>`;
+  }
+  
+  const modal = document.getElementById("comparativeModal");
+  if (modal) modal.style.display = "flex";
+}
+
+function closeComparativeAnalysis() {
+  const modal = document.getElementById("comparativeModal");
+  if (modal) modal.style.display = "none";
+}
+
 window.login = login;
 window.showSteps = showSteps;
 window.goToPathaoPay = goToPathaoPay;
@@ -582,6 +815,10 @@ window.toggleEmail = toggleEmail;
 window.logout = logout;
 window.viewUpdateHistory = viewUpdateHistory;
 window.closeUpdateHistory = closeUpdateHistory;
+window.exportUsageReport = exportUsageReport;
+window.printBills = printBills;
+window.viewComparativeAnalysis = viewComparativeAnalysis;
+window.closeComparativeAnalysis = closeComparativeAnalysis;
 window.backToDashboard = backToDashboard;
 window.switchLanguage = switchLanguage;
 

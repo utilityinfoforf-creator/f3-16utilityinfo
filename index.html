@@ -83,6 +83,47 @@
         <div id="toggleMsg"></div>
       </div>
 
+      <!-- Notifications & Alerts Section -->
+      <div class="notifications-section">
+        <h3 id="label-notifications">🔔 Notifications & Alerts</h3>
+        <div class="alerts-container" id="alertsContainer">
+          <div class="alert-item alert-info">
+            <div class="alert-icon">⚡</div>
+            <div class="alert-content">
+              <div class="alert-title" id="label-low-balance-alert">Low Balance Warning</div>
+              <div class="alert-desc" id="label-low-balance-desc">Your balance is below 200 tk</div>
+              <div class="alert-time">Last updated: <span id="low-balance-time">N/A</span></div>
+            </div>
+          </div>
+          <div class="alert-item alert-warning">
+            <div class="alert-icon">🚨</div>
+            <div class="alert-content">
+              <div class="alert-title" id="label-outage-alert">Service Status</div>
+              <div class="alert-desc" id="label-outage-desc">All services running normally</div>
+              <div class="alert-time">Status: <span id="service-status">Active</span></div>
+            </div>
+          </div>
+          <div class="alert-item alert-success">
+            <div class="alert-icon">✅</div>
+            <div class="alert-content">
+              <div class="alert-title" id="label-payment-confirm">Payment Confirmation</div>
+              <div class="alert-desc" id="label-payment-confirm-desc">Last payment received successfully</div>
+              <div class="alert-time">Received: <span id="last-payment-date">N/A</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Reporting Section -->
+      <div class="reporting-section">
+        <h3 id="label-reporting">📊 Reporting & Analytics</h3>
+        <div class="reporting-actions">
+          <button class="btn btn-secondary" onclick="exportUsageReport()" id="btn-export-report">📑 Export Usage Report</button>
+          <button class="btn btn-secondary" onclick="printBills()" id="btn-print-bills">🖨️ Print Bills</button>
+          <button class="btn btn-secondary" onclick="viewComparativeAnalysis()" id="btn-comparative">📊 Monthly Comparison</button>
+        </div>
+      </div>
+
       <div class="action-buttons">
         <button class="btn btn-primary" onclick="goToPayment()" id="btn-payment">💳 Make Payment</button>
         <button class="btn btn-secondary" onclick="goToTerms()" id="btn-terms">📋 Terms & Conditions</button>
@@ -101,6 +142,19 @@
           </div>
           <div id="historyContainer" class="history-container">
             <!-- History items will be populated here -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Comparative Analysis Modal -->
+      <div id="comparativeModal" class="modal" style="display:none;">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h2 id="modal-comparative-title">📊 Monthly Comparison Analysis</h2>
+            <button class="close-btn" onclick="closeComparativeAnalysis()">&times;</button>
+          </div>
+          <div id="comparativeContainer" class="comparative-container">
+            <!-- Comparison data will be populated here -->
           </div>
         </div>
       </div>
