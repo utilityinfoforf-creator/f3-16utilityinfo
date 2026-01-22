@@ -124,6 +124,48 @@
         </div>
       </div>
 
+      <!-- Data & Analytics Section -->
+      <div class="analytics-section">
+        <h3 id="label-analytics">📈 Data & Analytics</h3>
+        <div class="analytics-grid">
+          <div class="analytics-card">
+            <h4 id="label-billing-chart">📊 Billing History</h4>
+            <button class="btn btn-secondary" onclick="viewBillingHistory()" id="btn-billing-history">View Last 12 Months</button>
+          </div>
+          <div class="analytics-card">
+            <h4 id="label-usage-trends">📈 Usage Trends</h4>
+            <button class="btn btn-secondary" onclick="viewUsageTrends()" id="btn-usage-trends">Consumption Patterns</button>
+          </div>
+          <div class="analytics-card">
+            <h4 id="label-pdf-bills">💾 Download PDF</h4>
+            <button class="btn btn-secondary" onclick="downloadBillsPDF()" id="btn-pdf-bills">Download as PDF</button>
+          </div>
+          <div class="analytics-card">
+            <h4 id="label-payment-history">📅 Payment History</h4>
+            <button class="btn btn-secondary" onclick="viewPaymentHistory()" id="btn-payment-history">View Receipts</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Security & Reminders Section -->
+      <div class="security-section">
+        <h3 id="label-security">🔐 Security & Reminders</h3>
+        <div class="security-grid">
+          <div class="security-card">
+            <h4 id="label-2fa-title">🔐 Two-Factor Authentication</h4>
+            <label for="2faToggle" id="label-2fa-toggle">Enable 2FA for added security</label>
+            <input type="checkbox" id="2faToggle" onchange="toggle2FA()">
+            <p class="security-info" id="2fa-info">Receive verification codes via email</p>
+          </div>
+          <div class="security-card">
+            <h4 id="label-bill-reminders">📝 Auto Bill Reminders</h4>
+            <label for="remindersToggle" id="label-reminders-toggle">Enable bill reminders</label>
+            <input type="checkbox" id="remindersToggle" onchange="toggleBillReminders()">
+            <p class="security-info" id="reminders-info">Get notified before bills are due</p>
+          </div>
+        </div>
+      </div>
+
       <div class="action-buttons">
         <button class="btn btn-primary" onclick="goToPayment()" id="btn-payment">💳 Make Payment</button>
         <button class="btn btn-secondary" onclick="goToTerms()" id="btn-terms">📋 Terms & Conditions</button>
@@ -158,9 +200,49 @@
           </div>
         </div>
       </div>
+
+      <!-- Billing History Modal -->
+      <div id="billingHistoryModal" class="modal" style="display:none;">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h2 id="modal-billing-title">📊 Billing History - Last 12 Months</h2>
+            <button class="close-btn" onclick="closeBillingHistory()">&times;</button>
+          </div>
+          <div id="billingHistoryContainer" class="billing-history-container">
+            <!-- Billing chart and data will be populated here -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Usage Trends Modal -->
+      <div id="usageTrendsModal" class="modal" style="display:none;">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h2 id="modal-usage-title">📈 Usage Trends & Consumption Patterns</h2>
+            <button class="close-btn" onclick="closeUsageTrends()">&times;</button>
+          </div>
+          <div id="usageTrendsContainer" class="usage-trends-container">
+            <!-- Usage trends data will be populated here -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Payment History Modal -->
+      <div id="paymentHistoryModal" class="modal" style="display:none;">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h2 id="modal-payment-title">📅 Payment History & Receipts</h2>
+            <button class="close-btn" onclick="closePaymentHistory()">&times;</button>
+          </div>
+          <div id="paymentHistoryContainer" class="payment-history-container">
+            <!-- Payment history will be populated here -->
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
 <script src="script.js"></script>
+<script src="script-premium-features.js"></script>
 </body>
 </html>
