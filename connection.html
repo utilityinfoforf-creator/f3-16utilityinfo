@@ -9,19 +9,38 @@
 <body>
   <div class="container">
     <div class="page-header">
-      <h1>🌐 Request Internet Connection</h1>
-      <p>Fill out the form below to request a connection</p>
+      <h1 id="conn-title">🌐 Request Internet Connection</h1>
+      <p id="conn-subtitle">Fill out the form below to request a connection</p>
     </div>
     
     <div class="card">
-      <h2>Request Form</h2>
+      <h2 id="conn-form-title">Request Form</h2>
       <iframe src="https://docs.google.com/forms/d/e/1FAIpQLSdq6jALfPqeGmK8GD3LJ8NzT_0zXQUvHOK3ntsRf4mLIh2Xhw/viewform?embedded=true" 
-              frameborder="0" marginheight="0" marginwidth="0">
+              frameborder="0" marginheight="0" marginwidth="0" style="width:100%; min-height:800px;">
         Loading…
       </iframe>
     </div>
 
-    <button class="btn" onclick="window.location.href='index.html'">← Back to Dashboard</button>
+    <button class="btn" onclick="window.location.href='index.html'" id="conn-back">← Back to Dashboard</button>
   </div>
+
+  <script src="script.js"></script>
+  <script>
+    function updateConnectionLanguage() {
+      if (currentLanguage === 'bn') {
+        document.getElementById('conn-title').innerText = "🌐 ইন্টারনেট সংযোগের অনুরোধ";
+        document.getElementById('conn-subtitle').innerText = "সংযোগের অনুরোধ জানাতে নিচের ফর্ম পূরণ করুন";
+        document.getElementById('conn-form-title').innerText = "অনুরোধ ফর্ম";
+        document.getElementById('conn-back').innerText = "← ড্যাশবোর্ডে ফিরে যান";
+      } else {
+        document.getElementById('conn-title').innerText = "🌐 Request Internet Connection";
+        document.getElementById('conn-subtitle').innerText = "Fill out the form below to request a connection";
+        document.getElementById('conn-form-title').innerText = "Request Form";
+        document.getElementById('conn-back').innerText = "← Back to Dashboard";
+      }
+    }
+    
+    window.addEventListener("load", updateConnectionLanguage);
+  </script>
 </body>
 </html>

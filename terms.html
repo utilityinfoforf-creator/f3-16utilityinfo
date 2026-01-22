@@ -47,25 +47,25 @@
       window.location.href = "index.html";
     }
 
-    // Extend updatePageLanguage for terms page
-    const oldUpdate = updatePageLanguage;
-    updatePageLanguage = function() {
-      oldUpdate();
+    function updateTermsLanguage() {
       if (currentLanguage === 'bn') {
         document.getElementById('label-terms-title').innerText = "📋 শর্তাবলী";
         document.getElementById('label-terms-subtitle').innerText = "দয়া করে আমাদের নীতিগুলো পর্যালোচনা করুন";
-        document.getElementById('term-1-title').innerText = "১. পরিষেবা ব্যবহার";
-        document.getElementById('term-1-desc').innerText = "গ্রাহকদের ইউটিলিটি পোর্টাল ব্যবহার করার সময় সঠিক তথ্য প্রদান করতে হবে।";
-        document.getElementById('term-2-title').innerText = "২. পেমেন্ট";
-        document.getElementById('term-2-desc').innerText = "সব পেমেন্ট অনুমোদিত চ্যানেলের (বিকাশ, নগদ) মাধ্যমে করতে হবে।";
-        document.getElementById('term-3-title').innerText = "৩. ব্যালেন্স নীতি";
-        document.getElementById('term-3-desc').innerText = "আপনার বিদ্যুৎ মিটার ব্যালেন্স -২০০ এর নিচে গেলে লাইন কাটা হবে।";
+        document.getElementById('term-1-title').innerText = "१. परिषेवा उपयोग";
+        document.getElementById('term-1-desc').innerText = "গ্রাহকদের ইউটিলিটি পোর্টাল নিবন্ধন ও ব্যবহারে সঠিক তথ্য দিতে হবে।";
+        document.getElementById('term-2-title').innerText = "२. पेमेंट";
+        document.getElementById('term-2-desc').innerText = "সব পেমেন্ট অনুমোদিত চ্যানেলে (বিকাশ, নগদ) করতে হবে।";
+        document.getElementById('term-3-title').innerText = "३. ব্যালেন্স নীতি";
+        document.getElementById('term-3-desc').innerText = "মিটার ব্যালেন্স -२००  এর নিচে গেলে লাইন কাটা হবে।";
+        document.getElementById('term-4-title').innerText = "४. গোপনীয়তা ও নিরাপত্তা";
+        document.getElementById('term-4-desc').innerText = "আপনার তথ্য সুরক্ষিত ও এনক্रिप्ट করা।";
+        document.getElementById('term-5-title').innerText = "५. বিরোধ সমাধান";
+        document.getElementById('term-5-desc').innerText = "৭ দিনের মধ্যে আমাদের সাথে যোগাযোগ করুন।";
         document.getElementById('btn-back-terms').innerText = "← ড্যাশবোর্ডে ফিরে যান";
       }
-    };
+    }
     
-    // Trigger language update on load
-    window.addEventListener("load", updatePageLanguage);
+    window.addEventListener("load", updateTermsLanguage);
   </script>
 </body>
 </html>
