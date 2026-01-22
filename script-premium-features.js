@@ -108,23 +108,20 @@ async function viewUsageTrends() {
   container.innerHTML = '<p style="text-align: center; color: #666;">Loading usage trends...</p>';
   
   try {
-    const currentDate = new Date();
-    const data = [];
+    // Fetch real data from backend
+    const response = await fetch(`${SCRIPT_URL}?id=${id}&action=getUsageTrends`);
+    const result = await response.json();
     
-    for (let i = 11; i >= 0; i--) {
-      const date = new Date(currentDate.getFullYear(), currentDate.getMonth() - i, 1);
-      const month = date.toLocaleDateString('en-US', { month: 'short' });
-      const electricUsage = Math.random() * 200;
-      const waterUsage = Math.random() * 100;
-      const gasUsage = Math.random() * 50;
-      data.push({ month, electric: electricUsage, water: waterUsage, gas: gasUsage });
+    if (result.error) {
+      container.innerHTML = `<p style="text-align: center; color: #666;">Error: ${result.error}</p>`;
+      return;
     }
     
-    const avgElectric = (data.reduce((sum, d) => sum + d.electric, 0) / 12).toFixed(2);
-    const avgWater = (data.reduce((sum, d) => sum + d.water, 0) / 12).toFixed(2);
-    const avgGas = (data.reduce((sum, d) => sum + d.gas, 0) / 12).toFixed(2);
-    
-    const trend = data[11].electric > data[0].electric ? '📈 Increasing' : '📉 Decreasing';
+    const data = result.data || [];
+    const avgElectric = result.avgElectric || 0;
+    const avgWater = result.avgWater || 0;
+    const avgGas = result.avgGas || 0;
+    const trend = result.trend || '➡️ Stable';
     
     let html = `
       <div class="trends-analysis">
@@ -148,13 +145,13 @@ async function viewUsageTrends() {
           ${data.map((d, idx) => {
             const total = (d.electric + d.water + d.gas).toFixed(2);
             const prevTotal = idx > 0 ? (data[idx-1].electric + data[idx-1].water + data[idx-1].gas).toFixed(2) : 0;
-            const trendIcon = idx > 0 ? (total > prevTotal ? '📈' : total < prevTotal ? '📉' : '➡️') : '➡️';
+            const trendIcon = idx > 0 ? (parseFloat(total) > parseFloat(prevTotal) ? '📈' : parseFloat(total) < parseFloat(prevTotal) ? '📉' : '➡️') : '➡️';
             return `
               <tr>
                 <td>${d.month}</td>
-                <td>${d.electric.toFixed(2)}</td>
-                <td>${d.water.toFixed(2)}</td>
-                <td>${d.gas.toFixed(2)}</td>
+                <td>${parseFloat(d.electric).toFixed(2)}</td>
+                <td>${parseFloat(d.water).toFixed(2)}</td>
+                <td>${parseFloat(d.gas).toFixed(2)}</td>
                 <td><strong>${total}</strong></td>
                 <td>${trendIcon}</td>
               </tr>

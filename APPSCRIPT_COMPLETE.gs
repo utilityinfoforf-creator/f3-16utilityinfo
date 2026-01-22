@@ -26,6 +26,7 @@ function initializeSpreadsheet() {
   getOrCreateHistorySheet_(ss);
   getOrCreateSubsSheet_(ss);
   getOrCreateVerificationSheet_();
+  getOrCreateUsageSheet_(ss);
   
   Logger.log("✅ All sheets initialized successfully");
 }
@@ -102,6 +103,12 @@ function doGet(e) {
   if (e.parameter.history === "true") {
     var history = getCustomerHistory_(ss, id);
     return jsonWithCORS_({ history: history });
+  }
+
+  // Usage Trends endpoint (for Usage Trends feature) - REAL DATA
+  if (action === "getUsageTrends") {
+    var trends = getUsageTrends_(ss, id);
+    return jsonWithCORS_(trends);
   }
 
   // Usage Report endpoint (for Export Report feature)
@@ -282,65 +289,119 @@ function getUsageReport_(ss, customerId) {
   };
 }
 
+/***** USAGE TRENDS - Real Data from Usage Sheet *****/
+function getUsageTrends_(ss, customerId) {
+  var usageSheet = getOrCreateUsageSheet_(ss);
+  var usageData = usageSheet.getDataRange().getValues();
+  
+  // Get last 12 months of usage data for this customer
+  var monthlyData = {};
+  
+  for (var i = 1; i < usageData.length; i++) {
+    if (String(usageData[i][0]).trim() === customerId) {
+      var yearMonth = String(usageData[i][1] || "").trim(); // Format: "2025-12"
+      
+      if (!monthlyData[yearMonth]) {
+        monthlyData[yearMonth] = {
+          electric: parseFloat(usageData[i][2]) || 0,
+          water: parseFloat(usageData[i][3]) || 0,
+          gas: parseFloat(usageData[i][4]) || 0
+        };
+      }
+    }
+  }
+  
+  // Get current date and last 12 months
+  var now = new Date();
+  var data = [];
+  
+  for (var m = 11; m >= 0; m--) {
+    var date = new Date(now.getFullYear(), now.getMonth() - m, 1);
+    var yearMonth = date.getFullYear() + "-" + String(date.getMonth() + 1).padStart(2, "0");
+    var month = date.toLocaleDateString('en-US', { month: 'short' });
+    
+    if (monthlyData[yearMonth]) {
+      data.push({
+        month: month,
+        electric: monthlyData[yearMonth].electric,
+        water: monthlyData[yearMonth].water,
+        gas: monthlyData[yearMonth].gas
+      });
+    } else {
+      // No data for this month - return 0
+      data.push({
+        month: month,
+        electric: 0,
+        water: 0,
+        gas: 0
+      });
+    }
+  }
+  
+  // Calculate averages
+  var totalElectric = 0, totalWater = 0, totalGas = 0, count = 0;
+  for (var i = 0; i < data.length; i++) {
+    totalElectric += data[i].electric;
+    totalWater += data[i].water;
+    totalGas += data[i].gas;
+    count++;
+  }
+  
+  var avgElectric = (totalElectric / count).toFixed(2);
+  var avgWater = (totalWater / count).toFixed(2);
+  var avgGas = (totalGas / count).toFixed(2);
+  
+  // Calculate trend
+  var trend = data[data.length - 1].electric > data[0].electric ? '📈 Increasing' : '📉 Decreasing';
+  
+  return {
+    data: data,
+    avgElectric: avgElectric,
+    avgWater: avgWater,
+    avgGas: avgGas,
+    trend: trend,
+    customerId: customerId,
+    reportDate: Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "EEEE, dd MMM yyyy hh:mm a")
+  };
+}
+
 /***** MONTHLY COMPARISON - Comparative Analysis Feature *****/
 function getMonthlyComparison_(ss, customerId) {
-  var historySheet = getOrCreateHistorySheet_(ss);
-  var dashSheet = ss.getSheetByName("DashboardData");
+  var usageSheet = getOrCreateUsageSheet_(ss);
+  var usageData = usageSheet.getDataRange().getValues();
   
-  if (!historySheet || !dashSheet) {
+  if (!usageData) {
     return { months: [] };
   }
   
-  var historyData = historySheet.getDataRange().getValues();
   var months = {};
   
-  // Group by month
-  for (var i = 1; i < historyData.length; i++) {
-    if (String(historyData[i][1]).trim() === customerId) {
-      var dateStr = String(historyData[i][0]);
-      var balance = parseFloat(historyData[i][2]) || 0;
+  // Group usage by month
+  for (var i = 1; i < usageData.length; i++) {
+    if (String(usageData[i][0]).trim() === customerId) {
+      var yearMonth = String(usageData[i][1] || "").trim(); // Format: "2025-12"
+      var electric = parseFloat(usageData[i][2]) || 0;
+      var water = parseFloat(usageData[i][3]) || 0;
+      var gas = parseFloat(usageData[i][4]) || 0;
       
-      // Extract month-year
-      var monthKey = dateStr.substring(dateStr.lastIndexOf(' ') - 3, dateStr.lastIndexOf(' '));
-      
-      if (!months[monthKey]) {
-        months[monthKey] = {
-          month: monthKey,
-          electric: balance,
-          water: Math.random() * 500,
-          gas: Math.random() * 300,
-          transactions: 1
-        };
-      } else {
-        months[monthKey].transactions++;
-      }
-    }
-  }
-  
-  // Get current bill info for latest month
-  var dashData = dashSheet.getDataRange().getValues();
-  var currentMonth = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "MMM yyyy");
-  
-  for (var j = 1; j < dashData.length; j++) {
-    if (String(dashData[j][0]).trim() === customerId) {
-      var electric = parseFloat(dashData[j][2]) || 0;
-      var water = parseFloat(dashData[j][3]) || 0;
-      var gas = parseFloat(dashData[j][4]) || 0;
-      
-      if (!months[currentMonth]) {
-        months[currentMonth] = {
-          month: currentMonth,
+      if (!months[yearMonth]) {
+        // Extract month name from yearMonth
+        var parts = yearMonth.split("-");
+        var monthDate = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, 1);
+        var monthName = monthDate.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+        
+        months[yearMonth] = {
+          month: monthName,
           electric: electric,
           water: water,
           gas: gas,
-          transactions: 1
+          total: (electric + water + gas).toFixed(2)
         };
       }
-      break;
     }
   }
   
-  // Convert to array and sort by month
+  // Convert to array and sort by date
   var monthArray = [];
   for (var key in months) {
     if (months.hasOwnProperty(key)) {
@@ -348,7 +409,11 @@ function getMonthlyComparison_(ss, customerId) {
     }
   }
   
-  // Return last 6 months
+  // Sort chronologically and return last 6 months
+  monthArray.sort(function(a, b) {
+    return new Date(a.month) - new Date(b.month);
+  });
+  
   return { 
     months: monthArray.slice(-6),
     customerId: customerId,
@@ -480,6 +545,28 @@ function getOrCreateSubsSheet_(ss) {
   if (!(headers.includes("customerid") && headers.includes("email") && headers.includes("subscribed"))) {
     sheet.clear();
     sheet.appendRow(["CustomerID", "Email", "Subscribed"]);
+  }
+
+  return sheet;
+}
+
+/***** USAGE DATA SHEET *****/
+function getOrCreateUsageSheet_(ss) {
+  var sheet = ss.getSheetByName("UsageData");
+  if (!sheet) {
+    sheet = ss.insertSheet("UsageData");
+    sheet.appendRow(["CustomerID", "YearMonth", "Electric", "Water", "Gas"]);
+    Logger.log("✅ UsageData sheet created");
+  }
+
+  var range = sheet.getRange(1, 1, 1, Math.max(5, sheet.getLastColumn()));
+  var headers = range.getValues()[0].map(function(h) {
+    return String(h).toLowerCase().trim();
+  });
+
+  if (!(headers.includes("customerid") && headers.includes("yearmonth") && headers.includes("electric") && headers.includes("water") && headers.includes("gas"))) {
+    sheet.clear();
+    sheet.appendRow(["CustomerID", "YearMonth", "Electric", "Water", "Gas"]);
   }
 
   return sheet;
