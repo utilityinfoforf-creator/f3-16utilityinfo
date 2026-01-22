@@ -68,6 +68,90 @@
         if (dashEl) dashEl.style.display = 'block';
       }
     });
+
+    function backToDashboard() {
+      window.location.href = 'index.html';
+    }
+
+    function showSteps(method) {
+      const stepsContainer = document.getElementById('steps');
+      let stepsHTML = '<div class="card"><h4>Payment Steps for ' + method.toUpperCase() + '</h4><ol>';
+      
+      if (method === 'bkash') {
+        stepsHTML += `
+          <li>Open bKash app or dial <strong>*247#</strong></li>
+          <li>Select "Send Money"</li>
+          <li>Enter our Merchant number</li>
+          <li>Enter the amount you want to pay</li>
+          <li>Complete the transaction</li>
+          <li>You'll receive a confirmation message</li>
+          <li>Copy the Transaction ID and paste it above</li>
+        `;
+      } else if (method === 'nagad') {
+        stepsHTML += `
+          <li>Open Nagad app or dial <strong>*167#</strong></li>
+          <li>Select "Send Money to Merchant"</li>
+          <li>Enter our Merchant account number</li>
+          <li>Enter the payment amount</li>
+          <li>Enter your PIN to confirm</li>
+          <li>Transaction will be processed instantly</li>
+          <li>Copy the Transaction ID and paste it above</li>
+        `;
+      } else if (method === 'pathao') {
+        stepsHTML += `
+          <li>Open Pathao Pay app</li>
+          <li>Select "Make Payment"</li>
+          <li>Choose utility bills</li>
+          <li>Enter your customer ID</li>
+          <li>Enter the amount to pay</li>
+          <li>Complete payment with your PIN</li>
+          <li>Copy the Transaction ID and paste it above</li>
+        `;
+      }
+      
+      stepsHTML += '</ol></div>';
+      stepsContainer.innerHTML = stepsHTML;
+    }
+
+    async function submitTransaction() {
+      const transactionNumber = document.getElementById('transactionNumber').value.trim();
+      const confirmMsg = document.getElementById('confirmMsg');
+      
+      if (!transactionNumber) {
+        confirmMsg.className = 'error';
+        confirmMsg.innerText = '❌ Please enter a transaction number';
+        return;
+      }
+      
+      try {
+        const customerId = localStorage.getItem('customerId');
+        const response = await fetch(SCRIPT_URL, {
+          method: 'POST',
+          payload: JSON.stringify({
+            action: 'submitTransaction',
+            customerId: customerId,
+            transaction: transactionNumber
+          })
+        });
+        
+        const result = await response.json();
+        
+        if (result.status && result.status.includes('✅')) {
+          confirmMsg.className = 'success';
+          confirmMsg.innerText = '✅ ' + result.status;
+          document.getElementById('transactionNumber').value = '';
+          setTimeout(() => {
+            window.location.href = 'index.html';
+          }, 2000);
+        } else {
+          confirmMsg.className = 'error';
+          confirmMsg.innerText = '❌ ' + (result.error || 'Payment submission failed');
+        }
+      } catch (err) {
+        confirmMsg.className = 'error';
+        confirmMsg.innerText = '❌ Error: ' + err.message;
+      }
+    }
   </script>
 </body>
 </html>
