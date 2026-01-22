@@ -832,10 +832,10 @@ async function viewComparativeAnalysis() {
           <thead>
             <tr>
               <th>Month</th>
-              <th>Electric (₹)</th>
-              <th>Water (₹)</th>
-              <th>Gas (₹)</th>
-              <th>Total (₹)</th>
+              <th>Electric (৳)</th>
+              <th>Water (৳)</th>
+              <th>Gas (৳)</th>
+              <th>Total (৳)</th>
               <th>Trend</th>
             </tr>
           </thead>
@@ -847,10 +847,10 @@ async function viewComparativeAnalysis() {
               return `
                 <tr>
                   <td>${data.month}</td>
-                  <td>₹${parseFloat(data.electric || 0).toFixed(2)}</td>
-                  <td>₹${parseFloat(data.water || 0).toFixed(2)}</td>
-                  <td>₹${parseFloat(data.gas || 0).toFixed(2)}</td>
-                  <td><strong>₹${total}</strong></td>
+                  <td>৳${parseFloat(data.electric || 0).toFixed(2)}</td>
+                  <td>৳${parseFloat(data.water || 0).toFixed(2)}</td>
+                  <td>৳${parseFloat(data.gas || 0).toFixed(2)}</td>
+                  <td><strong>৳${total}</strong></td>
                   <td>${trend}</td>
                 </tr>
               `;

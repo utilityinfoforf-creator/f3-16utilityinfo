@@ -38,39 +38,39 @@ async function viewBillingHistory() {
       <div class="billing-summary">
         <div class="summary-item">
           <span>${t.totalBilled}</span>
-          <strong>₹${totalBilled}</strong>
+          <strong>৳${totalBilled}</strong>
         </div>
         <div class="summary-item">
           <span>${t.averageMonthly}</span>
-          <strong>₹${avgMonthly}</strong>
+          <strong>৳${avgMonthly}</strong>
         </div>
         <div class="summary-item">
           <span>${t.highestUsage}</span>
-          <strong>₹${highest}</strong>
+          <strong>৳${highest}</strong>
         </div>
         <div class="summary-item">
           <span>${t.lowestUsage}</span>
-          <strong>₹${lowest}</strong>
+          <strong>৳${lowest}</strong>
         </div>
       </div>
       <table class="billing-table">
         <thead>
           <tr>
             <th>Month</th>
-            <th>Electric (₹)</th>
-            <th>Water (₹)</th>
-            <th>Gas (₹)</th>
-            <th>Total (₹)</th>
+            <th>Electric (৳)</th>
+            <th>Water (৳)</th>
+            <th>Gas (৳)</th>
+            <th>Total (৳)</th>
           </tr>
         </thead>
         <tbody>
           ${data.map(d => `
             <tr>
               <td>${d.month}</td>
-              <td>₹${d.electric.toFixed(2)}</td>
-              <td>₹${d.water.toFixed(2)}</td>
-              <td>₹${d.gas.toFixed(2)}</td>
-              <td><strong>₹${d.total.toFixed(2)}</strong></td>
+              <td>৳${d.electric.toFixed(2)}</td>
+              <td>৳${d.water.toFixed(2)}</td>
+              <td>৳${d.gas.toFixed(2)}</td>
+              <td><strong>৳${d.total.toFixed(2)}</strong></td>
             </tr>
           `).join('')}
         </tbody>
@@ -299,7 +299,7 @@ async function viewPaymentHistory() {
     
     let html = `
       <div class="payment-summary">
-        <p><strong>Total Paid (Last 6 Months):</strong> ₹${totalPaid}</p>
+        <p><strong>Total Paid (Last 6 Months):</strong> ৳${totalPaid}</p>
       </div>
       <div class="payment-list">
         ${payments.map(p => `
@@ -309,7 +309,7 @@ async function viewPaymentHistory() {
               <span class="status-badge">${p.status}</span>
             </div>
             <div class="receipt-details">
-              <p><strong>Amount:</strong> ₹${p.amount}</p>
+              <p><strong>Amount:</strong> ৳${p.amount}</p>
               <p><strong>Transaction ID:</strong> ${p.transactionId}</p>
               <p><strong>Payment Method:</strong> ${p.method}</p>
             </div>
@@ -346,7 +346,7 @@ function downloadReceipt(txnId, amount) {
     Customer Name: ${name}
     
     Transaction ID: ${txnId}
-    Amount Paid: ₹${amount}
+    Amount Paid: ৳${amount}
     Date: ${new Date().toLocaleDateString()}
     Time: ${new Date().toLocaleTimeString()}
     
