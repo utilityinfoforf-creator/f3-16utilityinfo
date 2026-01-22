@@ -617,7 +617,7 @@ document.addEventListener('keydown', function(e) {
 
 // Ensure functions used by inline onclick or other scripts are available globally
 // ---- Export Usage Report (CSV) ----
-function exportUsageReport() {
+async function exportUsageReport() {
   const id = sessionStorage.getItem('customerId') || localStorage.getItem('customerId') || '';
   const name = localStorage.getItem('customerName') || 'User';
   
@@ -626,14 +626,40 @@ function exportUsageReport() {
     return;
   }
   
-  // Sample data - replace with actual data from API
-  const csv = `Customer ID,Customer Name,Bill Type,Amount,Date\n${id},${name},Electric,0.00,${new Date().toLocaleDateString()}\n${id},${name},Water,0.00,${new Date().toLocaleDateString()}\n${id},${name},Gas,0.00,${new Date().toLocaleDateString()}`;
-  
-  const blob = new Blob([csv], { type: 'text/csv' });
-  const link = document.createElement('a');
-  link.href = window.URL.createObjectURL(blob);
-  link.download = `usage-report-${id}-${new Date().toISOString().slice(0,10)}.csv`;
-  link.click();
+  try {
+    // Fetch usage report from AppScript
+    const res = await fetch(`${API_BASE}?id=${encodeURIComponent(id)}&action=getUsageReport`);
+    if (!res.ok) throw new Error('Failed to fetch usage report');
+    const data = await res.json();
+    
+    if (data.error) {
+      alert('Error: ' + data.error);
+      return;
+    }
+    
+    // Build CSV from usage data
+    let csv = `Customer ID,Customer Name,Date,Balance,Description\n`;
+    
+    if (data.usage && data.usage.length > 0) {
+      data.usage.forEach(item => {
+        csv += `${id},${data.customerName || name},${item.date},${item.balance},${item.description}\n`;
+      });
+    } else {
+      csv += `${id},${data.customerName || name},${new Date().toLocaleDateString()},0.00,No data available\n`;
+    }
+    
+    // Trigger download
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.href = url;
+    link.download = `usage-report-${id}-${new Date().toISOString().slice(0,10)}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+  } catch (err) {
+    console.error('Export usage report error:', err);
+    alert('Failed to export report: ' + err.message);
+  }
 }
 
 // ---- Print Bills ----
@@ -728,7 +754,7 @@ function printBills() {
 }
 
 // ---- Comparative Analysis (Month-to-Month) ----
-function viewComparativeAnalysis() {
+async function viewComparativeAnalysis() {
   const id = sessionStorage.getItem('customerId') || localStorage.getItem('customerId') || '';
   const t = translations[currentLanguage] || translations.en;
   
@@ -743,59 +769,65 @@ function viewComparativeAnalysis() {
   // Show loading message
   comparativeContainer.innerHTML = '<p style="text-align: center; color: #666;">Loading comparative analysis...</p>';
   
-  // Sample data - replace with actual API call
-  const currentDate = new Date();
-  const months = [];
-  for (let i = 5; i >= 0; i--) {
-    const date = new Date(currentDate.getFullYear(), currentDate.getMonth() - i, 1);
-    months.push(date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' }));
-  }
-  
-  const analysisData = [
-    { month: months[0], electric: Math.random() * 1500, water: Math.random() * 500, gas: Math.random() * 300 },
-    { month: months[1], electric: Math.random() * 1500, water: Math.random() * 500, gas: Math.random() * 300 },
-    { month: months[2], electric: Math.random() * 1500, water: Math.random() * 500, gas: Math.random() * 300 },
-    { month: months[3], electric: Math.random() * 1500, water: Math.random() * 500, gas: Math.random() * 300 },
-    { month: months[4], electric: Math.random() * 1500, water: Math.random() * 500, gas: Math.random() * 300 },
-    { month: months[5], electric: Math.random() * 1500, water: Math.random() * 500, gas: Math.random() * 300 }
-  ];
-  
-  if (analysisData && analysisData.length > 0) {
+  try {
+    // Fetch monthly comparison from AppScript
+    const res = await fetch(`${API_BASE}?id=${encodeURIComponent(id)}&action=getMonthlyComparison`);
+    if (!res.ok) throw new Error('Failed to fetch comparison data');
+    const data = await res.json();
+    
+    if (data.error) {
+      comparativeContainer.innerHTML = `<p style="text-align: center; color: #666;">Error: ${data.error}</p>`;
+      return;
+    }
+    
+    const analysisData = data.months || [];
+    
+    if (analysisData && analysisData.length > 0) {
+      comparativeContainer.innerHTML = `
+        <table class="comparative-table">
+          <thead>
+            <tr>
+              <th>Month</th>
+              <th>Electric (₹)</th>
+              <th>Water (₹)</th>
+              <th>Gas (₹)</th>
+              <th>Total (₹)</th>
+              <th>Trend</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${analysisData.map((data, idx) => {
+              const total = (parseFloat(data.electric || 0) + parseFloat(data.water || 0) + parseFloat(data.gas || 0)).toFixed(2);
+              const prevTotal = idx > 0 ? (parseFloat(analysisData[idx-1].electric || 0) + parseFloat(analysisData[idx-1].water || 0) + parseFloat(analysisData[idx-1].gas || 0)).toFixed(2) : 0;
+              const trend = idx > 0 ? (total > prevTotal ? '📈' : total < prevTotal ? '📉' : '➡️') : '➡️';
+              return `
+                <tr>
+                  <td>${data.month}</td>
+                  <td>₹${parseFloat(data.electric || 0).toFixed(2)}</td>
+                  <td>₹${parseFloat(data.water || 0).toFixed(2)}</td>
+                  <td>₹${parseFloat(data.gas || 0).toFixed(2)}</td>
+                  <td><strong>₹${total}</strong></td>
+                  <td>${trend}</td>
+                </tr>
+              `;
+            }).join('')}
+          </tbody>
+        </table>
+        <div class="analysis-summary">
+          <p><strong>💡 Summary:</strong> Showing your last ${analysisData.length} months of utility usage. Monitor your consumption patterns to optimize costs.</p>
+        </div>
+      `;
+    } else {
+      comparativeContainer.innerHTML = `<p style="text-align: center; color: #666;">${t.noComparativeData}</p>`;
+    }
+  } catch (err) {
+    console.error('viewComparativeAnalysis error:', err);
     comparativeContainer.innerHTML = `
-      <table class="comparative-table">
-        <thead>
-          <tr>
-            <th>Month</th>
-            <th>Electric (₹)</th>
-            <th>Water (₹)</th>
-            <th>Gas (₹)</th>
-            <th>Total (₹)</th>
-            <th>Trend</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${analysisData.map((data, idx) => {
-            const total = (data.electric + data.water + data.gas).toFixed(2);
-            const trend = idx > 0 ? (total > (analysisData[idx-1].electric + analysisData[idx-1].water + analysisData[idx-1].gas).toFixed(2) ? '📈' : '📉') : '➡️';
-            return `
-              <tr>
-                <td>${data.month}</td>
-                <td>₹${data.electric.toFixed(2)}</td>
-                <td>₹${data.water.toFixed(2)}</td>
-                <td>₹${data.gas.toFixed(2)}</td>
-                <td><strong>₹${total}</strong></td>
-                <td>${trend}</td>
-              </tr>
-            `;
-          }).join('')}
-        </tbody>
-      </table>
-      <div class="analysis-summary">
-        <p><strong>💡 Summary:</strong> Your average monthly usage is increasing. Consider reducing consumption to save on bills.</p>
+      <div style="text-align: center; color: #666; padding: 20px;">
+        <p style="margin-bottom: 10px;">⚠️ Unable to load comparative analysis.</p>
+        <p style="font-size: 13px; color: #999;">Error: ${err.message}</p>
       </div>
     `;
-  } else {
-    comparativeContainer.innerHTML = `<p style="text-align: center; color: #666;">${t.noComparativeData}</p>`;
   }
   
   const modal = document.getElementById("comparativeModal");
