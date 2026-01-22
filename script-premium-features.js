@@ -23,9 +23,9 @@ async function viewBillingHistory() {
     for (let i = 11; i >= 0; i--) {
       const date = new Date(currentDate.getFullYear(), currentDate.getMonth() - i, 1);
       const month = date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
-      const electricBill = Math.random() * 1500;
-      const waterBill = Math.random() * 500;
-      const gasBill = Math.random() * 300;
+      const electricBill = 0;
+      const waterBill = 0;
+      const gasBill = 0;
       data.push({ month, electric: electricBill, water: waterBill, gas: gasBill, total: electricBill + waterBill + gasBill });
     }
     
@@ -285,10 +285,10 @@ async function viewPaymentHistory() {
       const date = new Date(currentDate.getFullYear(), currentDate.getMonth() - i, 15);
       payments.push({
         date: date.toLocaleDateString(),
-        amount: (Math.random() * 2000 + 500).toFixed(2),
-        transactionId: 'TXN' + Math.random().toString(36).substr(2, 9).toUpperCase(),
-        method: ['UPI', 'Bank Transfer', 'Card', 'Mobile Payment'][Math.floor(Math.random() * 4)],
-        status: 'Completed'
+        amount: '0.00',
+        transactionId: 'TXN0000000000',
+        method: 'N/A',
+        status: 'N/A'
       });
     }
     
