@@ -41,7 +41,7 @@
           <input id="transactionNumber" name="transactionNumber" placeholder="Enter Transaction Number" type="text" autocomplete="off">
         </div>
         <div class="form-group">
-          <button type="button" class="submit-btn" onclick="submitTransaction()" id="btn-submit-payment">Submit Payment Confirmation</button>
+          <button type="button" class="submit-btn" id="btn-submit-payment">Submit Payment Confirmation</button>
         </div>
         <div id="confirmMsg" role="status" aria-live="polite"></div>
       </div>
@@ -113,45 +113,8 @@
       stepsContainer.innerHTML = stepsHTML;
     }
 
-    async function submitTransaction() {
-      const transactionNumber = document.getElementById('transactionNumber').value.trim();
-      const confirmMsg = document.getElementById('confirmMsg');
-      
-      if (!transactionNumber) {
-        confirmMsg.className = 'error';
-        confirmMsg.innerText = '❌ Please enter a transaction number';
-        return;
-      }
-      
-      try {
-        const customerId = localStorage.getItem('customerId');
-        const response = await fetch(SCRIPT_URL, {
-          method: 'POST',
-          payload: JSON.stringify({
-            action: 'submitTransaction',
-            customerId: customerId,
-            transaction: transactionNumber
-          })
-        });
-        
-        const result = await response.json();
-        
-        if (result.status && result.status.includes('✅')) {
-          confirmMsg.className = 'success';
-          confirmMsg.innerText = '✅ ' + result.status;
-          document.getElementById('transactionNumber').value = '';
-          setTimeout(() => {
-            window.location.href = 'index.html';
-          }, 2000);
-        } else {
-          confirmMsg.className = 'error';
-          confirmMsg.innerText = '❌ ' + (result.error || 'Payment submission failed');
-        }
-      } catch (err) {
-        confirmMsg.className = 'error';
-        confirmMsg.innerText = '❌ Error: ' + err.message;
-      }
-    }
+    // Note: submitTransaction is provided by script.js. The broken inline implementation was removed.
+    // The submit button is bound to submitTransaction in script.js on load.
   </script>
 </body>
 </html>

@@ -1,6 +1,11 @@
 // Configuration (override these before this file runs if needed)
 const API_BASE = "https://script.google.com/macros/s/AKfycbzUQeJKLBRCjQG928fnIdJ7Tlg-JR0072ENK-K2_07NBOxWsH9zs0qd5CrcoQW_Mbz3lA/exec";
 
+// Client-side API key (must match server Script Properties 'API_KEY').
+// IMPORTANT: For production, keep this value secret. If frontend is public, consider a different auth flow.
+// Replace 'REPLACE_WITH_YOUR_KEY' with your actual key, or leave blank in development.
+const API_KEY = "REPLACE_WITH_YOUR_KEY";
+
 // Pathao links you provided
 const PATHAO_LINK_500 = "https://pathaopay.me/@payutility/510?ref=pm8JmHuQBxOM_DDe4LQkSwYGGaiG0p9gb9RFvIpJSyI";
 const PATHAO_LINK_1000 = "https://pathaopay.me/@payutility/1010?ref=P6jLYaOWKpmFKAPhjgfMBc0Gq3nzZrUt_V7-su9lZwY";
@@ -79,7 +84,7 @@ const translations = {
     subtitle: "আপনার ইউটিলিটি ড্যাশবোর্ড",
     warning: "⚠️ আপনার বিদ্যুৎ মিটার ব্যালেন্স ২০০ টাকার নিচে গেলে আপনার লাইন কাটা হবে।",
     electric: "বিদ্যুৎ ব্যালেন্স",
-    water: "পান��র বিল বকেয়া",
+    water: "পানির বিল বকেয়া",
     gas: "গ্যাস বিল বকেয়া",
     internet: "ইন্টারনেট সংযুক্ত",
     internetBill: "ইন্টারনেট বিল বকেয়া",
@@ -385,6 +390,10 @@ async function submitTransaction(event) {
   if (btn) { btn.disabled = true; btn.dataset.origText = btn.innerText; btn.innerText = 'Submitting...'; }
 
   const payload = { action: 'submitTransaction', customerId: id, transaction: txn };
+  // Attach API key if configured
+  if (API_KEY && API_KEY !== "REPLACE_WITH_YOUR_KEY") {
+    payload.apiKey = API_KEY;
+  }
 
   // Helper to parse response text/JSON and return { ok, status, bodyText, json }
   async function parseResponse(res) {
@@ -424,7 +433,7 @@ async function submitTransaction(event) {
     // Success or JSON reply handling
     if (parsed.json) {
       const data = parsed.json;
-      if (data.status && /success/i.test(String(data.status))) {
+      if (data.status && /success|✅|Payment confirmation submitted/i.test(String(data.status))) {
         showSuccess(msgEl, data.status);
         if (txnEl) txnEl.value = '';
       } else if (data.error) {
@@ -434,7 +443,7 @@ async function submitTransaction(event) {
       }
     } else {
       // Not JSON - server returned text
-      if (/success/i.test(parsed.bodyText)) {
+      if (/success|✅/i.test(parsed.bodyText)) {
         showSuccess(msgEl, parsed.bodyText);
         if (txnEl) txnEl.value = '';
       } else {
@@ -483,7 +492,7 @@ async function submitTransaction_textPlainFallback(payload, btn, txnEl, msgEl) {
     }
 
     if (json) {
-      if (json.status && /success/i.test(String(json.status))) {
+      if (json.status && /success|✅/i.test(String(json.status))) {
         showSuccess(msgEl, json.status);
         if (txnEl) txnEl.value = '';
       } else if (json.error) {
@@ -492,7 +501,7 @@ async function submitTransaction_textPlainFallback(payload, btn, txnEl, msgEl) {
         showSuccess(msgEl, json.message || JSON.stringify(json));
       }
     } else {
-      if (/success/i.test(bodyText)) {
+      if (/success|✅/i.test(bodyText)) {
         showSuccess(msgEl, bodyText);
         if (txnEl) txnEl.value = '';
       } else {
@@ -509,7 +518,7 @@ async function submitTransaction_textPlainFallback(payload, btn, txnEl, msgEl) {
 
 // ---- Email subscription toggle ----
 async function toggleEmail() {
-  const id = (document.getElementById("customerId") || {}).value || "";
+  const id = (document.getElementById("customerId") || {}).value || sessionStorage.getItem('customerId') || localStorage.getItem('customerId') || "";
   const emailToggleEl = document.getElementById("emailToggle");
   const enabled = emailToggleEl ? emailToggleEl.checked : false;
   const emailInput = document.getElementById("emailAddress");

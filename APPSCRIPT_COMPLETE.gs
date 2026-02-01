@@ -34,18 +34,44 @@ function initializeSpreadsheet() {
 /***** FORM SUBMISSION: updates DashboardData *****/
 function onFormSubmit(e) {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
+  // Ensure dashboard exists
   var dashSheet = ss.getSheetByName("DashboardData");
+  if (!dashSheet) {
+    dashSheet = ss.insertSheet("DashboardData");
+    dashSheet.appendRow(["CustomerID", "Name", "ElectricBalance", "WaterBillDue", "GasBillDue", "LastUpdated", "FlatNumber", "InternetConnected", "InternetBillDue"]);
+  }
   var lookupSheet = ss.getSheetByName("FlatLookup");
 
-  var submittedRange = e.range.getValues()[0];
-  var timestamp = submittedRange[0];
-  var customerId = String(submittedRange[1] || '').trim();
-  var name = submittedRange[2];
-  var electricBalance = submittedRange[3];
-  var waterBillDue = submittedRange[4];
-  var gasBillDue = submittedRange[5];
+  // Prefer e.values for form submit; fallback to namedValues or range
+  var values = (e && e.values) ? e.values
+             : (e && e.namedValues) ? (function(){
+                 var nv = e.namedValues;
+                 var arr = [];
+                 // Best-effort mapping: Timestamp, CustomerID, Name, ElectricBalance, WaterBillDue, GasBillDue
+                 arr.push(nv.Timestamp ? nv.Timestamp[0] : (nv['Timestamp'] ? nv['Timestamp'][0] : new Date()));
+                 arr.push(nv.CustomerID ? nv.CustomerID[0] : (nv['Customer ID'] ? nv['Customer ID'][0] : ""));
+                 arr.push(nv.Name ? nv.Name[0] : "");
+                 arr.push(nv.ElectricBalance ? nv.ElectricBalance[0] : 0);
+                 arr.push(nv.WaterBillDue ? nv.WaterBillDue[0] : 0);
+                 arr.push(nv.GasBillDue ? nv.GasBillDue[0] : 0);
+                 return arr;
+               })()
+             : (e && e.range && typeof e.range.getValues === 'function') ? e.range.getValues()[0]
+             : null;
 
-  var formattedTime = Utilities.formatDate(timestamp, Session.getScriptTimeZone(), "EEEE, dd MMM yyyy hh:mm a");
+  if (!values) {
+    Logger.log("onFormSubmit: no form values provided");
+    return;
+  }
+
+  var timestamp = values[0];
+  var customerId = String(values[1] || '').trim();
+  var name = values[2] || "";
+  var electricBalance = values[3] || "0";
+  var waterBillDue = values[4] || "0";
+  var gasBillDue = values[5] || "0";
+
+  var formattedTime = Utilities.formatDate(timestamp instanceof Date ? timestamp : new Date(), Session.getScriptTimeZone(), "EEEE, dd MMM yyyy hh:mm a");
 
   // Lookup FlatNumber
   var flatNumber = "";
@@ -83,13 +109,20 @@ function onFormSubmit(e) {
     dashSheet.appendRow([customerId, name, electricBalance, waterBillDue, gasBillDue, formattedTime, flatNumber, "Unknown", "0"]);
   }
 
-  logBalanceChange_(ss, customerId, electricBalance);
+  try {
+    logBalanceChange_(ss, customerId, electricBalance);
+  } catch (err) {
+    Logger.log("onFormSubmit: error logging balance change: " + (err && err.message ? err.message : err));
+  }
 }
 
 /***** WEB APP: GET *****/
 function doGet(e) {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var dashSheet = ss.getSheetByName("DashboardData");
+  if (!dashSheet) {
+    return jsonWithCORS_({ error: "DashboardData sheet not found. Please run initializeSpreadsheet() or contact admin." }, e);
+  }
   var subsSheet = getOrCreateSubsSheet_(ss);
 
   var id = (e.parameter.id || "").trim();
@@ -97,46 +130,46 @@ function doGet(e) {
   var email = (e.parameter.email || "").trim();
   var action = (e.parameter.action || "").trim();
 
-  if (!id) return jsonWithCORS_({ error: "Missing Customer ID" });
+  if (!id) return jsonWithCORS_({ error: "Missing Customer ID" }, e);
 
   // History endpoint
   if (e.parameter.history === "true") {
     var history = getCustomerHistory_(ss, id);
-    return jsonWithCORS_({ history: history });
+    return jsonWithCORS_({ history: history }, e);
   }
 
   // Usage Trends endpoint (for Usage Trends feature) - REAL DATA
   if (action === "getUsageTrends") {
     var trends = getUsageTrends_(ss, id);
-    return jsonWithCORS_(trends);
+    return jsonWithCORS_(trends, e);
   }
 
   // Usage Report endpoint (for Export Report feature)
   if (action === "getUsageReport") {
     var report = getUsageReport_(ss, id);
-    return jsonWithCORS_(report);
+    return jsonWithCORS_(report, e);
   }
 
   // Monthly Comparison endpoint (for Comparative Analysis feature)
   if (action === "getMonthlyComparison") {
     var comparison = getMonthlyComparison_(ss, id);
-    return jsonWithCORS_(comparison);
+    return jsonWithCORS_(comparison, e);
   }
 
   // Email verification request
   if (action === "request") {
-    return jsonWithCORS_(requestEmailVerification_(id, email));
+    return jsonWithCORS_(requestEmailVerification_(id, email), e);
   }
 
   // Email verification confirm
   if (action === "confirm") {
-    return jsonWithCORS_(confirmEmailVerification_(id, e.parameter.code));
+    return jsonWithCORS_(confirmEmailVerification_(id, e.parameter.code), e);
   }
 
   // Email subscription toggle
   if (subscribe !== undefined) {
     upsertSubscription_(subsSheet, id, email, subscribe);
-    return jsonWithCORS_({ status: subscribe === "true" ? "Email updates enabled" : "Email updates disabled" });
+    return jsonWithCORS_({ status: subscribe === "true" ? "Email updates enabled" : "Email updates disabled" }, e);
   }
 
   // Default: Get customer dashboard data
@@ -160,39 +193,53 @@ function doGet(e) {
         flatNumber: data[i][6] || "",
         subscribed: subInfo.subscribed,
         email: subInfo.email
-      });
+      }, e);
     }
   }
-  return jsonWithCORS_({ error: "Customer not found" });
+  return jsonWithCORS_({ error: "Customer not found" }, e);
 }
 
 /***** WEB APP: POST *****/
 function doPost(e) {
   try {
     var raw = e.postData && e.postData.contents ? e.postData.contents : null;
-    if (!raw) return jsonWithCORS_({ error: "No payload" });
+    if (!raw) return jsonWithCORS_({ error: "No payload" }, e);
 
     var payload = JSON.parse(raw);
     var action = payload.action || '';
     var ss = SpreadsheetApp.getActiveSpreadsheet();
 
+    // API key enforcement (optional): stored in Script Properties
+    var requiredKey = PropertiesService.getScriptProperties().getProperty('API_KEY') || '';
+    if (requiredKey) {
+      var provided = payload.apiKey || '';
+      if (!provided || provided !== requiredKey) {
+        return jsonWithCORS_({ error: 'Unauthorized' }, e);
+      }
+    } else {
+      Logger.log('doPost: no API_KEY configured in Script Properties (requests are not enforced).');
+    }
+
     if (action === 'submitTransaction') {
       var customerId = String(payload.customerId || '').trim();
       var transaction = String(payload.transaction || '').trim();
-      if (!customerId || !transaction) return jsonWithCORS_({ error: 'Missing customerId or transaction' });
+      if (!customerId || !transaction) return jsonWithCORS_({ error: 'Missing customerId or transaction' }, e);
       var result = confirmPayment_(ss, customerId, transaction);
-      return jsonWithCORS_({ status: result });
+      return jsonWithCORS_({ status: result }, e);
     }
 
-    return jsonWithCORS_({ error: 'Unknown action' });
+    return jsonWithCORS_({ error: 'Unknown action' }, e);
   } catch (err) {
-    return jsonWithCORS_({ error: 'Invalid request: ' + (err.message || err) });
+    Logger.log('doPost error: ' + (err && err.message ? err.message : err));
+    return jsonWithCORS_({ error: 'Invalid request: ' + (err.message || err) }, e);
   }
 }
 
 /***** PAYMENT CONFIRMATION *****/
 function confirmPayment_(ss, id, transactionNumber) {
   var dashSheet = ss.getSheetByName("DashboardData");
+  if (!dashSheet) return "❌ DashboardData sheet missing.";
+
   var logSheet = ss.getSheetByName("PaymentLog") || ss.insertSheet("PaymentLog");
 
   if (logSheet.getLastRow() === 0) {
@@ -209,17 +256,20 @@ function confirmPayment_(ss, id, transactionNumber) {
 
       logSheet.appendRow([formattedTime, id, name, flatNumber, transactionNumber]);
 
+      // Recipient from Script Properties (set PAYMENT_NOTIFICATION_EMAIL there)
+      var recipient = PropertiesService.getScriptProperties().getProperty('PAYMENT_NOTIFICATION_EMAIL') || "mridhamdraihan589@gmail.com";
+
       try {
         MailApp.sendEmail({
-          to: "mridhamdraihan589@gmail.com",
+          to: recipient,
           subject: "Payment Confirmation Received — " + (flatNumber || id),
           body: "Tenant: " + (name || id) + "\nFlat: " + flatNumber + "\nCustomer ID: " + id + "\nTransaction: " + transactionNumber + "\nTime: " + formattedTime,
           name: "F3-16 Utility Corporations"
         });
         return "✅ Payment confirmation submitted and email sent.";
       } catch (err) {
-        Logger.log("❌ Email failed: " + err.message);
-        return "Payment logged, but email failed: " + err.message;
+        Logger.log("❌ Email failed: " + (err && err.message ? err.message : err));
+        return "Payment logged, but email failed: " + (err && err.message ? err.message : err);
       }
     }
   }
@@ -300,14 +350,16 @@ function getUsageTrends_(ss, customerId) {
   for (var i = 1; i < usageData.length; i++) {
     if (String(usageData[i][0]).trim() === customerId) {
       var yearMonth = String(usageData[i][1] || "").trim(); // Format: "2025-12"
+      var eVal = parseFloat(usageData[i][2]) || 0;
+      var wVal = parseFloat(usageData[i][3]) || 0;
+      var gVal = parseFloat(usageData[i][4]) || 0;
       
       if (!monthlyData[yearMonth]) {
-        monthlyData[yearMonth] = {
-          electric: parseFloat(usageData[i][2]) || 0,
-          water: parseFloat(usageData[i][3]) || 0,
-          gas: parseFloat(usageData[i][4]) || 0
-        };
+        monthlyData[yearMonth] = { electric: 0, water: 0, gas: 0 };
       }
+      monthlyData[yearMonth].electric += eVal;
+      monthlyData[yearMonth].water += wVal;
+      monthlyData[yearMonth].gas += gVal;
     }
   }
   
@@ -376,7 +428,7 @@ function getMonthlyComparison_(ss, customerId) {
   
   var months = {};
   
-  // Group usage by month
+  // Group usage by month (sum duplicates)
   for (var i = 1; i < usageData.length; i++) {
     if (String(usageData[i][0]).trim() === customerId) {
       var yearMonth = String(usageData[i][1] || "").trim(); // Format: "2025-12"
@@ -392,12 +444,15 @@ function getMonthlyComparison_(ss, customerId) {
         
         months[yearMonth] = {
           month: monthName,
-          electric: electric,
-          water: water,
-          gas: gas,
-          total: (electric + water + gas).toFixed(2)
+          electric: 0,
+          water: 0,
+          gas: 0
         };
       }
+      months[yearMonth].electric += electric;
+      months[yearMonth].water += water;
+      months[yearMonth].gas += gas;
+      months[yearMonth].total = (months[yearMonth].electric + months[yearMonth].water + months[yearMonth].gas).toFixed(2);
     }
   }
   
@@ -600,10 +655,22 @@ function upsertSubscription_(subsSheet, id, email, subscribe) {
   subsSheet.appendRow([id, emailNorm, subNorm]);
 }
 
-function jsonWithCORS_(obj) {
-  var output = ContentService.createTextOutput(JSON.stringify(obj));
-  output.setMimeType(ContentService.MimeType.JSON);
-  return output;
+/**
+ * Return JSON or JSONP (if callback param provided).
+ * Use: return jsonWithCORS_(obj, e); // pass request 'e' if you want JSONP support
+ */
+function jsonWithCORS_(obj, e) {
+  var json = JSON.stringify(obj);
+  if (e && e.parameter && e.parameter.callback) {
+    var callback = e.parameter.callback;
+    var output = ContentService.createTextOutput(callback + "(" + json + ");");
+    output.setMimeType(ContentService.MimeType.JAVASCRIPT);
+    return output;
+  } else {
+    var output = ContentService.createTextOutput(json);
+    output.setMimeType(ContentService.MimeType.JSON);
+    return output;
+  }
 }
 
 /***** EMAIL VERIFICATION FUNCTIONS *****/
