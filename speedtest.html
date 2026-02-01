@@ -47,6 +47,7 @@
     // Reload iframe (handy if it gets blocked or cached)
     document.getElementById('reload').addEventListener('click', () => {
       const frame = document.getElementById('fastFrame');
+      // Some browsers block embedding; the reload will reattempt
       frame.src = frame.src;
     });
   </script>

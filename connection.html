@@ -27,6 +27,7 @@
   <script src="script.js"></script>
   <script>
     function updateConnectionLanguage() {
+      if (typeof currentLanguage === 'undefined') return;
       if (currentLanguage === 'bn') {
         document.getElementById('conn-title').innerText = "🌐 ইন্টারনেট সংযোগের অনুরোধ";
         document.getElementById('conn-subtitle').innerText = "সংযোগের অনুরোধ জানাতে নিচের ফর্ম পূরণ করুন";
