@@ -27,12 +27,13 @@
       <div class="language-toggle">
         <button class="lang-btn active" onclick="switchLanguage('en')">English</button>
         <button class="lang-btn" onclick="switchLanguage('bn')">বাংলা</button>
-        <button class="lang-btn" style="margin-left:8px; background:#dc3545; color:#fff; border-color:#dc3545;" onclick="logout()" id="btn-logout-top">🚪 Logout</button>
+        <button class="lang-btn" style="margin-left:8px; background:#dc3545; color:#fff; border-color:#dc3545;" onclick="logout()" id="btn-logout">🚪 Logout</button>
       </div>
 
       <div class="dashboard-header">
         <h1>Welcome, <span id="name">User</span>! 👋</h1>
         <p id="dashboardSubtitle">Your Utility Dashboard</p>
+        <p id="warningBox" style="margin-top:6px; font-size:13px; color:#fff; opacity:0.95;"></p>
       </div>
 
       <!-- Main Dashboard Grid: Left Sidebar + Right Content -->
@@ -109,7 +110,7 @@
 
           <!-- Email Section -->
           <div class="sidebar-email-section">
-            <h3>📧 Notifications</h3>
+            <h3 id="label-email">📧 Notifications</h3>
             <div class="checkbox-group">
               <input type="checkbox" id="emailToggle" onchange="toggleEmail()">
               <label for="emailToggle" id="label-email-toggle">Email Updates</label>
@@ -125,7 +126,7 @@
 
           <!-- Alerts Section -->
           <div class="alerts-section">
-            <h3>🔔 Active Alerts</h3>
+            <h3 id="label-notifications">🔔 Active Alerts</h3>
             <div class="alerts-container" id="alertsContainer">
               <div class="alert-item alert-info">
                 <div class="alert-icon">⚡</div>
@@ -220,7 +221,7 @@
 
       </div>
 
-      <!-- Update History Modal -->
+      <!-- Modals (unchanged) -->
       <div id="historyModal" class="modal" style="display:none;">
         <div class="modal-content">
           <div class="modal-header">
@@ -231,7 +232,6 @@
         </div>
       </div>
 
-      <!-- Comparative Analysis Modal -->
       <div id="comparativeModal" class="modal" style="display:none;">
         <div class="modal-content">
           <div class="modal-header">
@@ -242,7 +242,6 @@
         </div>
       </div>
 
-      <!-- Billing History Modal -->
       <div id="billingHistoryModal" class="modal" style="display:none;">
         <div class="modal-content">
           <div class="modal-header">
@@ -253,7 +252,6 @@
         </div>
       </div>
 
-      <!-- Usage Trends Modal -->
       <div id="usageTrendsModal" class="modal" style="display:none;">
         <div class="modal-content">
           <div class="modal-header">
@@ -264,7 +262,6 @@
         </div>
       </div>
 
-      <!-- Payment History Modal -->
       <div id="paymentHistoryModal" class="modal" style="display:none;">
         <div class="modal-content">
           <div class="modal-header">

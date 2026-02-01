@@ -31,19 +31,23 @@
 
   <script src="script.js"></script>
   <script>
-    // Handle redirect after successful login
-    const originalLogin = window.login;
+    // Override login behavior on this page so we redirect to a 'redirect' query param after successful login.
+    const originalLoginFn = window.login;
     window.login = async function() {
+      // If global login is not yet initialized, wait a moment
+      if (typeof API_BASE === 'undefined') {
+        // fallback to original behavior after short delay
+        await new Promise(r => setTimeout(r, 100));
+      }
+
       const idEl = document.getElementById("customerId");
       if (!idEl) return;
       const id = idEl.value.trim();
 
-      setToggleMessage = () => {}; // Override for this page
-      const emailInput = document.getElementById("emailAddress");
-      if (emailInput) emailInput.classList.remove("input-error");
+      const errorEl = document.getElementById("error");
+      if (errorEl) { errorEl.style.display = "none"; errorEl.innerText = ""; }
 
       if (!id) {
-        const errorEl = document.getElementById("error");
         if (errorEl) {
           errorEl.innerText = "Enter Customer ID";
           errorEl.style.display = "block";
@@ -52,12 +56,13 @@
       }
 
       try {
-        const res = await fetch(`https://script.google.com/macros/s/AKfycbzUQeJKLBRCjQG928fnIdJ7Tlg-JR0072ENK-K2_07NBOxWsH9zs0qd5CrcoQW_Mbz3lA/exec?id=${encodeURIComponent(id)}`);
+        // Use API_BASE from script.js (ensure script.js is loaded)
+        const base = (typeof API_BASE !== 'undefined') ? API_BASE : '/';
+        const res = await fetch(`${base}?id=${encodeURIComponent(id)}`);
         if (!res.ok) throw new Error("Network response was not ok");
         const data = await res.json();
 
         if (data.error) {
-          const errorEl = document.getElementById("error");
           if (errorEl) {
             errorEl.innerText = data.error;
             errorEl.style.display = "block";
@@ -69,12 +74,11 @@
         localStorage.setItem("customerName", data.name || "");
         localStorage.setItem("customerEmail", data.email || "");
 
-        // Get redirect URL from query params, default to index.html
+        // Redirect to 'redirect' query param if present, else index.html
         const params = new URLSearchParams(window.location.search);
         const redirect = params.get('redirect') || 'index.html';
         window.location.href = redirect;
       } catch (err) {
-        const errorEl = document.getElementById("error");
         if (errorEl) {
           errorEl.innerText = "An error occurred. Please try again.";
           errorEl.style.display = "block";
