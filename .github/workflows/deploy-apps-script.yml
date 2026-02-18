@@ -31,13 +31,34 @@ jobs:
           fi
 
       - name: Write .clasp.json with Script ID
+        env:
+          CLASP_SCRIPT_ID: ${{ secrets.CLASP_SCRIPT_ID }}
         run: |
-          cat > .clasp.json <<EOF
-          {
-            "scriptId": "${{ secrets.CLASP_SCRIPT_ID }}",
-            "rootDir": "apps-script"
-          }
-          EOF
+          if [ -z "$CLASP_SCRIPT_ID" ]; then
+            echo "Warning: CLASP_SCRIPT_ID secret is empty. .clasp.json will not be written.";
+            cat > .clasp.json <<EOF
+            {
+              "scriptId": "ENTER_YOUR_SCRIPT_ID",
+              "rootDir": "apps-script"
+            }
+            EOF
+          else
+            cat > .clasp.json <<EOF
+            {
+              "scriptId": "$CLASP_SCRIPT_ID",
+              "rootDir": "apps-script"
+            }
+            EOF
+          fi
+
+      - name: Ensure CLASP_SCRIPT_ID is provided
+        env:
+          CLASP_SCRIPT_ID: ${{ secrets.CLASP_SCRIPT_ID }}
+        run: |
+          if [ -z "$CLASP_SCRIPT_ID" ]; then
+            echo "Error: CLASP_SCRIPT_ID secret is not set. Set repository secret 'CLASP_SCRIPT_ID' to your Apps Script scriptId.";
+            exit 1;
+          fi
 
       - name: Login clasp with service account (if creds provided)
         env:
