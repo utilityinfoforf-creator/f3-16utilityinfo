@@ -219,6 +219,21 @@ function updatePageLanguage() {
   setText("modal-comparative-title", t.comparativeTitle);
 }
 
+// Fetch deployed web app version and display in small bar
+async function fetchWebVersion() {
+  const el = document.getElementById('webVersion');
+  if (!el) return;
+  try {
+    const res = await fetch(`${API_BASE}?action=getVersion`);
+    if (!res.ok) return;
+    const json = await res.json();
+    const ts = json.timestamp ? new Date(json.timestamp).toLocaleString() : '';
+    el.textContent = json.version ? `Web v${json.version}` + (ts ? ` • ${ts}` : '') : '';
+  } catch (err) {
+    console.warn('Unable to fetch web app version', err);
+  }
+}
+
 // ----- Login -----
 async function login() {
   const idEl = document.getElementById("customerId");
@@ -917,6 +932,9 @@ window.addEventListener("load", function() {
     if (langBtns.length > 0) langBtns[savedLang === "bn" ? 1 : 0].classList.add("active");
   }
   updatePageLanguage();
+
+  // Fetch and display deployed web app version (if API exposes it)
+  try { fetchWebVersion(); } catch (e) { console.warn('fetchWebVersion failed', e); }
 
   const savedId = localStorage.getItem("customerId");
   if (savedId && document.getElementById("customerId")) {

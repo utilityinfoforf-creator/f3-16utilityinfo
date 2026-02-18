@@ -31,6 +31,12 @@ function initializeSpreadsheet() {
   Logger.log("✅ All sheets initialized successfully");
 }
 
+/**
+ * Web app version - update when deploying a new release
+ */
+var WEB_APP_VERSION = '1.0.0';
+
+
 /***** FORM SUBMISSION: updates DashboardData *****/
 function onFormSubmit(e) {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
@@ -129,6 +135,11 @@ function doGet(e) {
   var action = (e.parameter.action || '').trim();
   var subscribe = e.parameter.subscribe;
   var email = (e.parameter.email || '').trim();
+
+  // Public action: get current deployed web-app version (no id required)
+  if (action === 'getVersion') {
+    return jsonWithCORS_({ version: WEB_APP_VERSION, timestamp: Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "yyyy-MM-dd'T'HH:mm:ss'Z'") }, e);
+  }
 
   if (!id) return jsonWithCORS_({ error: 'Missing Customer ID' }, e);
 
