@@ -151,6 +151,18 @@ function doGet(e) {
     }
   }
 
+  // Read-only helpers: list sheets or return sheet rows as JSON (no id required)
+  if (!id && action) {
+    if (action === 'listSheets') {
+      return jsonWithCORS_({ sheets: listAvailableSheets_() }, e);
+    }
+    if (action === 'getSheet') {
+      var sheetName = (e.parameter.sheet || '').trim();
+      if (!sheetName) return jsonWithCORS_({ error: 'Missing sheet parameter' }, e);
+      return jsonWithCORS_(getSheetDataObjects_(sheetName), e);
+    }
+  }
+
   if (!id) return jsonWithCORS_({ error: 'Missing Customer ID' }, e);
 
   if (e.parameter.history === 'true') return jsonWithCORS_({ history: getCustomerHistory_(ss, id) }, e);
@@ -289,3 +301,42 @@ function getCustomerHistory_(ss, customerId) {
 }
 
 /*** End of file ***/
+
+/* ----------------- Read-only sheet helpers ----------------- */
+function getSheetDataObjects_(sheetName) {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = ss.getSheetByName(sheetName);
+  if (!sheet) return { error: 'Sheet not found: ' + sheetName, rows: [] };
+  var values = sheet.getDataRange().getValues();
+  if (!values || values.length === 0) return { headers: [], rows: [] };
+  var headers = values[0].map(function(h){ return String(h||'').trim(); });
+  var rows = [];
+  for (var r = 1; r < values.length; r++) {
+    var row = values[r];
+    var obj = {};
+    for (var c = 0; c < headers.length; c++) {
+      obj[headers[c] || ('col' + (c+1))] = row[c];
+    }
+    rows.push(obj);
+  }
+  return { headers: headers, rows: rows };
+}
+
+function listAvailableSheets_() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  return ss.getSheets().map(function(s){ return s.getName(); });
+}
+
+function jsonWithCORS_(obj, e) {
+  var json = JSON.stringify(obj || {});
+  if (e && e.parameter && e.parameter.callback) {
+    var cb = e.parameter.callback;
+    var out = ContentService.createTextOutput(cb + '(' + json + ');');
+    out.setMimeType(ContentService.MimeType.JAVASCRIPT);
+    return out;
+  } else {
+    var out = ContentService.createTextOutput(json);
+    out.setMimeType(ContentService.MimeType.JSON);
+    return out;
+  }
+}

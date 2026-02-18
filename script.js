@@ -1,5 +1,5 @@
 // Configuration (override these before this file runs if needed)
-const API_BASE = "https://script.google.com/macros/s/AKfycbzUQeJKLBRCjQG928fnIdJ7Tlg-JR0072ENK-K2_07NBOxWsH9zs0qd5CrcoQW_Mbz3lA/exec";
+const API_BASE = "https://script.google.com/macros/s/AKfycbxWo9aXgi_xv0bKI9r8kbLX7Wc7ouvYmdkSTGdqt5mN2_OHTFcW0usECrhLShGSDX84QQ/exec";
 
 // Client-side API key (must match server Script Properties 'API_KEY').
 // IMPORTANT: For production, keep this value secret. If frontend is public, consider a different auth flow.

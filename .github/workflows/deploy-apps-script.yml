@@ -21,9 +21,14 @@ jobs:
         run: npm ci
 
       - name: Write clasp credentials
-        if: secrets.CLASP_CREDENTIALS != ''
+        env:
+          CLASP_CREDENTIALS: ${{ secrets.CLASP_CREDENTIALS }}
         run: |
-          echo "$CLASP_CREDENTIALS" > ./creds.json
+          if [ -n "$CLASP_CREDENTIALS" ]; then
+            echo "$CLASP_CREDENTIALS" > ./creds.json
+          else
+            echo "No clasp credentials provided; skipping write"
+          fi
 
       - name: Write .clasp.json with Script ID
         run: |
@@ -35,8 +40,14 @@ jobs:
           EOF
 
       - name: Login clasp with service account (if creds provided)
-        if: secrets.CLASP_CREDENTIALS != ''
-        run: npx @google/clasp login --creds ./creds.json
+        env:
+          CLASP_CREDENTIALS: ${{ secrets.CLASP_CREDENTIALS }}
+        run: |
+          if [ -n "$CLASP_CREDENTIALS" ]; then
+            npx @google/clasp login --creds ./creds.json
+          else
+            echo "No clasp credentials provided; skipping login"
+          fi
 
       - name: Push to Apps Script
         run: npx @google/clasp push --force --rootDir=apps-script

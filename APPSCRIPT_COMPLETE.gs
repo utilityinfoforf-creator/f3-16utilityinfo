@@ -135,20 +135,25 @@ function doGet(e) {
   var action = (e.parameter.action || '').trim();
   var subscribe = e.parameter.subscribe;
   var email = (e.parameter.email || '').trim();
-
-  // Public action: get current deployed web-app version (no id required)
-  if (action === 'getVersion') {
-    return jsonWithCORS_({ version: WEB_APP_VERSION, timestamp: Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "yyyy-MM-dd'T'HH:mm:ss'Z'") }, e);
-  }
-
-  // Admin/dev helper: seed sample data (no id required)
-  if (action === 'seedSample' || action === 'populateSample') {
-    try {
-      var result = populateSampleData_();
-      return jsonWithCORS_({ status: 'ok', result: result }, e);
-    } catch (err) {
-      return jsonWithCORS_({ error: 'seed_failed', message: (err && err.message) ? err.message : String(err) }, e);
+  // Allow some actions to run without a Customer ID (version, seeder)
+  if (!id && action) {
+    if (action === 'getVersion') {
+      var WEB_APP_VERSION = PropertiesService.getScriptProperties().getProperty('WEB_APP_VERSION') || '1.0.0';
+      return jsonWithCORS_({ version: WEB_APP_VERSION, timestamp: Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "yyyy-MM-dd'T'HH:mm:ssZ") }, e);
     }
+    if (action === 'seedSample') {
+      if (typeof populateSampleData_ === 'function') {
+        try {
+          populateSampleData_();
+          return jsonWithCORS_({ status: 'Sample data seeded' }, e);
+        } catch (err) {
+          return jsonWithCORS_({ error: 'Seeder failed: ' + (err && err.message ? err.message : err) }, e);
+        }
+      } else {
+        return jsonWithCORS_({ error: 'Seeder not available' }, e);
+      }
+    }
+    // If action is present but not handled above, continue — actions that require id will error below
   }
 
   if (!id) return jsonWithCORS_({ error: 'Missing Customer ID' }, e);
