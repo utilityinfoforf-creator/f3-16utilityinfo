@@ -35,20 +35,11 @@ jobs:
           CLASP_SCRIPT_ID: ${{ secrets.CLASP_SCRIPT_ID }}
         run: |
           if [ -z "$CLASP_SCRIPT_ID" ]; then
-            echo "Warning: CLASP_SCRIPT_ID secret is empty. .clasp.json will not be written.";
-            cat > .clasp.json <<EOF
-            {
-              "scriptId": "ENTER_YOUR_SCRIPT_ID",
-              "rootDir": "apps-script"
-            }
-            EOF
+            echo "Warning: CLASP_SCRIPT_ID secret is empty. Writing placeholder .clasp.json";
+            echo '{"scriptId":"ENTER_YOUR_SCRIPT_ID","rootDir":"apps-script"}' > .clasp.json
           else
-            cat > .clasp.json <<EOF
-            {
-              "scriptId": "$CLASP_SCRIPT_ID",
-              "rootDir": "apps-script"
-            }
-            EOF
+            # Use double quotes and escape for variable expansion
+            echo "{\"scriptId\":\"$CLASP_SCRIPT_ID\",\"rootDir\":\"apps-script\"}" > .clasp.json
           fi
 
       - name: Ensure CLASP_SCRIPT_ID is provided
