@@ -1,0 +1,11 @@
+{
+  "name": "f3-16utilityinfo-appscript",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "deploy": "npx @google/clasp push --force --rootDir=apps-script"
+  },
+  "devDependencies": {
+    "@google/clasp": "^2.5.0"
+  }
+}

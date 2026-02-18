@@ -1,0 +1,42 @@
+name: Deploy Apps Script
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    name: Deploy Apps Script via clasp
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Write clasp credentials
+        if: secrets.CLASP_CREDENTIALS != ''
+        run: |
+          echo "$CLASP_CREDENTIALS" > ./creds.json
+
+      - name: Write .clasp.json with Script ID
+        run: |
+          cat > .clasp.json <<EOF
+          {
+            "scriptId": "${{ secrets.CLASP_SCRIPT_ID }}",
+            "rootDir": "apps-script"
+          }
+          EOF
+
+      - name: Login clasp with service account (if creds provided)
+        if: secrets.CLASP_CREDENTIALS != ''
+        run: npx @google/clasp login --creds ./creds.json
+
+      - name: Push to Apps Script
+        run: npx @google/clasp push --force --rootDir=apps-script
