@@ -367,30 +367,81 @@ function closePaymentHistory() {
 function downloadReceipt(txnId, amount) {
   const id = sessionStorage.getItem('customerId') || localStorage.getItem('customerId') || '';
   const name = localStorage.getItem('customerName') || 'User';
-  
-  const receiptContent = `
-    PAYMENT RECEIPT
-    ================
-    
-    Customer ID: ${id}
-    Customer Name: ${name}
-    
-    Transaction ID: ${txnId}
-    Amount Paid: ৳${amount}
-    Date: ${new Date().toLocaleDateString()}
-    Time: ${new Date().toLocaleTimeString()}
-    
-    Status: COMPLETED
-    
-    Thank you for your payment!
+  const date = new Date();
+  const dateStr = date.toLocaleDateString();
+  const timeStr = date.toLocaleTimeString();
+
+  const html = `
+    <!doctype html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <title>Receipt - ${txnId}</title>
+      <style>
+        body{font-family: Arial, sans-serif; padding:20px; color:#222}
+        .receipt{max-width:700px;margin:auto;border:1px solid #e6e6e6;padding:18px}
+        .header{display:flex;justify-content:space-between;align-items:center}
+        .brand{font-size:18px;font-weight:700;color:#2b6cb0}
+        .meta{font-size:12px;color:#666}
+        table{width:100%;border-collapse:collapse;margin-top:12px}
+        td,th{padding:8px;border:1px solid #eee;text-align:left}
+        .total{font-weight:700}
+        .center{text-align:center}
+        .small{font-size:12px;color:#666}
+      </style>
+    </head>
+    <body>
+      <div class="receipt">
+        <div class="header">
+          <div>
+            <div class="brand">⚡ Utility Portal</div>
+            <div class="small">Payment Receipt</div>
+          </div>
+          <div class="meta">
+            <div>Txn: ${txnId}</div>
+            <div>${dateStr} ${timeStr}</div>
+          </div>
+        </div>
+        <hr />
+        <div style="margin-top:10px">
+          <p><strong>Customer:</strong> ${name}</p>
+          <p><strong>Customer ID:</strong> ${id}</p>
+        </div>
+        <table>
+          <thead>
+            <tr><th>Description</th><th class="center">Amount (৳)</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Payment</td><td class="center">${parseFloat(amount).toFixed(2)}</td></tr>
+            <tr class="total"><td class="total">Total Paid</td><td class="center total">৳${parseFloat(amount).toFixed(2)}</td></tr>
+          </tbody>
+        </table>
+        <div style="margin-top:14px" class="small">Status: COMPLETED</div>
+        <div style="margin-top:18px; text-align:center; font-size:13px; color:#444">Thank you for your payment!</div>
+      </div>
+      <script>
+        window.onload = function(){ window.print(); setTimeout(()=>window.close(), 600); };
+      <\/script>
+    </body>
+    </html>
   `;
-  
-  const blob = new Blob([receiptContent], { type: 'text/plain' });
-  const link = document.createElement('a');
-  link.href = URL.createObjectURL(blob);
-  link.download = `receipt-${txnId}.txt`;
-  link.click();
-  URL.revokeObjectURL(link.href);
+
+  const w = window.open('', '_blank');
+  if (!w) {
+    // Fallback: download as text if popup blocked
+    const receiptContent = `Receipt\nTransaction: ${txnId}\nAmount: ${amount}\nDate: ${dateStr} ${timeStr}\nCustomer: ${name} (${id})\nStatus: COMPLETED`;
+    const blob = new Blob([receiptContent], { type: 'text/plain' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `receipt-${txnId}.txt`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(link.href);
+    return;
+  }
+  w.document.write(html);
+  w.document.close();
 }
 
 // ---- Two-Factor Authentication (2FA) ----

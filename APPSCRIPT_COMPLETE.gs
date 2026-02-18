@@ -125,78 +125,47 @@ function doGet(e) {
   }
   var subsSheet = getOrCreateSubsSheet_(ss);
 
-  var id = (e.parameter.id || "").trim();
+  var id = (e.parameter.id || '').trim();
+  var action = (e.parameter.action || '').trim();
   var subscribe = e.parameter.subscribe;
-  var email = (e.parameter.email || "").trim();
-  var action = (e.parameter.action || "").trim();
+  var email = (e.parameter.email || '').trim();
 
-  if (!id) return jsonWithCORS_({ error: "Missing Customer ID" }, e);
+  if (!id) return jsonWithCORS_({ error: 'Missing Customer ID' }, e);
 
-  // History endpoint
-  if (e.parameter.history === "true") {
-    var history = getCustomerHistory_(ss, id);
-    return jsonWithCORS_({ history: history }, e);
-  }
+  if (e.parameter.history === 'true') return jsonWithCORS_({ history: getCustomerHistory_(ss, id) }, e);
 
-  // Usage Trends endpoint (for Usage Trends feature) - REAL DATA
-  if (action === "getUsageTrends") {
-    var trends = getUsageTrends_(ss, id);
-    return jsonWithCORS_(trends, e);
-  }
+  if (action === 'getUsageTrends') return jsonWithCORS_(getUsageTrends_(ss, id), e);
+  if (action === 'getUsageReport') return jsonWithCORS_(getUsageReport_(ss, id), e);
+  if (action === 'getMonthlyComparison') return jsonWithCORS_(getMonthlyComparison_(ss, id), e);
+  if (action === 'request') return jsonWithCORS_(requestEmailVerification_(id, email), e);
+  if (action === 'confirm') return jsonWithCORS_(confirmEmailVerification_(id, e.parameter.code), e);
 
-  // Usage Report endpoint (for Export Report feature)
-  if (action === "getUsageReport") {
-    var report = getUsageReport_(ss, id);
-    return jsonWithCORS_(report, e);
-  }
-
-  // Monthly Comparison endpoint (for Comparative Analysis feature)
-  if (action === "getMonthlyComparison") {
-    var comparison = getMonthlyComparison_(ss, id);
-    return jsonWithCORS_(comparison, e);
-  }
-
-  // Email verification request
-  if (action === "request") {
-    return jsonWithCORS_(requestEmailVerification_(id, email), e);
-  }
-
-  // Email verification confirm
-  if (action === "confirm") {
-    return jsonWithCORS_(confirmEmailVerification_(id, e.parameter.code), e);
-  }
-
-  // Email subscription toggle
   if (subscribe !== undefined) {
     upsertSubscription_(subsSheet, id, email, subscribe);
-    return jsonWithCORS_({ status: subscribe === "true" ? "Email updates enabled" : "Email updates disabled" }, e);
+    return jsonWithCORS_({ status: subscribe === 'true' ? 'Email updates enabled' : 'Email updates disabled' }, e);
   }
 
-  // Default: Get customer dashboard data
   var data = dashSheet.getDataRange().getValues();
   for (var i = 1; i < data.length; i++) {
     if (String(data[i][0]).trim() === id) {
       var subInfo = getSubscription_(subsSheet, id);
       var lastUpdatedRaw = data[i][5];
-      var lastUpdatedStr = lastUpdatedRaw instanceof Date
-        ? Utilities.formatDate(lastUpdatedRaw, Session.getScriptTimeZone(), "EEEE, dd MMM yyyy hh:mm a")
-        : String(lastUpdatedRaw);
-
+      var lastUpdatedStr = lastUpdatedRaw instanceof Date ? Utilities.formatDate(lastUpdatedRaw, Session.getScriptTimeZone(), 'EEEE, dd MMM yyyy hh:mm a') : String(lastUpdatedRaw);
       return jsonWithCORS_({
-        name: data[i][1] || "",
-        electricBalance: data[i][2] || "0",
-        waterBillDue: data[i][3] || "0",
-        gasBillDue: data[i][4] || "0",
-        internetConnected: data[i][7] || "Unknown",
-        internetBillDue: data[i][8] || "0",
+        name: data[i][1] || '',
+        electricBalance: data[i][2] || '0',
+        waterBillDue: data[i][3] || '0',
+        gasBillDue: data[i][4] || '0',
+        internetConnected: data[i][7] || 'Unknown',
+        internetBillDue: data[i][8] || '0',
         lastUpdated: lastUpdatedStr,
-        flatNumber: data[i][6] || "",
+        flatNumber: data[i][6] || '',
         subscribed: subInfo.subscribed,
         email: subInfo.email
       }, e);
     }
   }
-  return jsonWithCORS_({ error: "Customer not found" }, e);
+  return jsonWithCORS_({ error: 'Customer not found' }, e);
 }
 
 /***** WEB APP: POST *****/
