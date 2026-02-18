@@ -326,10 +326,17 @@ async function viewPaymentHistory() {
     }
     
     const totalPaid = payments.reduce((sum, p) => sum + parseFloat(p.amount), 0).toFixed(2);
+    const allEmpty = payments.every(p => (parseFloat(p.amount) || 0) === 0 || (p.status === 'N/A'));
     
+    let demoButtonHtml = allEmpty ? `<div style="margin-top:8px"><button class="btn btn-secondary" onclick="showDemoPayments()">Show demo payment data</button></div>` : '';
+
     let html = `
       <div class="payment-summary">
         <p><strong>Total Paid (Last 6 Months):</strong> ৳${totalPaid}</p>
+        <div style="margin-top:8px">
+          <button class="btn btn-primary" onclick="sendBalanceWhatsApp()">📲 Send Balance via WhatsApp</button>
+          ${demoButtonHtml}
+        </div>
       </div>
       <div class="payment-list">
         ${payments.map(p => `
@@ -362,6 +369,60 @@ async function viewPaymentHistory() {
 function closePaymentHistory() {
   const modal = document.getElementById("paymentHistoryModal");
   if (modal) modal.style.display = "none";
+}
+
+// ---- Send Balance via WhatsApp ----
+async function sendBalanceWhatsApp() {
+  const id = sessionStorage.getItem('customerId') || localStorage.getItem('customerId') || '';
+  if (!id) {
+    alert('Please login first.');
+    return;
+  }
+
+  try {
+    // Fetch latest summary from API (falls back to stored values)
+    let name = localStorage.getItem('customerName') || 'Customer';
+    let electricBalance = localStorage.getItem('electricBalance') || '';
+    let lastUpdated = '';
+
+    try {
+      const res = await fetch(`${API_BASE}?id=${encodeURIComponent(id)}`);
+      if (res.ok) {
+        const json = await res.json();
+        if (json && !json.error) {
+          name = json.name || name;
+          electricBalance = (json.electricBalance !== undefined) ? String(json.electricBalance) : electricBalance;
+          lastUpdated = json.lastUpdated || '';
+        }
+      }
+    } catch (e) {
+      // ignore, use local fallback
+    }
+
+    // Ask for phone number if not available
+    let phone = localStorage.getItem('customerPhone') || '';
+    if (!phone) {
+      phone = prompt('Enter your WhatsApp number (country code + number), e.g. +8801XXXXXXXXX');
+      if (!phone) return;
+      localStorage.setItem('customerPhone', phone);
+    }
+
+    // Sanitize phone for wa.me (digits only, no leading +)
+    const digits = phone.replace(/[^0-9]/g, '');
+    if (!digits) {
+      alert('Invalid phone number');
+      return;
+    }
+
+    const balanceText = electricBalance ? `৳ ${parseFloat(electricBalance).toFixed(2)}` : 'N/A';
+    const msg = `Hello ${name}, your current electric balance is ${balanceText}. ${lastUpdated ? 'Last updated: ' + lastUpdated + '.' : ''} - F3-16 Utility Corporations`;
+
+    const waUrl = `https://wa.me/${digits}?text=${encodeURIComponent(msg)}`;
+    window.open(waUrl, '_blank');
+  } catch (err) {
+    console.error('sendBalanceWhatsApp error:', err);
+    alert('Unable to open WhatsApp: ' + (err && err.message ? err.message : err));
+  }
 }
 
 function downloadReceipt(txnId, amount) {
@@ -529,3 +590,51 @@ window.closePaymentHistory = closePaymentHistory;
 window.downloadReceipt = downloadReceipt;
 window.toggle2FA = toggle2FA;
 window.toggleBillReminders = toggleBillReminders;
+window.sendBalanceWhatsApp = sendBalanceWhatsApp;
+// Show demo payments (client-side only)
+function showDemoPayments() {
+  const container = document.getElementById("paymentHistoryContainer");
+  if (!container) return;
+  const currentDate = new Date();
+  const demo = [];
+  for (let i = 0; i < 6; i++) {
+    const date = new Date(currentDate.getFullYear(), currentDate.getMonth() - i, 12);
+    demo.push({
+      date: date.toLocaleDateString(),
+      amount: (Math.random() * 500 + 100).toFixed(2),
+      transactionId: 'TXN' + (Math.floor(Math.random() * 900000) + 100000),
+      method: 'Card',
+      status: 'COMPLETED'
+    });
+  }
+
+  const totalPaid = demo.reduce((s, p) => s + parseFloat(p.amount), 0).toFixed(2);
+
+  let html = `
+    <div class="payment-summary">
+      <p><strong>Total Paid (Last 6 Months):</strong> ৳${totalPaid}</p>
+      <div style="margin-top:8px">
+        <button class="btn btn-primary" onclick="sendBalanceWhatsApp()">📲 Send Balance via WhatsApp</button>
+      </div>
+    </div>
+    <div class="payment-list">
+      ${demo.map(p => `
+        <div class="payment-receipt">
+          <div class="receipt-header">
+            <span><strong>Date:</strong> ${p.date}</span>
+            <span class="status-badge">${p.status}</span>
+          </div>
+          <div class="receipt-details">
+            <p><strong>Amount:</strong> ৳${p.amount}</p>
+            <p><strong>Transaction ID:</strong> ${p.transactionId}</p>
+            <p><strong>Payment Method:</strong> ${p.method}</p>
+          </div>
+          <button class="btn btn-secondary" onclick="downloadReceipt('${p.transactionId}', '${p.amount}')">📄 Download Receipt</button>
+        </div>
+      `).join('')}
+    </div>
+  `;
+
+  container.innerHTML = html;
+}
+window.showDemoPayments = showDemoPayments;

@@ -648,7 +648,7 @@ async function viewUpdateHistory() {
         </div>
       `).join('');
     } else {
-      historyContainer.innerHTML = `<p style="text-align: center; color: #666;">${t.noHistory}</p>`;
+      historyContainer.innerHTML = `<p style="text-align: center; color: #666;">${t.noHistory}</p><div style="text-align:center;margin-top:8px;"><button class="btn btn-secondary" onclick="showDemoHistory()">Show demo history</button></div>`;
     }
   } catch (err) {
     console.error('viewUpdateHistory error:', err);
@@ -670,6 +670,26 @@ function closeUpdateHistory() {
   const modal = document.getElementById("historyModal");
   if (modal) modal.style.display = "none";
 }
+
+// Client-side demo history (no server changes)
+function showDemoHistory() {
+  const historyContainer = document.getElementById("historyContainer");
+  if (!historyContainer) return;
+  const now = new Date();
+  const demo = [];
+  for (let i = 0; i < 8; i++) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 5 + i);
+    demo.push({ date: d.toLocaleDateString(), balance: (Math.random() * 1200 - 200).toFixed(2), description: 'Auto update' });
+  }
+  historyContainer.innerHTML = demo.map(item => `
+    <div class="history-item">
+      <div class="history-date">📅 ${item.date}</div>
+      <div class="history-balance">💰 Balance: <strong>${item.balance}</strong></div>
+      <div class="history-description">${item.description}</div>
+    </div>
+  `).join('');
+}
+window.showDemoHistory = showDemoHistory;
 
 window.addEventListener("click", function(event) {
   const modal = document.getElementById("historyModal");

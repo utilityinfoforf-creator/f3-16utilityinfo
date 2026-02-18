@@ -141,6 +141,16 @@ function doGet(e) {
     return jsonWithCORS_({ version: WEB_APP_VERSION, timestamp: Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "yyyy-MM-dd'T'HH:mm:ss'Z'") }, e);
   }
 
+  // Admin/dev helper: seed sample data (no id required)
+  if (action === 'seedSample' || action === 'populateSample') {
+    try {
+      var result = populateSampleData_();
+      return jsonWithCORS_({ status: 'ok', result: result }, e);
+    } catch (err) {
+      return jsonWithCORS_({ error: 'seed_failed', message: (err && err.message) ? err.message : String(err) }, e);
+    }
+  }
+
   if (!id) return jsonWithCORS_({ error: 'Missing Customer ID' }, e);
 
   if (e.parameter.history === 'true') return jsonWithCORS_({ history: getCustomerHistory_(ss, id) }, e);
@@ -724,4 +734,72 @@ function getOrCreateVerificationSheet_() {
     sheet.appendRow(["CustomerID", "Email", "VerificationCode", "Timestamp"]);
   }
   return sheet;
+}
+
+/**
+ * Populate sample rows into sheets for local testing.
+ * Run this from the Apps Script editor to create demo data.
+ */
+function populateSampleData_() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var dash = ss.getSheetByName('DashboardData') || ss.insertSheet('DashboardData');
+  if (dash.getLastRow() === 0) dash.appendRow(["CustomerID", "Name", "ElectricBalance", "WaterBillDue", "GasBillDue", "LastUpdated", "FlatNumber", "InternetConnected", "InternetBillDue"]);
+
+  var history = getOrCreateHistorySheet_(ss);
+  var paymentLog = ss.getSheetByName('PaymentLog') || ss.insertSheet('PaymentLog');
+  if (paymentLog.getLastRow() === 0) paymentLog.appendRow(["Timestamp","CustomerID","Name","FlatNumber","TransactionNumber"]);
+  var usage = getOrCreateUsageSheet_(ss);
+  var subs = getOrCreateSubsSheet_(ss);
+
+  var now = new Date();
+  var ts = Utilities.formatDate(now, Session.getScriptTimeZone(), "EEEE, dd MMM yyyy hh:mm a");
+
+  // Write two sample customers (upsert)
+  var existing = dash.getDataRange().getValues();
+  var ids = existing.map(function(r){ return String(r[0]||'').trim(); });
+
+  function upsertDash(id, name, balance, water, gas, flat) {
+    var found = false;
+    var data = dash.getDataRange().getValues();
+    for (var i = 1; i < data.length; i++) {
+      if (String(data[i][0]).trim() === id) {
+        dash.getRange(i+1,2).setValue(name);
+        dash.getRange(i+1,3).setValue(balance);
+        dash.getRange(i+1,4).setValue(water);
+        dash.getRange(i+1,5).setValue(gas);
+        dash.getRange(i+1,6).setValue(ts);
+        dash.getRange(i+1,7).setValue(flat);
+        found = true; break;
+      }
+    }
+    if (!found) dash.appendRow([id, name, balance, water, gas, ts, flat, 'Yes', '0']);
+  }
+
+  upsertDash('CUST001','Ayesha Rahman', 450.75, 120.00, 30.50, 'A-101');
+  upsertDash('CUST002','Rafiq Khan', -120.00, 0, 0, 'B-203');
+
+  // Add some history rows
+  history.appendRow([Utilities.formatDate(new Date(now.getTime() - 1000*60*60*24*30), Session.getScriptTimeZone(), 'yyyy-MM-dd'), 'CUST001', 520.00, 'Monthly billing']);
+  history.appendRow([Utilities.formatDate(new Date(now.getTime() - 1000*60*60*24*15), Session.getScriptTimeZone(), 'yyyy-MM-dd'), 'CUST001', 450.75, 'Payment received']);
+  history.appendRow([Utilities.formatDate(new Date(now.getTime() - 1000*60*60*24*40), Session.getScriptTimeZone(), 'yyyy-MM-dd'), 'CUST002', -120.00, 'Adjustment']);
+
+  // Add payment log entries
+  paymentLog.appendRow([Utilities.formatDate(new Date(now.getTime() - 1000*60*60*24*10), Session.getScriptTimeZone(), 'EEEE, dd MMM yyyy hh:mm a'), 'CUST001', 'Ayesha Rahman', 'A-101', 'TXN1001']);
+  paymentLog.appendRow([Utilities.formatDate(new Date(now.getTime() - 1000*60*60*24*35), Session.getScriptTimeZone(), 'EEEE, dd MMM yyyy hh:mm a'), 'CUST002', 'Rafiq Khan', 'B-203', 'TXN1002']);
+
+  // Add usage data for last 12 months for CUST001
+  for (var m = 0; m < 12; m++) {
+    var d = new Date(now.getFullYear(), now.getMonth() - m, 1);
+    var ym = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
+    var e = Math.round(Math.random()*200 + 100);
+    var w = Math.round(Math.random()*50 + 10);
+    var g = Math.round(Math.random()*20 + 5);
+    usage.appendRow(['CUST001', ym, e, w, g]);
+  }
+
+  // Subscriptions
+  subs.appendRow(['CUST001','ayesha@example.com','true']);
+  subs.appendRow(['CUST002','rafiq@example.com','false']);
+
+  return { status: 'Sample data populated' };
 }
