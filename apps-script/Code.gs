@@ -7,27 +7,30 @@
 /***** INITIALIZE ALL SHEETS ON FIRST RUN *****/
 function initializeSpreadsheet() {
   var ss = getSpreadsheet_();
-  
-  // Create DashboardData sheet if it doesn't exist
-  if (!ss.getSheetByName("DashboardData")) {
-    var dashSheet = ss.insertSheet("DashboardData");
+
+  var DASH = getSheetName_('DASHBOARD_SHEET');
+  var FLAT = getSheetName_('FLATLOOKUP_SHEET');
+
+  // Create Dashboard sheet if it doesn't exist
+  if (!ss.getSheetByName(DASH)) {
+    var dashSheet = ss.insertSheet(DASH);
     dashSheet.appendRow(["CustomerID", "Name", "ElectricBalance", "WaterBillDue", "GasBillDue", "LastUpdated", "FlatNumber", "InternetConnected", "InternetBillDue"]);
-    Logger.log("✅ DashboardData sheet created");
+    Logger.log("✅ " + DASH + " sheet created");
   }
-  
+
   // Create FlatLookup sheet if it doesn't exist
-  if (!ss.getSheetByName("FlatLookup")) {
-    var flatSheet = ss.insertSheet("FlatLookup");
+  if (!ss.getSheetByName(FLAT)) {
+    var flatSheet = ss.insertSheet(FLAT);
     flatSheet.appendRow(["CustomerID", "FlatNumber"]);
-    Logger.log("✅ FlatLookup sheet created");
+    Logger.log("✅ " + FLAT + " sheet created");
   }
-  
+
   // These will auto-create when needed, but we can pre-create them
   getOrCreateHistorySheet_(ss);
   getOrCreateSubsSheet_(ss);
   getOrCreateVerificationSheet_();
   getOrCreateUsageSheet_(ss);
-  
+
   Logger.log("✅ All sheets initialized successfully");
 }
 
@@ -41,12 +44,14 @@ var WEB_APP_VERSION = '1.0.0';
 function onFormSubmit(e) {
   var ss = getSpreadsheet_();
   // Ensure dashboard exists
-  var dashSheet = ss.getSheetByName("DashboardData");
+  var dashName = getSheetName_('DASHBOARD_SHEET');
+  var lookupName = getSheetName_('FLATLOOKUP_SHEET');
+  var dashSheet = ss.getSheetByName(dashName);
   if (!dashSheet) {
-    dashSheet = ss.insertSheet("DashboardData");
+    dashSheet = ss.insertSheet(dashName);
     dashSheet.appendRow(["CustomerID", "Name", "ElectricBalance", "WaterBillDue", "GasBillDue", "LastUpdated", "FlatNumber", "InternetConnected", "InternetBillDue"]);
   }
-  var lookupSheet = ss.getSheetByName("FlatLookup");
+  var lookupSheet = ss.getSheetByName(lookupName);
 
   // Prefer e.values for form submit; fallback to namedValues or range
   var values = (e && e.values) ? e.values
@@ -125,7 +130,7 @@ function onFormSubmit(e) {
 /***** WEB APP: GET *****/
 function doGet(e) {
   var ss = getSpreadsheet_();
-  var dashSheet = ss.getSheetByName("DashboardData");
+  var dashSheet = ss.getSheetByName(getSheetName_('DASHBOARD_SHEET'));
   if (!dashSheet) {
     return jsonWithCORS_({ error: "DashboardData sheet not found. Please run initializeSpreadsheet() or contact admin." }, e);
   }
@@ -220,7 +225,7 @@ function doPost(e) {
 
     var payload = JSON.parse(raw);
     var action = payload.action || '';
-    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var ss = getSpreadsheet_();
 
     // API key enforcement (optional): stored in Script Properties
     var requiredKey = PropertiesService.getScriptProperties().getProperty('API_KEY') || '';
@@ -250,10 +255,11 @@ function doPost(e) {
 
 /***** PAYMENT CONFIRMATION *****/
 function confirmPayment_(ss, id, transactionNumber) {
-  var dashSheet = ss.getSheetByName("DashboardData");
-  if (!dashSheet) return "❌ DashboardData sheet missing.";
+  var dashSheet = ss.getSheetByName(getSheetName_('DASHBOARD_SHEET'));
+  if (!dashSheet) return "❌ Dashboard sheet missing.";
 
-  var logSheet = ss.getSheetByName("PaymentLog") || ss.insertSheet("PaymentLog");
+  var logSheetName = getSheetName_('PAYMENTLOG_SHEET');
+  var logSheet = ss.getSheetByName(logSheetName) || ss.insertSheet(logSheetName);
 
   if (logSheet.getLastRow() === 0) {
     logSheet.appendRow(["Timestamp","CustomerID","Name","FlatNumber","TransactionNumber"]);
@@ -291,9 +297,10 @@ function confirmPayment_(ss, id, transactionNumber) {
 
 /***** HISTORY TRACKING *****/
 function getOrCreateHistorySheet_(ss) {
-  var sheet = ss.getSheetByName("BalanceHistory");
+  var name = getSheetName_('HISTORY_SHEET');
+  var sheet = ss.getSheetByName(name);
   if (!sheet) {
-    sheet = ss.insertSheet("BalanceHistory");
+    sheet = ss.insertSheet(name);
     sheet.appendRow(["Timestamp", "CustomerID", "ElectricBalance", "Description"]);
   }
   return sheet;
@@ -330,6 +337,24 @@ function getScriptProperties_() {
   return safe;
 }
 
+/**
+ * Return sheet name for a logical key. Keys read from Script Properties
+ * allow customizing sheet names without code changes. Defaults map below.
+ */
+function getSheetName_(key) {
+  var props = PropertiesService.getScriptProperties();
+  var defaults = {
+    'DASHBOARD_SHEET': 'DashboardData',
+    'FLATLOOKUP_SHEET': 'FlatLookup',
+    'HISTORY_SHEET': 'BalanceHistory',
+    'SUBSCRIPTIONS_SHEET': 'Subscriptions',
+    'VERIFICATION_SHEET': 'EmailVerification',
+    'USAGE_SHEET': 'UsageData',
+    'PAYMENTLOG_SHEET': 'PaymentLog'
+  };
+  return props.getProperty(key) || defaults[key] || key;
+}
+
 function getCustomerHistory_(ss, customerId) {
   var historySheet = getOrCreateHistorySheet_(ss);
   var data = historySheet.getDataRange().getValues();
@@ -346,7 +371,7 @@ function getCustomerHistory_(ss, customerId) {
 
 /* ----------------- Read-only sheet helpers ----------------- */
 function getSheetDataObjects_(sheetName) {
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var ss = getSpreadsheet_();
   var sheet = ss.getSheetByName(sheetName);
   if (!sheet) return { error: 'Sheet not found: ' + sheetName, rows: [] };
   var values = sheet.getDataRange().getValues();
@@ -365,7 +390,7 @@ function getSheetDataObjects_(sheetName) {
 }
 
 function listAvailableSheets_() {
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var ss = getSpreadsheet_();
   return ss.getSheets().map(function(s){ return s.getName(); });
 }
 
