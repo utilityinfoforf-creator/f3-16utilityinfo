@@ -6,7 +6,7 @@
 
 /***** INITIALIZE ALL SHEETS ON FIRST RUN *****/
 function initializeSpreadsheet() {
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var ss = getSpreadsheet_();
   
   // Create DashboardData sheet if it doesn't exist
   if (!ss.getSheetByName("DashboardData")) {
@@ -39,7 +39,7 @@ var WEB_APP_VERSION = '1.0.0';
 
 /***** FORM SUBMISSION: updates DashboardData *****/
 function onFormSubmit(e) {
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var ss = getSpreadsheet_();
   // Ensure dashboard exists
   var dashSheet = ss.getSheetByName("DashboardData");
   if (!dashSheet) {
@@ -124,7 +124,7 @@ function onFormSubmit(e) {
 
 /***** WEB APP: GET *****/
 function doGet(e) {
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var ss = getSpreadsheet_();
   var dashSheet = ss.getSheetByName("DashboardData");
   if (!dashSheet) {
     return jsonWithCORS_({ error: "DashboardData sheet not found. Please run initializeSpreadsheet() or contact admin." }, e);
@@ -135,6 +135,17 @@ function doGet(e) {
   var action = (e.parameter.action || '').trim();
   var subscribe = e.parameter.subscribe;
   var email = (e.parameter.email || '').trim();
+  // Diagnostic endpoint for debugging deployments
+  if (action === 'diagnose') {
+    try {
+      var props = getScriptProperties_();
+      var sheets = [];
+      try { sheets = listAvailableSheets_(); } catch(e){ sheets = ['error_reading_sheets: '+ (e.message || e)]; }
+      return jsonWithCORS_({ status: 'ok', properties: props, sheets: sheets }, e);
+    } catch (err) {
+      return jsonWithCORS_({ error: 'diagnose_failed', message: (err && err.message) ? err.message : String(err) }, e);
+    }
+  }
 
   // Public action: get current deployed web-app version (no id required)
   if (action === 'getVersion') {
@@ -286,6 +297,37 @@ function getOrCreateHistorySheet_(ss) {
     sheet.appendRow(["Timestamp", "CustomerID", "ElectricBalance", "Description"]);
   }
   return sheet;
+}
+
+/**
+ * Robust spreadsheet getter. Prefer SPREADSHEET_ID Script Property if present,
+ * otherwise fall back to container-bound active spreadsheet. Throws an error
+ * object if no spreadsheet can be found.
+ */
+function getSpreadsheet_() {
+  var props = PropertiesService.getScriptProperties();
+  var ssId = props.getProperty('SPREADSHEET_ID');
+  if (ssId) {
+    try {
+      return SpreadsheetApp.openById(ssId);
+    } catch (err) {
+      throw new Error('Unable to open spreadsheet by SPREADSHEET_ID: ' + err.message);
+    }
+  }
+  var active = SpreadsheetApp.getActiveSpreadsheet();
+  if (active) return active;
+  throw new Error('No spreadsheet available. Set Script Property SPREADSHEET_ID or run as a container-bound script.');
+}
+
+/** Return key script properties useful for diagnostics. */
+function getScriptProperties_() {
+  var props = PropertiesService.getScriptProperties().getProperties();
+  // Don't return sensitive keys
+  var safe = {};
+  ['WEB_APP_VERSION','PAYMENT_NOTIFICATION_EMAIL','API_KEY','SPREADSHEET_ID'].forEach(function(k){
+    if (props[k]) safe[k] = props[k];
+  });
+  return safe;
 }
 
 function getCustomerHistory_(ss, customerId) {
