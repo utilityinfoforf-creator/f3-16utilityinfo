@@ -157,6 +157,11 @@ function doGet(e) {
     return jsonWithCORS_({ version: WEB_APP_VERSION, timestamp: Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "yyyy-MM-dd'T'HH:mm:ss'Z'") }, e);
   }
 
+  // Export all data as JSON for static dashboard (no id required)
+  if (action === 'export') {
+    return doGet_Export(e);
+  }
+
   // Admin/dev helper: seed sample data (no id required)
   if (action === 'seedSample' || action === 'populateSample') {
     try {
@@ -406,4 +411,152 @@ function jsonWithCORS_(obj, e) {
     out.setMimeType(ContentService.MimeType.JSON);
     return out;
   }
+}
+
+/***** EXPORT FOR STATIC DASHBOARD *****/
+function exportDashboardDataAsJSON() {
+  var ss = getSpreadsheet_();
+  var dashName = getSheetName_('DASHBOARD_SHEET');
+  var dashSheet = ss.getSheetByName(dashName);
+  var historySheet = getOrCreateHistorySheet_(ss);
+  var usageSheet = getOrCreateUsageSheet_(ss);
+
+  if (!dashSheet) {
+    Logger.log("DashboardData sheet not found");
+    return null;
+  }
+
+  var dashData = dashSheet.getDataRange().getValues();
+  var historyData = historySheet.getDataRange().getValues();
+  var usageData = usageSheet.getDataRange().getValues();
+
+  var customers = [];
+
+  // Convert dashboard rows to objects
+  for (var i = 1; i < dashData.length; i++) {
+    var row = dashData[i];
+    var customerId = String(row[0] || '').trim();
+
+    if (!customerId) continue;
+
+    // Get history for this customer
+    var customerHistory = [];
+    for (var h = 1; h < historyData.length; h++) {
+      if (String(historyData[h][1]).trim() === customerId) {
+        customerHistory.push({
+          date: String(historyData[h][0] || ''),
+          balance: String(historyData[h][2] || '0'),
+          description: String(historyData[h][3] || '')
+        });
+      }
+    }
+    customerHistory.reverse();
+
+    // Get usage trends
+    var monthlyData = {};
+    for (var u = 1; u < usageData.length; u++) {
+      if (String(usageData[u][0]).trim() === customerId) {
+        var yearMonth = String(usageData[u][1] || '').trim();
+        var eVal = parseFloat(usageData[u][2]) || 0;
+        var wVal = parseFloat(usageData[u][3]) || 0;
+        var gVal = parseFloat(usageData[u][4]) || 0;
+
+        if (!monthlyData[yearMonth]) {
+          monthlyData[yearMonth] = { electric: 0, water: 0, gas: 0 };
+        }
+        monthlyData[yearMonth].electric += eVal;
+        monthlyData[yearMonth].water += wVal;
+        monthlyData[yearMonth].gas += gVal;
+      }
+    }
+
+    // Build 12-month trends
+    var now = new Date();
+    var trendsData = [];
+    var totalElectric = 0, totalWater = 0, totalGas = 0, count = 0;
+
+    for (var m = 11; m >= 0; m--) {
+      var date = new Date(now.getFullYear(), now.getMonth() - m, 1);
+      var yearMonth = date.getFullYear() + "-" + String(date.getMonth() + 1).padStart(2, "0");
+      var month = date.toLocaleDateString('en-US', { month: 'short' });
+
+      var monthData = monthlyData[yearMonth] || { electric: 0, water: 0, gas: 0 };
+      trendsData.push({
+        month: month,
+        electric: monthData.electric,
+        water: monthData.water,
+        gas: monthData.gas
+      });
+      totalElectric += monthData.electric;
+      totalWater += monthData.water;
+      totalGas += monthData.gas;
+      count++;
+    }
+
+    var avgElectric = (count > 0 ? (totalElectric / count).toFixed(2) : '0');
+    var avgWater = (count > 0 ? (totalWater / count).toFixed(2) : '0');
+    var avgGas = (count > 0 ? (totalGas / count).toFixed(2) : '0');
+
+    // Monthly comparison (last 6 months)
+    var monthlyComparison = [];
+    var allMonths = Object.keys(monthlyData).sort().slice(-6);
+    for (var mi = 0; mi < allMonths.length; mi++) {
+      var ym = allMonths[mi];
+      var parts = ym.split("-");
+      var mDate = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, 1);
+      var mName = mDate.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+      var mData = monthlyData[ym];
+      monthlyComparison.push({
+        month: mName,
+        electric: mData.electric,
+        water: mData.water,
+        gas: mData.gas,
+        total: (mData.electric + mData.water + mData.gas).toFixed(2)
+      });
+    }
+
+    customers.push({
+      id: customerId,
+      name: row[1] || '',
+      flatNumber: row[6] || '',
+      electricBalance: String(row[2] || '0'),
+      waterBillDue: String(row[3] || '0'),
+      gasBillDue: String(row[4] || '0'),
+      internetBillDue: String(row[8] || '0'),
+      internetConnected: row[7] || 'Unknown',
+      lastUpdated: row[5] instanceof Date ? Utilities.formatDate(row[5], Session.getScriptTimeZone(), 'EEEE, dd MMM yyyy hh:mm a') : String(row[5] || ''),
+      history: customerHistory,
+      usageTrends: {
+        data: trendsData,
+        avgElectric: avgElectric,
+        avgWater: avgWater,
+        avgGas: avgGas,
+        trend: trendsData.length > 1 && trendsData[trendsData.length - 1].electric > trendsData[0].electric ? '📈 Increasing' : '📉 Decreasing'
+      },
+      monthlyComparison: {
+        months: monthlyComparison
+      }
+    });
+  }
+
+  var exportData = {
+    customers: customers,
+    lastExported: new Date().toString(),
+    metadata: {
+      totalCustomers: customers.length,
+      building: "F3-16",
+      organization: "Utility Corporations"
+    }
+  };
+
+  Logger.log("Export successful: " + customers.length + " customers exported");
+  return exportData;
+}
+
+function doGet_Export(e) {
+  var exportData = exportDashboardDataAsJSON();
+  if (!exportData) {
+    return jsonWithCORS_({ error: "Failed to export data" }, e);
+  }
+  return jsonWithCORS_(exportData, e);
 }

@@ -1,0 +1,68 @@
+{
+  "customers": [
+    {
+      "id": "C001",
+      "name": "Ahmed Hassan",
+      "flatNumber": "3A",
+      "electricBalance": "1500",
+      "waterBillDue": "800",
+      "gasBillDue": "600",
+      "internetBillDue": "1200",
+      "internetConnected": "Yes",
+      "lastUpdated": "Monday, 28 Mar 2026 03:45 PM",
+      "history": [
+        {
+          "date": "28 Mar 2026",
+          "balance": "1500",
+          "description": "Balance update"
+        },
+        {
+          "date": "27 Mar 2026",
+          "balance": "1450",
+          "description": "Balance update"
+        },
+        {
+          "date": "26 Mar 2026",
+          "balance": "1400",
+          "description": "Balance update"
+        }
+      ],
+      "usageTrends": {
+        "data": [
+          {"month": "Apr", "electric": 450, "water": 120, "gas": 85},
+          {"month": "May", "electric": 480, "water": 125, "gas": 90},
+          {"month": "Jun", "electric": 520, "water": 140, "gas": 95},
+          {"month": "Jul", "electric": 580, "water": 150, "gas": 100},
+          {"month": "Aug", "electric": 620, "water": 160, "gas": 105},
+          {"month": "Sep", "electric": 550, "water": 145, "gas": 98},
+          {"month": "Oct", "electric": 490, "water": 130, "gas": 92},
+          {"month": "Nov", "electric": 420, "water": 115, "gas": 80},
+          {"month": "Dec", "electric": 380, "water": 105, "gas": 75},
+          {"month": "Jan", "electric": 400, "water": 110, "gas": 78},
+          {"month": "Feb", "electric": 430, "water": 118, "gas": 82},
+          {"month": "Mar", "electric": 460, "water": 125, "gas": 88}
+        ],
+        "avgElectric": "490.25",
+        "avgWater": "129.17",
+        "avgGas": "89.67",
+        "trend": "📈 Increasing"
+      },
+      "monthlyComparison": {
+        "months": [
+          {"month": "Oct 2025", "electric": 490, "water": 130, "gas": 92, "total": "712.00"},
+          {"month": "Nov 2025", "electric": 420, "water": 115, "gas": 80, "total": "615.00"},
+          {"month": "Dec 2025", "electric": 380, "water": 105, "gas": 75, "total": "560.00"},
+          {"month": "Jan 2026", "electric": 400, "water": 110, "gas": 78, "total": "588.00"},
+          {"month": "Feb 2026", "electric": 430, "water": 118, "gas": 82, "total": "630.00"},
+          {"month": "Mar 2026", "electric": 460, "water": 125, "gas": 88, "total": "673.00"}
+        ]
+      }
+    }
+  ],
+  "lastExported": "28 Mar 2026 03:45 PM",
+  "metadata": {
+    "totalCustomers": 1,
+    "building": "F3-16",
+    "organization": "Utility Corporations"
+  }
+}

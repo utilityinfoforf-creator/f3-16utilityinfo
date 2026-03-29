@@ -1,0 +1,268 @@
+{
+  "staticDashboardSetup": {
+    "name": "F3-16 Utility Dashboard - Static Viewer",
+    "description": "GitHub-hosted read-only dashboard for utility data",
+    "version": "1.0.0",
+
+    "files": {
+      "mainDashboard": {
+        "path": "dashboard-static.html",
+        "description": "Main viewer application",
+        "size": "~25KB",
+        "dependencies": ["data.json", "Chart.js (CDN)"],
+        "features": [
+          "Customer data lookup",
+          "Usage trends (12 months)",
+          "Monthly comparison",
+          "Balance history",
+          "CSV export",
+          "Responsive design"
+        ]
+      },
+
+      "customerData": {
+        "path": "data.json",
+        "description": "Customer data (auto-updated)",
+        "format": "JSON",
+        "structure": {
+          "customers": "Array of customer objects",
+          "lastExported": "Timestamp of last update",
+          "metadata": "Building info"
+        },
+        "updateFrequency": "Daily (automated via GitHub Actions)"
+      },
+
+      "documentation": [
+        {
+          "file": "STATIC_DASHBOARD_GUIDE.md",
+          "purpose": "Complete setup guide"
+        },
+        {
+          "file": "QUICK_REFERENCE.md",
+          "purpose": "Quick start & troubleshooting"
+        },
+        {
+          "file": "_config.yml",
+          "purpose": "GitHub Pages theme config"
+        }
+      ]
+    },
+
+    "setup": {
+      "step1_prerequisites": {
+        "title": "Prerequisites",
+        "items": [
+          "GitHub repository with write access",
+          "Google Apps Script deployment URL (optional, for auto-export)"
+        ]
+      },
+
+      "step2_enableGitHubPages": {
+        "title": "Enable GitHub Pages",
+        "instructions": [
+          "Go to Repository → Settings",
+          "Find 'Pages' section (left sidebar)",
+          "Source: Select 'Deploy from branch'",
+          "Branch: Select 'main'",
+          "Folder: Select '/ (root)'",
+          "Save"
+        ],
+        "result": "Site published at: https://username.github.io/repo-name/"
+      },
+
+      "step3_setupAutoExport": {
+        "title": "Setup Auto-Export (Optional)",
+        "instructions": [
+          "Go to Repository → Settings → Secrets and variables → Actions",
+          "New repository secret",
+          "Name: APPS_SCRIPT_EXPORT_URL",
+          "Value: Your Apps Script deployment URL with ?action=export",
+          "Save",
+          "Workflow will auto-export daily at 2 AM UTC"
+        ],
+        "result": "data.json updates automatically every day"
+      },
+
+      "step4_accessDashboard": {
+        "title": "Access Dashboard",
+        "url": "https://username.github.io/repo-name/dashboard-static.html",
+        "instructions": [
+          "Open URL in browser",
+          "Enter Customer ID from data.json",
+          "Click 'Load Data'",
+          "View utility information"
+        ]
+      }
+    },
+
+    "deployment": {
+      "github_pages": {
+        "hosting": "Free with GitHub repository",
+        "ssl": "Automatic HTTPS",
+        "uptime": "99.9% (GitHub SLA)",
+        "cdn": "Automatic (GitHub Pages CDN)",
+        "customDomain": "Supported"
+      },
+
+      "alternatives": {
+        "netlify": {
+          "process": "Connect GitHub repo to Netlify",
+          "benefit": "Automatic deployments on push"
+        },
+        "vercel": {
+          "process": "Import GitHub project",
+          "benefit": "Serverless functions available"
+        },
+        "self_hosted": {
+          "process": "Copy files to web server",
+          "files": ["dashboard-static.html", "data.json"]
+        }
+      }
+    },
+
+    "features": {
+      "readOnly": {
+        "description": "No write permissions needed",
+        "benefit": "Safe for public use"
+      },
+
+      "noBackend": {
+        "description": "No server-side code required",
+        "benefit": "No infrastructure costs"
+      },
+
+      "responsive": {
+        "description": "Works on all screen sizes",
+        "browsers": ["Chrome", "Firefox", "Safari", "Edge"]
+      },
+
+      "fastPerformance": {
+        "description": "Static files = instant load",
+        "size": "Combined ~60KB (including charts)"
+      },
+
+      "dataVisualization": {
+        "features": [
+          "Usage trends (Line chart, 12 months)",
+          "Average usage (Pie/Doughnut chart)",
+          "Monthly comparison (Bar chart)",
+          "Balance history (Table)"
+        ],
+        "library": "Chart.js 3.9.1 (via CDN)"
+      }
+    },
+
+    "dataManagement": {
+      "format": "JSON",
+      "structure": {
+        "customers": [
+          {
+            "id": "string (Customer ID)",
+            "name": "string",
+            "flatNumber": "string",
+            "electricBalance": "string (formatted amount)",
+            "waterBillDue": "string",
+            "gasBillDue": "string",
+            "internetBillDue": "string",
+            "internetConnected": "string (Yes/No)",
+            "lastUpdated": "string (formatted date)",
+            "history": [
+              {"date": "string", "balance": "string", "description": "string"}
+            ],
+            "usageTrends": {
+              "data": [
+                {"month": "string", "electric": "number", "water": "number", "gas": "number"}
+              ],
+              "avgElectric": "string",
+              "avgWater": "string",
+              "avgGas": "string",
+              "trend": "string (📈/📉)"
+            },
+            "monthlyComparison": {
+              "months": [
+                {"month": "string", "electric": "number", "water": "number", "gas": "number", "total": "string"}
+              ]
+            }
+          }
+        ],
+        "lastExported": "string (timestamp)",
+        "metadata": {
+          "totalCustomers": "number",
+          "building": "string",
+          "organization": "string"
+        }
+      }
+    },
+
+    "updateProcess": {
+      "automated": {
+        "method": "GitHub Actions",
+        "schedule": "Daily at 02:00 UTC",
+        "workflow": ".github/workflows/export-utility-data.yml",
+        "process": [
+          "Fetch data from Apps Script export endpoint",
+          "Validate JSON format",
+          "Compare with previous version",
+          "Commit if changed",
+          "Push to repository",
+          "GitHub Pages auto-deploys"
+        ]
+      },
+
+      "manual": {
+        "method": "Direct data.json update",
+        "process": [
+          "Export from Apps Script console",
+          "Copy JSON output",
+          "Update data.json in repository",
+          "Commit with message",
+          "Push to main branch",
+          "GitHub Pages auto-updates (2-3 min)"
+        ]
+      }
+    },
+
+    "security": {
+      "dataLocation": "GitHub repository (public or private)",
+      "transmission": "HTTPS (GitHub Pages automatic)",
+      "processing": "Client-side JavaScript (no backend)",
+      "storage": "Browser memory only (no cookies)",
+      "apiKey": "Not required for frontend",
+      "authentication": "Optional (can add login page)"
+    },
+
+    "performance": {
+      "pageSize": "~25KB (HTML)",
+      "dataSize": "Variable (depends on customer count)",
+      "loadTime": "<2 seconds (depends on data.json size)",
+      "chartsLibrary": "Chart.js from CDN (loaded on demand)",
+      "cdn": "GitHub Pages CDN worldwide"
+    },
+
+    "troubleshooting": {
+      "blankPage": {
+        "cause": "data.json not found or invalid",
+        "solution": "Verify data.json exists and is valid JSON"
+      },
+      "customerNotFound": {
+        "cause": "Wrong Customer ID or data mismatch",
+        "solution": "Check spelling in data.json"
+      },
+      "chartsNotShowing": {
+        "cause": "Missing usageTrends data",
+        "solution": "Ensure usageTrends object in customer data"
+      },
+      "siteNotPublished": {
+        "cause": "GitHub Pages not enabled",
+        "solution": "Check Settings → Pages configuration"
+      }
+    },
+
+    "maintenance": {
+      "updateData": "Update data.json as needed",
+      "monitoring": "Check GitHub Actions for export errors",
+      "backups": "GitHub history (automatic)",
+      "retention": "Indefinite (GitHub keeps history)"
+    }
+  }
+}
