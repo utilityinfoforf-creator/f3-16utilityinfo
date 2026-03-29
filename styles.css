@@ -43,9 +43,37 @@ body {
   transition: background-color 0.3s, color 0.3s;
 }
 
-.container { 
-  max-width: 1400px; 
+.container {
+  max-width: 1400px;
   margin: 0 auto;
+}
+
+/* ===== THEME TOGGLE ===== */
+.theme-toggle {
+  background: none;
+  border: 2px solid white;
+  color: white;
+  width: 44px;
+  height: 44px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s;
+  margin-right: 8px;
+}
+
+.theme-toggle:hover {
+  background: rgba(255, 255, 255, 0.1);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.dark-mode .theme-toggle {
+  border-color: #666;
+  color: #ddd;
 }
 
 /* ===== DASHBOARD HEADER ===== */
@@ -73,6 +101,7 @@ body {
   display: flex;
   gap: 8px;
   z-index: 100;
+  align-items: center;
 }
 
 .lang-btn {
@@ -95,6 +124,16 @@ body {
   background: #667eea;
   color: #fff;
   border-color: #667eea;
+}
+
+.dark-mode .lang-btn {
+  background: var(--input-bg);
+  color: var(--text-primary);
+}
+
+.dark-mode .lang-btn.active {
+  background: #667eea;
+  color: #fff;
 }
 
 /* ===== MAIN DASHBOARD LAYOUT ===== */
@@ -120,18 +159,19 @@ body {
 }
 
 .stat-card {
-  background: white;
+  background: var(--bg-primary);
   border-radius: 12px;
   padding: 16px;
   display: flex;
   gap: 12px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  box-shadow: 0 2px 8px var(--card-shadow);
   transition: all 0.3s;
+  color: var(--text-primary);
 }
 
 .stat-card:hover {
   transform: translateY(-3px);
-  box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+  box-shadow: 0 4px 16px var(--card-shadow);
 }
 
 .stat-icon {
@@ -145,7 +185,7 @@ body {
 
 .stat-label {
   font-size: 12px;
-  color: #999;
+  color: var(--text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -187,16 +227,17 @@ body {
 
 /* Bills Due Section */
 .bills-due-section {
-  background: white;
+  background: var(--bg-primary);
   border-radius: 12px;
   padding: 18px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  box-shadow: 0 2px 8px var(--card-shadow);
+  color: var(--text-primary);
 }
 
 .bills-due-section h3 {
   font-size: 14px;
   margin-bottom: 12px;
-  color: #333;
+  color: var(--text-primary);
 }
 
 .bill-item {
@@ -204,8 +245,9 @@ body {
   justify-content: space-between;
   align-items: center;
   padding: 10px 0;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid var(--border-color);
   font-size: 13px;
+  color: var(--text-primary);
 }
 
 .bill-item:last-child {
@@ -218,11 +260,11 @@ body {
 }
 
 .bill-item.total-bill {
-  border-top: 2px solid #f0f0f0;
+  border-top: 2px solid var(--border-color);
   margin-top: 8px;
   padding-top: 12px;
   font-weight: 700;
-  color: #333;
+  color: var(--text-primary);
 }
 
 .bill-amount-total {
@@ -232,16 +274,17 @@ body {
 
 /* Connection Status */
 .connection-status {
-  background: white;
+  background: var(--bg-primary);
   border-radius: 12px;
   padding: 18px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  box-shadow: 0 2px 8px var(--card-shadow);
+  color: var(--text-primary);
 }
 
 .connection-status h3 {
   font-size: 14px;
   margin-bottom: 12px;
-  color: #333;
+  color: var(--text-primary);
 }
 
 .status-item {
@@ -249,8 +292,9 @@ body {
   justify-content: space-between;
   align-items: center;
   padding: 10px 0;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid var(--border-color);
   font-size: 12px;
+  color: var(--text-primary);
 }
 
 .status-item:last-child {
@@ -262,8 +306,8 @@ body {
   border-radius: 12px;
   font-size: 11px;
   font-weight: 600;
-  background: #f0f0f0;
-  color: #666;
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
 }
 
 .status-badge.active {
@@ -272,7 +316,7 @@ body {
 }
 
 .status-value {
-  color: #666;
+  color: var(--text-secondary);
   font-weight: 600;
 }
 
@@ -840,12 +884,13 @@ body {
 }
 
 .login-box {
-  background: white;
+  background: var(--bg-primary);
   padding: 40px;
   border-radius: 12px;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
   width: 100%;
   max-width: 400px;
+  color: var(--text-primary);
 }
 
 .login-box h1 {
@@ -862,10 +907,12 @@ body {
 .form-group input {
   width: 100%;
   padding: 12px 14px;
-  border: 2px solid #ddd;
+  border: 2px solid var(--input-border);
   border-radius: 6px;
   font-size: 14px;
   transition: border-color 0.3s;
+  background: var(--input-bg);
+  color: var(--text-primary);
 }
 
 .form-group input:focus {
@@ -931,6 +978,18 @@ body {
     position: static;
     margin-bottom: 15px;
     flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .theme-toggle {
+    width: 36px;
+    height: 36px;
+    font-size: 16px;
+  }
+
+  .lang-btn {
+    padding: 6px 10px;
+    font-size: 11px;
   }
 
   .lang-btn {

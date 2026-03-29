@@ -1,0 +1,52 @@
+{
+  "articles": [
+    {
+      "id": 1,
+      "title": "Dark Mode Support Added",
+      "date": "2026-03-29",
+      "description": "We've added a new dark mode toggle to improve your experience during night hours. Switch between light and dark themes with a single click!",
+      "tags": ["Feature", "UI"],
+      "fullContent": "<p>We're excited to announce that <strong>dark mode is now available</strong> in the Utility Dashboard!</p><p><strong>What's New:</strong></p><ul><li>Toggle between light and dark themes using the moon/sun icon</li><li>Your theme preference is automatically saved</li><li>Smooth transitions between themes</li><li>Improved eye comfort in low-light environments</li></ul><p><strong>How to Use:</strong> Click the moon icon (🌙) in the top right corner of the dashboard to switch to dark mode. Click the sun icon (☀️) to return to light mode.</p><p>Your preference will be remembered the next time you visit!</p>"
+    },
+    {
+      "id": 2,
+      "title": "About Page & Update Articles Launched",
+      "date": "2026-03-28",
+      "description": "New About page now displays articles about the latest updates and improvements. Stay informed about what's new!",
+      "tags": ["Feature", "News"],
+      "fullContent": "<p>Welcome to our new <strong>About & Updates section</strong>!</p><p><strong>What's Included:</strong></p><ul><li>📰 Dedicated About page with update articles</li><li>📌 Latest features and improvements posted here</li><li>🏷️ Categorized with tags (Feature, Fix, Performance)</li><li>🔍 Click any article to read the full details</li></ul><p><strong>Why This Matters:</strong> You'll now be able to stay informed about new features, bug fixes, and improvements as they're released. Simply click the 📰 icon on the dashboard to browse all updates.</p><p>Articles are listed with the most recent first, making it easy to catch the latest changes!</p>"
+    },
+    {
+      "id": 3,
+      "title": "Performance Improvements",
+      "date": "2026-03-25",
+      "description": "Optimized dashboard loading times and reduced data usage. The app now loads 30% faster!",
+      "tags": ["Performance", "Fix"],
+      "fullContent": "<p>We've made significant performance improvements to make your experience faster and smoother.</p><p><strong>Performance Enhancements:</strong></p><ul><li>Dashboard loading time reduced by 30%</li><li>Optimized API calls to reduce data usage</li><li>Improved chart rendering performance</li><li>Better caching of frequently accessed data</li><li>Reduced memory footprint</li></ul><p><strong>What You'll Notice:</strong></p><ul><li>Faster login process</li><li>Quicker data updates</li><li>Smoother page transitions</li><li>Better performance on mobile devices</li></ul><p>Thank you for your patience as we continue to optimize the platform!</p>"
+    },
+    {
+      "id": 4,
+      "title": "Email Verification System Enhanced",
+      "date": "2026-03-20",
+      "description": "Improved email verification process with better security and clearer instructions for subscribers.",
+      "tags": ["Feature", "Security"],
+      "fullContent": "<p>We've enhanced our email verification system to provide better security and user experience.</p><p><strong>Improvements Made:</strong></p><ul><li>Streamlined verification code process</li><li>Clear on-screen instructions for subscribers</li><li>Better error messages if verification fails</li><li>Automatic retry mechanism</li><li>Enhanced security validation</li></ul><p><strong>How It Works:</strong></p><ol><li>Click 'Enable Email Updates' on the dashboard</li><li>Enter your email address</li><li>Check your inbox for the verification code</li><li>Enter the 8-character code to confirm</li></ol><p>Your email preferences are now stored securely and will persist across sessions!</p>"
+    },
+    {
+      "id": 5,
+      "title": "Usage Trends & Analytics Released",
+      "date": "2026-03-15",
+      "description": "New analytics features show your 12-month usage trends, average consumption, and monthly comparisons.",
+      "tags": ["Feature", "Analytics"],
+      "fullContent": "<p>We're excited to introduce comprehensive <strong>usage analytics and trends</strong>!</p><p><strong>New Features:</strong></p><ul><li>📈 12-month usage trend charts</li><li>💡 Calculate your monthly averages</li><li>📊 Compare usage across months</li><li>🎯 See if your consumption is increasing or decreasing</li><li>📋 Download reports for your records</li></ul><p><strong>What's Tracked:</strong></p><ul><li>Electric consumption</li><li>Water usage</li><li>Gas consumption</li></ul><p>Use these insights to monitor your consumption patterns and identify opportunities to save on bills!</p>"
+    },
+    {
+      "id": 6,
+      "title": "Payment Gateway Integration",
+      "date": "2026-03-10",
+      "description": "Seamless payment processing now available through multiple payment methods for your convenience.",
+      "tags": ["Feature", "Payment"],
+      "fullContent": "<p>Paying your utility bills is now easier than ever!</p><p><strong>Payment Options Available:</strong></p><ul><li>💳 Multiple payment gateways supported</li><li>🔒 Secure payment processing</li><li>📱 Mobile-friendly payment interface</li><li>✅ Instant payment confirmation</li><li>📧 Receipt emailed automatically</li></ul><p><strong>How to Pay:</strong></p><ol><li>Click '💳 Make Payment' on the dashboard</li><li>Select your payment method</li><li>Follow the secure payment process</li><li>Receive confirmation immediately</li></ol><p>Your payment history is automatically tracked and available for download!</p>"
+    }
+  ]
+}

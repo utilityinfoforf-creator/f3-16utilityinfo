@@ -1,3 +1,41 @@
+// ===== THEME TOGGLE (Light/Dark Mode) =====
+function toggleTheme() {
+  const html = document.documentElement;
+  const isDarkMode = html.classList.contains('dark-mode');
+
+  if (isDarkMode) {
+    html.classList.remove('dark-mode');
+    localStorage.setItem('theme', 'light');
+    updateThemeIcon();
+  } else {
+    html.classList.add('dark-mode');
+    localStorage.setItem('theme', 'dark');
+    updateThemeIcon();
+  }
+}
+
+function updateThemeIcon() {
+  const btn = document.querySelector('.theme-toggle');
+  if (btn) {
+    const isDarkMode = document.documentElement.classList.contains('dark-mode');
+    btn.textContent = isDarkMode ? '☀️' : '🌙';
+  }
+}
+
+function initTheme() {
+  const savedTheme = localStorage.getItem('theme') || 'light';
+  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const theme = savedTheme === 'dark' || (savedTheme === 'auto' && prefersDark) ? 'dark' : 'light';
+
+  if (theme === 'dark') {
+    document.documentElement.classList.add('dark-mode');
+  }
+  updateThemeIcon();
+}
+
+// Initialize theme on page load
+initTheme();
+
 // Configuration (override these before this file runs if needed)
 const API_BASE = "https://script.google.com/macros/s/AKfycbxWo9aXgi_xv0bKI9r8kbLX7Wc7ouvYmdkSTGdqt5mN2_OHTFcW0usECrhLShGSDX84QQ/exec";
 
