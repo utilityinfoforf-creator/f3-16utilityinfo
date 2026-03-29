@@ -1,2 +1,0 @@
-make these working ( Billing History - Last 12 Months
-, Usage Trends & Consumption Patterns,📅 Payment History & Receipts,📊 Monthly Comparison Analysis)

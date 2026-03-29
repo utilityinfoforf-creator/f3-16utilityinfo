@@ -560,3 +560,387 @@ function doGet_Export(e) {
   }
   return jsonWithCORS_(exportData, e);
 }
+
+/***** USAGE DATA SHEET *****/
+function getOrCreateUsageSheet_(ss) {
+  var name = getSheetName_('USAGE_SHEET');
+  var sheet = ss.getSheetByName(name);
+  if (!sheet) {
+    sheet = ss.insertSheet(name);
+    sheet.appendRow(["CustomerID", "YearMonth", "Electric", "Water", "Gas"]);
+  }
+  return sheet;
+}
+
+function getOrCreateSubsSheet_(ss) {
+  var name = getSheetName_('SUBSCRIPTIONS_SHEET');
+  var sheet = ss.getSheetByName(name);
+  if (!sheet) {
+    sheet = ss.insertSheet(name);
+    sheet.appendRow(["CustomerID", "Email", "Subscribed"]);
+  }
+  return sheet;
+}
+
+function getOrCreateVerificationSheet_() {
+  var ss = getSpreadsheet_();
+  var name = getSheetName_('VERIFICATION_SHEET');
+  var sheet = ss.getSheetByName(name);
+  if (!sheet) {
+    sheet = ss.insertSheet(name);
+    sheet.appendRow(["CustomerID", "Email", "VerificationCode", "Timestamp"]);
+  }
+  return sheet;
+}
+
+/***** USAGE TRENDS *****/
+function getUsageTrends_(ss, customerId) {
+  var usageSheet = getOrCreateUsageSheet_(ss);
+  var usageData = usageSheet.getDataRange().getValues();
+  var monthlyData = {};
+
+  for (var i = 1; i < usageData.length; i++) {
+    if (String(usageData[i][0]).trim() === customerId) {
+      var yearMonth = String(usageData[i][1] || "").trim();
+      var eVal = parseFloat(usageData[i][2]) || 0;
+      var wVal = parseFloat(usageData[i][3]) || 0;
+      var gVal = parseFloat(usageData[i][4]) || 0;
+
+      if (!monthlyData[yearMonth]) {
+        monthlyData[yearMonth] = { electric: 0, water: 0, gas: 0 };
+      }
+      monthlyData[yearMonth].electric += eVal;
+      monthlyData[yearMonth].water += wVal;
+      monthlyData[yearMonth].gas += gVal;
+    }
+  }
+
+  var now = new Date();
+  var data = [];
+
+  for (var m = 11; m >= 0; m--) {
+    var date = new Date(now.getFullYear(), now.getMonth() - m, 1);
+    var yearMonth = date.getFullYear() + "-" + String(date.getMonth() + 1).padStart(2, "0");
+    var month = date.toLocaleDateString('en-US', { month: 'short' });
+
+    if (monthlyData[yearMonth]) {
+      data.push({
+        month: month,
+        electric: monthlyData[yearMonth].electric,
+        water: monthlyData[yearMonth].water,
+        gas: monthlyData[yearMonth].gas
+      });
+    } else {
+      data.push({
+        month: month,
+        electric: 0,
+        water: 0,
+        gas: 0
+      });
+    }
+  }
+
+  var totalElectric = 0, totalWater = 0, totalGas = 0, count = 0;
+  for (var i = 0; i < data.length; i++) {
+    totalElectric += data[i].electric;
+    totalWater += data[i].water;
+    totalGas += data[i].gas;
+    count++;
+  }
+
+  var avgElectric = (totalElectric / count).toFixed(2);
+  var avgWater = (totalWater / count).toFixed(2);
+  var avgGas = (totalGas / count).toFixed(2);
+  var trend = data[data.length - 1].electric > data[0].electric ? '📈 Increasing' : '📉 Decreasing';
+
+  return {
+    data: data,
+    avgElectric: avgElectric,
+    avgWater: avgWater,
+    avgGas: avgGas,
+    trend: trend,
+    customerId: customerId,
+    reportDate: Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "EEEE, dd MMM yyyy hh:mm a")
+  };
+}
+
+/***** USAGE REPORT *****/
+function getUsageReport_(ss, customerId) {
+  var historySheet = getOrCreateHistorySheet_(ss);
+  var dashSheet = ss.getSheetByName(getSheetName_('DASHBOARD_SHEET'));
+
+  var historyData = historySheet.getDataRange().getValues();
+  var dashData = dashSheet.getDataRange().getValues();
+
+  var customerName = "";
+  for (var j = 1; j < dashData.length; j++) {
+    if (String(dashData[j][0]).trim() === customerId) {
+      customerName = dashData[j][1] || "";
+      break;
+    }
+  }
+
+  var usage = [];
+  for (var i = 1; i < historyData.length; i++) {
+    if (String(historyData[i][1]).trim() === customerId) {
+      usage.push({
+        date: String(historyData[i][0]),
+        balance: String(historyData[i][2]),
+        description: String(historyData[i][3])
+      });
+    }
+  }
+
+  return {
+    usage: usage.reverse(),
+    customerName: customerName,
+    customerId: customerId,
+    exportDate: Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "EEEE, dd MMM yyyy")
+  };
+}
+
+/***** MONTHLY COMPARISON *****/
+function getMonthlyComparison_(ss, customerId) {
+  var usageSheet = getOrCreateUsageSheet_(ss);
+  var usageData = usageSheet.getDataRange().getValues();
+  var months = {};
+
+  for (var i = 1; i < usageData.length; i++) {
+    if (String(usageData[i][0]).trim() === customerId) {
+      var yearMonth = String(usageData[i][1] || "").trim();
+      var electric = parseFloat(usageData[i][2]) || 0;
+      var water = parseFloat(usageData[i][3]) || 0;
+      var gas = parseFloat(usageData[i][4]) || 0;
+
+      if (!months[yearMonth]) {
+        var parts = yearMonth.split("-");
+        var monthDate = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, 1);
+        var monthName = monthDate.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+
+        months[yearMonth] = {
+          month: monthName,
+          electric: 0,
+          water: 0,
+          gas: 0
+        };
+      }
+      months[yearMonth].electric += electric;
+      months[yearMonth].water += water;
+      months[yearMonth].gas += gas;
+      months[yearMonth].total = (months[yearMonth].electric + months[yearMonth].water + months[yearMonth].gas).toFixed(2);
+    }
+  }
+
+  var monthArray = [];
+  for (var key in months) {
+    if (months.hasOwnProperty(key)) {
+      monthArray.push(months[key]);
+    }
+  }
+
+  monthArray.sort(function(a, b) {
+    return new Date(a.month) - new Date(b.month);
+  });
+
+  return {
+    months: monthArray.slice(-6),
+    customerId: customerId,
+    reportDate: Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "EEEE, dd MMM yyyy hh:mm a")
+  };
+}
+
+/***** EMAIL VERIFICATION *****/
+function requestEmailVerification_(customerId, email) {
+  if (!email) return { error: "Email address required" };
+
+  var verificationSheet = getOrCreateVerificationSheet_();
+  var verificationCode = Utilities.getUuid().substring(0, 8).toUpperCase();
+  var timestamp = new Date();
+
+  verificationSheet.appendRow([customerId, email, verificationCode, timestamp]);
+
+  try {
+    MailApp.sendEmail({
+      to: email,
+      subject: "Email Verification Code — F3-16 Utility",
+      body: "Hello,\n\nYour email verification code is: " + verificationCode + "\nThis code will expire in 24 hours.\n\nRegards,\nF3-16 Utility Corporations"
+    });
+    return { status: "Verification code sent to " + email };
+  } catch (err) {
+    return { error: "Failed to send verification email: " + err.message };
+  }
+}
+
+function confirmEmailVerification_(customerId, code) {
+  if (!code) {
+    return { error: "Verification code required" };
+  }
+
+  var verificationSheet = getOrCreateVerificationSheet_();
+  var data = verificationSheet.getDataRange().getValues();
+
+  for (var i = 1; i < data.length; i++) {
+    if (String(data[i][0]).trim() === customerId) {
+      var storedCode = String(data[i][2] || "").trim();
+      var timestamp = data[i][3];
+      var email = String(data[i][1] || "").trim();
+
+      if (storedCode !== String(code).trim()) {
+        return { error: "Invalid verification code" };
+      }
+
+      var now = new Date();
+      var timeDiff = (now - new Date(timestamp)) / (1000 * 60 * 60);
+      if (timeDiff > 24) {
+        return { error: "Verification code has expired" };
+      }
+
+      var subsSheet = getOrCreateSubsSheet_(getSpreadsheet_());
+      upsertSubscription_(subsSheet, customerId, email, "true");
+
+      verificationSheet.getRange(i + 1, 3).setValue("");
+
+      return { status: "✅ Email verified and subscription enabled" };
+    }
+  }
+
+  return { error: "Customer not found" };
+}
+
+/***** SUBSCRIPTION MANAGEMENT *****/
+function getSubscription_(subsSheet, id) {
+  var data = subsSheet.getDataRange().getValues();
+  for (var i = 1; i < data.length; i++) {
+    if (String(data[i][0]).trim() === id) {
+      var email = String(data[i][1] || "").trim();
+      var subscribedRaw = String(data[i][2] || "false").trim().toLowerCase();
+      var subscribed = (subscribedRaw === "true") ? "true" : "false";
+      return { email: email, subscribed: subscribed };
+    }
+  }
+  return { email: "", subscribed: "false" };
+}
+
+function upsertSubscription_(subsSheet, id, email, subscribe) {
+  var data = subsSheet.getDataRange().getValues();
+  var subNorm = (String(subscribe || "false").trim().toLowerCase() === "true") ? "true" : "false";
+  var emailNorm = String(email || "").trim();
+
+  for (var i = 1; i < data.length; i++) {
+    if (String(data[i][0]).trim() === id) {
+      if (emailNorm) subsSheet.getRange(i + 1, 2).setValue(emailNorm);
+      subsSheet.getRange(i + 1, 3).setValue(subNorm);
+      return;
+    }
+  }
+  subsSheet.appendRow([id, emailNorm, subNorm]);
+}
+
+/***** BALANCE CHANGE LOG *****/
+function logBalanceChange_(ss, customerId, electricBalance) {
+  var historySheet = getOrCreateHistorySheet_(ss);
+  var now = new Date();
+  var formattedTime = Utilities.formatDate(now, Session.getScriptTimeZone(), "EEEE, dd MMM yyyy hh:mm a");
+
+  historySheet.appendRow([formattedTime, customerId, electricBalance, "Balance update"]);
+
+  try {
+    var subsSheet = getOrCreateSubsSheet_(ss);
+    var subInfo = getSubscription_(subsSheet, customerId);
+    if (subInfo && subInfo.subscribed === "true" && subInfo.email) {
+      sendBalanceUpdateEmail_(subInfo.email, {
+        customerId: customerId,
+        balance: electricBalance,
+        timestamp: formattedTime,
+        name: getCustomerName_(ss, customerId),
+        flatNumber: getCustomerFlat_(ss, customerId)
+      });
+    }
+  } catch (e) {
+    Logger.log("Error sending balance update email: " + e);
+  }
+}
+
+function sendBalanceUpdateEmail_(toEmail, info) {
+  if (!toEmail) return;
+  var tenantName = info.name || info.customerId;
+  var balance = info.balance || "0";
+  var time = info.timestamp || Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "EEEE, dd MMM yyyy hh:mm a");
+  var flat = info.flatNumber || "N/A";
+
+  var subject = "Account Balance Update — " + flat + " (" + tenantName + ")";
+
+  var plainBody =
+    "Hello " + tenantName + ",\n\n" +
+    "This is an automated notification to inform you of a recent update to your utility account balance.\n\n" +
+    "Flat: " + flat + "\n" +
+    "Customer ID: " + (info.customerId || "") + "\n" +
+    "Electric balance: ৳ " + balance + "\n" +
+    "Updated at: " + time + "\n\n" +
+    "If this update is unexpected or you have questions, please reply to this email or contact the property manager.\n\n" +
+    "Regards,\n" +
+    "F3-16 Utility Corporations\n";
+
+  var htmlBody =
+    '<div style="font-family: Arial, Helvetica, sans-serif; color: #111;">' +
+      '<h2 style="margin:0 0 8px 0;">Account Balance Update</h2>' +
+      '<p>Hello ' + tenantName + ',</p>' +
+      '<p>This is an automated notification to inform you of a recent update to your utility account balance.</p>' +
+      '<table style="border-collapse:collapse; width:100%; max-width:600px;">' +
+        '<tr><td style="padding:8px; border:1px solid #e6e6e6; font-weight:700;">Flat</td><td style="padding:8px; border:1px solid #e6e6e6;">' + flat + '</td></tr>' +
+        '<tr><td style="padding:8px; border:1px solid #e6e6e6; font-weight:700;">Customer ID</td><td style="padding:8px; border:1px solid #e6e6e6;">' + (info.customerId || "") + '</td></tr>' +
+        '<tr><td style="padding:8px; border:1px solid #e6e6e6; font-weight:700;">Electric balance</td><td style="padding:8px; border:1px solid #e6e6e6;">৳ ' + balance + '</td></tr>' +
+        '<tr><td style="padding:8px; border:1px solid #e6e6e6; font-weight:700;">Updated at</td><td style="padding:8px; border:1px solid #e6e6e6;">' + time + '</td></tr>' +
+      '</table>' +
+      '<p>If you have any questions, reply to this email or contact the property manager.</p>' +
+      '<p style="margin:12px 0 0 0; font-weight:700;">F3-16 Utility Corporations</p>' +
+    '</div>';
+
+  try {
+    MailApp.sendEmail({
+      to: toEmail,
+      subject: subject,
+      body: plainBody,
+      htmlBody: htmlBody,
+      name: "F3-16 UTILITY CORPORATIONS"
+    });
+  } catch (mailErr) {
+    Logger.log("Balance email send failed to " + toEmail + ": " + mailErr);
+  }
+}
+
+/***** UTILITY LOOKUPS *****/
+function getCustomerName_(ss, customerId) {
+  if (!customerId) return "";
+  var dashSheet = ss.getSheetByName(getSheetName_('DASHBOARD_SHEET'));
+  if (!dashSheet) return "";
+  var data = dashSheet.getDataRange().getValues();
+  for (var i = 1; i < data.length; i++) {
+    if (String(data[i][0]).trim() === customerId) return data[i][1] || "";
+  }
+  return "";
+}
+
+function getCustomerFlat_(ss, customerId) {
+  if (!customerId) return "";
+  var dashSheet = ss.getSheetByName(getSheetName_('DASHBOARD_SHEET'));
+  if (!dashSheet) return "";
+  var data = dashSheet.getDataRange().getValues();
+  for (var i = 1; i < data.length; i++) {
+    if (String(data[i][0]).trim() === customerId) return data[i][6] || "";
+  }
+  return "";
+}
+
+/***** SAMPLE DATA POPULATION *****/
+function populateSampleData_() {
+  var ss = getSpreadsheet_();
+  var dashSheet = ss.getSheetByName(getSheetName_('DASHBOARD_SHEET'));
+  if (!dashSheet) return "Dashboard sheet not found";
+
+  dashSheet.appendRow(["C001", "Ahmed Hassan", "1500", "800", "600", new Date(), "3A", "Yes", "1200"]);
+  dashSheet.appendRow(["C002", "Fatima Khan", "2000", "1200", "900", new Date(), "3B", "No", "0"]);
+  dashSheet.appendRow(["C003", "Muhammad Ali", "1200", "500", "400", new Date(), "4A", "Yes", "900"]);
+
+  return "Sample data populated";
+}
