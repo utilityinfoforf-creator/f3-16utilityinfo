@@ -958,6 +958,125 @@ body {
   font-size: 13px;
 }
 
+/* ===== BILLING & PAYMENT HISTORY STYLES ===== */
+.billing-history-table,
+.payment-history-section {
+  color: var(--text-primary);
+}
+
+.billing-history-table table,
+.payment-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 16px;
+  background: var(--bg-primary);
+}
+
+.billing-history-table table thead,
+.payment-table thead {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+}
+
+.billing-history-table table th,
+.payment-table th {
+  padding: 12px;
+  text-align: left;
+  font-weight: 600;
+  border-bottom: 2px solid var(--border-color);
+  font-size: 13px;
+}
+
+.billing-history-table table td,
+.payment-table td {
+  padding: 12px;
+  border-bottom: 1px solid var(--border-color);
+  font-size: 13px;
+}
+
+.billing-history-table table tbody tr:hover,
+.payment-table tbody tr:hover {
+  background: var(--bg-secondary);
+  transition: background 0.2s;
+}
+
+.balance-cell {
+  font-weight: 600;
+  color: #667eea;
+  font-size: 14px;
+}
+
+.transaction-id {
+  font-family: 'Courier New', monospace;
+  font-weight: 600;
+  color: #667eea;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.status-badge.confirmed {
+  background: #c8e6c9;
+  color: #2e7d32;
+}
+
+.dark-mode .status-badge.confirmed {
+  background: #2d5a2d;
+  color: #76b776;
+}
+
+.billing-summary,
+.payment-stats,
+.payment-actions {
+  color: var(--text-primary);
+  background: var(--bg-secondary);
+  padding: 15px;
+  border-radius: 8px;
+  margin-top: 16px;
+}
+
+.billing-summary p,
+.payment-actions p {
+  margin: 8px 0;
+  font-size: 13px;
+}
+
+.payment-stats {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.stat {
+  text-align: center;
+  padding: 12px;
+  background: var(--bg-primary);
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+}
+
+.stat-label {
+  display: block;
+  font-size: 11px;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 6px;
+}
+
+.stat-value {
+  display: block;
+  font-size: 18px;
+  font-weight: 700;
+  color: #667eea;
+}
+
 /* Responsive */
 @media (max-width: 1024px) {
   .dashboard-main {
@@ -990,6 +1109,22 @@ body {
   .lang-btn {
     padding: 6px 10px;
     font-size: 11px;
+  }
+
+  .billing-history-table table,
+  .payment-table {
+    font-size: 12px;
+  }
+
+  .billing-history-table table th,
+  .payment-table th,
+  .billing-history-table table td,
+  .payment-table td {
+    padding: 8px;
+  }
+
+  .payment-stats {
+    grid-template-columns: 1fr;
   }
 
   .lang-btn {

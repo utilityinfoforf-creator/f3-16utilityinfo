@@ -965,6 +965,288 @@ function closeComparativeAnalysis() {
   if (modal) modal.style.display = "none";
 }
 
+// ---- Billing History Modal ----
+async function viewBillingHistory() {
+  const id = sessionStorage.getItem('customerId') || localStorage.getItem('customerId') || '';
+  const t = translations[currentLanguage] || translations.en;
+
+  if (!id) {
+    alert('Please login first');
+    return;
+  }
+
+  const billingContainer = document.getElementById("billingHistoryContainer");
+  if (!billingContainer) return;
+
+  billingContainer.innerHTML = '<p style="text-align: center; color: #666;">Loading billing history...</p>';
+
+  try {
+    const res = await fetch(`${API_BASE}?id=${encodeURIComponent(id)}&history=true`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' }
+    });
+
+    if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+    const data = await res.json();
+
+    if (data.error) throw new Error(data.error);
+
+    if (data.history && data.history.length > 0) {
+      const historyHTML = `
+        <div class="billing-history-table">
+          <table>
+            <thead>
+              <tr>
+                <th>📅 Date</th>
+                <th>💰 Balance (৳)</th>
+                <th>📝 Description</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${data.history.map(item => `
+                <tr>
+                  <td>${item.date || 'N/A'}</td>
+                  <td class="balance-cell">${item.balance || '0'}</td>
+                  <td>${item.description || 'Balance Update'}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+          <div class="billing-summary" style="margin-top: 20px; padding: 15px; background: var(--bg-secondary); border-radius: 8px;">
+            <p><strong>📊 Total Records:</strong> ${data.history.length}</p>
+            <p><strong>💡 Tip:</strong> Monitor your balance to avoid service interruption.</p>
+          </div>
+        </div>
+      `;
+      billingContainer.innerHTML = historyHTML;
+    } else {
+      billingContainer.innerHTML = `
+        <div style="text-align: center; padding: 30px;">
+          <p style="color: #666;">No billing history available yet.</p>
+          <button class="btn btn-secondary" onclick="showDemoBillingHistory()" style="margin-top: 10px;">Show Demo Data</button>
+        </div>
+      `;
+    }
+  } catch (err) {
+    console.error('viewBillingHistory error:', err);
+    billingContainer.innerHTML = `
+      <div style="text-align: center; color: #666; padding: 20px;">
+        <p style="margin-bottom: 10px;">⚠️ Unable to load billing history.</p>
+        <p style="font-size: 13px; color: #999;">${err.message}</p>
+        <button class="btn btn-secondary" onclick="showDemoBillingHistory()" style="margin-top: 10px;">Show Demo Data</button>
+      </div>
+    `;
+  }
+
+  const modal = document.getElementById("billingHistoryModal");
+  if (modal) modal.style.display = "flex";
+}
+
+function showDemoBillingHistory() {
+  const billingContainer = document.getElementById("billingHistoryContainer");
+  if (!billingContainer) return;
+
+  const demo = [];
+  const now = new Date();
+  for (let i = 0; i < 12; i++) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1 + (i * 2));
+    const balance = (2000 - (i * 150) + Math.random() * 200).toFixed(2);
+    demo.push({
+      date: d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }),
+      balance: balance,
+      description: `Monthly update - Balance: ৳${balance}`
+    });
+  }
+
+  const historyHTML = `
+    <div class="billing-history-table">
+      <table>
+        <thead>
+          <tr>
+            <th>📅 Date</th>
+            <th>💰 Balance (৳)</th>
+            <th>📝 Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${demo.map(item => `
+            <tr>
+              <td>${item.date}</td>
+              <td class="balance-cell">${item.balance}</td>
+              <td>${item.description}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+      <div class="billing-summary" style="margin-top: 20px; padding: 15px; background: #fff3cd; border-radius: 8px;">
+        <p style="color: #856404;"><strong>📊 Demo Data:</strong> This is sample billing history for demonstration purposes.</p>
+      </div>
+    </div>
+  `;
+  billingContainer.innerHTML = historyHTML;
+}
+
+function closeBillingHistory() {
+  const modal = document.getElementById("billingHistoryModal");
+  if (modal) modal.style.display = "none";
+}
+
+// ---- Payment History Modal ----
+async function viewPaymentHistory() {
+  const id = sessionStorage.getItem('customerId') || localStorage.getItem('customerId') || '';
+  const t = translations[currentLanguage] || translations.en;
+
+  if (!id) {
+    alert('Please login first');
+    return;
+  }
+
+  const paymentContainer = document.getElementById("paymentHistoryContainer");
+  if (!paymentContainer) return;
+
+  paymentContainer.innerHTML = '<p style="text-align: center; color: #666;">Loading payment history...</p>';
+
+  try {
+    const res = await fetch(`${API_BASE}?id=${encodeURIComponent(id)}&action=getPaymentHistory`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' }
+    });
+
+    if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+    const data = await res.json();
+
+    if (data.error) throw new Error(data.error);
+
+    if (data.payments && data.payments.length > 0) {
+      const paymentHTML = `
+        <div class="payment-history-section">
+          <div class="payment-stats">
+            <div class="stat">
+              <span class="stat-label">Total Payments</span>
+              <span class="stat-value">${data.totalPayments}</span>
+            </div>
+            <div class="stat">
+              <span class="stat-label">Last Payment</span>
+              <span class="stat-value">${data.lastPayment || 'N/A'}</span>
+            </div>
+          </div>
+
+          <table class="payment-table">
+            <thead>
+              <tr>
+                <th>📅 Date & Time</th>
+                <th>🏷️ Transaction ID</th>
+                <th>🏢 Flat</th>
+                <th>✅ Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${data.payments.map(payment => `
+                <tr>
+                  <td>${payment.timestamp}</td>
+                  <td class="transaction-id">${payment.transactionNumber}</td>
+                  <td>${payment.flatNumber}</td>
+                  <td><span class="status-badge confirmed">✅ ${payment.status}</span></td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+
+          <div class="payment-actions" style="margin-top: 20px; padding: 15px; background: var(--bg-secondary); border-radius: 8px;">
+            <p><strong>💡 Need a receipt?</strong> Click on any transaction ID to download the receipt.</p>
+            <button class="btn btn-secondary" onclick="downloadPaymentReceipt()" style="margin-top: 10px;">📥 Download All Receipts</button>
+          </div>
+        </div>
+      `;
+      paymentContainer.innerHTML = paymentHTML;
+    } else {
+      paymentContainer.innerHTML = `
+        <div style="text-align: center; padding: 30px;">
+          <p style="color: #666; font-size: 16px;">📭 No payment history available yet.</p>
+          <p style="color: #999; font-size: 13px; margin-top: 8px;">Your payments will appear here once you make a payment.</p>
+          <button class="btn btn-secondary" onclick="showDemoPaymentHistory()" style="margin-top: 10px;">Show Demo Data</button>
+        </div>
+      `;
+    }
+  } catch (err) {
+    console.error('viewPaymentHistory error:', err);
+    paymentContainer.innerHTML = `
+      <div style="text-align: center; color: #666; padding: 20px;">
+        <p style="margin-bottom: 10px;">⚠️ Unable to load payment history.</p>
+        <p style="font-size: 13px; color: #999;">${err.message}</p>
+        <button class="btn btn-secondary" onclick="showDemoPaymentHistory()" style="margin-top: 10px;">Show Demo Data</button>
+      </div>
+    `;
+  }
+
+  const modal = document.getElementById("paymentHistoryModal");
+  if (modal) modal.style.display = "flex";
+}
+
+function showDemoPaymentHistory() {
+  const paymentContainer = document.getElementById("paymentHistoryContainer");
+  if (!paymentContainer) return;
+
+  const demo = [
+    { timestamp: "2026-03-15 14:30", transactionID: "TXN2026031501", flatNumber: "3A", status: "Confirmed" },
+    { timestamp: "2026-02-20 10:45", transactionID: "TXN2026022001", flatNumber: "3A", status: "Confirmed" },
+    { timestamp: "2026-01-25 16:20", transactionID: "TXN2026012501", flatNumber: "3A", status: "Confirmed" },
+    { timestamp: "2025-12-28 09:15", transactionID: "TXN2025122801", flatNumber: "3A", status: "Confirmed" }
+  ];
+
+  const paymentHTML = `
+    <div class="payment-history-section">
+      <div class="payment-stats">
+        <div class="stat">
+          <span class="stat-label">Total Payments</span>
+          <span class="stat-value">${demo.length}</span>
+        </div>
+        <div class="stat">
+          <span class="stat-label">Last Payment</span>
+          <span class="stat-value">${demo[0].timestamp}</span>
+        </div>
+      </div>
+
+      <table class="payment-table">
+        <thead>
+          <tr>
+            <th>📅 Date & Time</th>
+            <th>🏷️ Transaction ID</th>
+            <th>🏢 Flat</th>
+            <th>✅ Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${demo.map(payment => `
+            <tr>
+              <td>${payment.timestamp}</td>
+              <td class="transaction-id">${payment.transactionID}</td>
+              <td>${payment.flatNumber}</td>
+              <td><span class="status-badge confirmed">✅ ${payment.status}</span></td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+
+      <div class="payment-actions" style="margin-top: 20px; padding: 15px; background: #fff3cd; border-radius: 8px;">
+        <p style="color: #856404;"><strong>📊 Demo Data:</strong> This is sample payment history for demonstration purposes.</p>
+      </div>
+    </div>
+  `;
+  paymentContainer.innerHTML = paymentHTML;
+}
+
+function closePaymentHistory() {
+  const modal = document.getElementById("paymentHistoryModal");
+  if (modal) modal.style.display = "none";
+}
+
+function downloadPaymentReceipt() {
+  alert('📥 Receipt download functionality - please contact support');
+}
+
+window.showDemoPaymentHistory = showDemoPaymentHistory;
+
 window.login = login;
 window.showSteps = showSteps;
 window.goToPathaoPay = goToPathaoPay;
@@ -973,6 +1255,12 @@ window.toggleEmail = toggleEmail;
 window.logout = logout;
 window.viewUpdateHistory = viewUpdateHistory;
 window.closeUpdateHistory = closeUpdateHistory;
+window.viewBillingHistory = viewBillingHistory;
+window.closeBillingHistory = closeBillingHistory;
+window.showDemoBillingHistory = showDemoBillingHistory;
+window.viewPaymentHistory = viewPaymentHistory;
+window.closePaymentHistory = closePaymentHistory;
+window.downloadPaymentReceipt = downloadPaymentReceipt;
 window.exportUsageReport = exportUsageReport;
 window.printBills = printBills;
 window.viewComparativeAnalysis = viewComparativeAnalysis;

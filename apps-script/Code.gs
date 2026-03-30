@@ -191,6 +191,7 @@ function doGet(e) {
   if (action === 'getUsageTrends') return jsonWithCORS_(getUsageTrends_(ss, id), e);
   if (action === 'getUsageReport') return jsonWithCORS_(getUsageReport_(ss, id), e);
   if (action === 'getMonthlyComparison') return jsonWithCORS_(getMonthlyComparison_(ss, id), e);
+  if (action === 'getPaymentHistory') return jsonWithCORS_(getPaymentHistory_(ss, id), e);
   if (action === 'request') return jsonWithCORS_(requestEmailVerification_(id, email), e);
   if (action === 'confirm') return jsonWithCORS_(confirmEmailVerification_(id, e.parameter.code), e);
 
@@ -943,4 +944,37 @@ function populateSampleData_() {
   dashSheet.appendRow(["C003", "Muhammad Ali", "1200", "500", "400", new Date(), "4A", "Yes", "900"]);
 
   return "Sample data populated";
+}
+
+/***** PAYMENT HISTORY *****/
+function getPaymentHistory_(ss, customerId) {
+  var logSheetName = getSheetName_('PAYMENTLOG_SHEET');
+  var logSheet = ss.getSheetByName(logSheetName);
+  if (!logSheet) {
+    return { payments: [], customerId: customerId };
+  }
+
+  var data = logSheet.getDataRange().getValues();
+  var payments = [];
+
+  for (var i = 1; i < data.length; i++) {
+    if (String(data[i][1]).trim() === customerId) {
+      payments.push({
+        timestamp: String(data[i][0] || ''),
+        customerID: String(data[i][1] || ''),
+        name: String(data[i][2] || ''),
+        flatNumber: String(data[i][3] || ''),
+        transactionNumber: String(data[i][4] || ''),
+        status: "Confirmed"
+      });
+    }
+  }
+
+  payments.reverse();
+  return {
+    payments: payments,
+    customerId: customerId,
+    totalPayments: payments.length,
+    lastPayment: payments.length > 0 ? payments[0].timestamp : 'N/A'
+  };
 }
