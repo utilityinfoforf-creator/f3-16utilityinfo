@@ -32,7 +32,7 @@
     <div id="dashboard" style="display:none;">
       <div class="language-toggle">
         <button class="theme-toggle" onclick="toggleTheme()" title="Toggle dark/light mode">🌙</button>
-        <button class="theme-toggle" id="installBtn" onclick="promptInstall()" title="Install app" style="display:none;">⬇️ Install</button>
+        <button class="theme-toggle" id="installBtn" onclick="promptInstall()" title="Install app">⬇️ Install</button>
         <button class="lang-btn active" onclick="switchLanguage('en')">English</button>
         <button class="lang-btn" onclick="switchLanguage('bn')">বাংলা</button>
         <button class="lang-btn" style="margin-left:8px; background:#dc3545; color:#fff; border-color:#dc3545;" onclick="logout()" id="btn-logout">🚪 Logout</button>
@@ -295,7 +295,6 @@
   window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault();
     deferredPrompt = e;
-    installBtn.style.display = 'flex';
   });
 
   function promptInstall() {
@@ -308,14 +307,14 @@
           console.log('Install prompt dismissed');
         }
         deferredPrompt = null;
-        installBtn.style.display = 'none';
       });
+    } else {
+      alert('Installation not available on this browser. Try using Chrome, Edge, or Firefox.');
     }
   }
 
   window.addEventListener('appinstalled', () => {
     console.log('PWA app installed successfully');
-    installBtn.style.display = 'none';
   });
 
   // Service Worker Registration (optional for online-only mode)
