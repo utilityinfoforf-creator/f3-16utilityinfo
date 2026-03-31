@@ -1,0 +1,17 @@
+{
+  "appId": "com.utilityinfo.dashboard",
+  "appName": "Utility Dashboard",
+  "webDir": "./",
+  "bundledWebRuntime": false,
+  "npmClient": "npm",
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 0
+    }
+  },
+  "cordova": {},
+  "server": {
+    "url": "https://utilityinfoforf-creator.github.io/f3-16utilityinfo/",
+    "cleartext": false
+  }
+}

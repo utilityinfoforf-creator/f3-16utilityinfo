@@ -1,0 +1,19 @@
+{
+  "name": "f3-16utilityinfo",
+  "version": "1.0.0",
+  "description": "Utility Dashboard - Mobile App",
+  "private": true,
+  "scripts": {
+    "build": "npm install",
+    "android": "capacitor build android",
+    "deploy-apps-script": "cd config && npm run deploy"
+  },
+  "dependencies": {
+    "@capacitor/core": "^5.0.0",
+    "@capacitor/cli": "^5.0.0"
+  },
+  "devDependencies": {
+    "@capacitor/android": "^5.0.0",
+    "@google/clasp": "^2.5.0"
+  }
+}
