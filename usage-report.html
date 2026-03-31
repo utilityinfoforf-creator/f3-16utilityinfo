@@ -102,6 +102,43 @@
       border-bottom: 1px solid var(--border-color);
     }
     .comparison-stat:last-child { border-bottom: none; }
+
+    @media (max-width: 768px) {
+      .page-container { padding: 15px; }
+      .page-header { margin-bottom: 20px; padding: 20px 15px; }
+      .page-header h1 { font-size: 22px; margin-bottom: 8px; }
+      .back-link { margin-bottom: 15px; padding: 6px 12px; font-size: 13px; }
+      .chart-container { padding: 15px; margin-bottom: 20px; }
+      .chart-title { font-size: 16px; margin-bottom: 12px; }
+      .comparison-grid { grid-template-columns: 1fr; gap: 12px; margin-bottom: 20px; }
+      .comparison-card { padding: 12px; }
+      .comparison-card h3 { margin-bottom: 8px; font-size: 14px; }
+      .comparison-stat { padding: 6px 0; font-size: 13px; }
+      .table-container { padding: 15px; }
+      .table-container table { font-size: 13px; }
+      .table-container th { padding: 8px 6px; font-size: 12px; }
+      .table-container td { padding: 8px 6px; font-size: 12px; }
+      .export-btn { padding: 8px 12px; margin-top: 15px; font-size: 13px; }
+    }
+
+    @media (max-width: 480px) {
+      .page-container { padding: 10px; }
+      .page-header { margin-bottom: 15px; padding: 15px 10px; }
+      .page-header h1 { font-size: 18px; margin-bottom: 5px; }
+      .page-header p { font-size: 12px; }
+      .back-link { margin-bottom: 12px; padding: 6px 10px; font-size: 12px; }
+      .chart-container { padding: 10px; margin-bottom: 15px; }
+      .chart-title { font-size: 14px; margin-bottom: 10px; }
+      .comparison-grid { grid-template-columns: 1fr; gap: 10px; margin-bottom: 15px; }
+      .comparison-card { padding: 10px; }
+      .comparison-card h3 { margin-bottom: 8px; font-size: 13px; }
+      .comparison-stat { padding: 5px 0; font-size: 12px; }
+      .table-container { padding: 10px; }
+      .table-container table { font-size: 11px; }
+      .table-container th { padding: 6px 4px; font-size: 11px; }
+      .table-container td { padding: 6px 4px; font-size: 11px; }
+      .export-btn { padding: 8px 10px; margin-top: 12px; font-size: 12px; }
+    }
   </style>
 </head>
 <body>
