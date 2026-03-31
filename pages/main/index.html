@@ -5,6 +5,12 @@
   <title>Utility Dashboard</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="../../assets/styles.css">
+  <link rel="manifest" href="../../manifest.json">
+  <meta name="theme-color" content="#667eea">
+  <meta name="description" content="Manage your utility bills, payments, and consumption">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Utility Portal">
 </head>
 <body>
   <div class="container">
@@ -26,6 +32,7 @@
     <div id="dashboard" style="display:none;">
       <div class="language-toggle">
         <button class="theme-toggle" onclick="toggleTheme()" title="Toggle dark/light mode">🌙</button>
+        <button class="theme-toggle" id="installBtn" onclick="promptInstall()" title="Install app" style="display:none;">⬇️ Install</button>
         <button class="lang-btn active" onclick="switchLanguage('en')">English</button>
         <button class="lang-btn" onclick="switchLanguage('bn')">বাংলা</button>
         <button class="lang-btn" style="margin-left:8px; background:#dc3545; color:#fff; border-color:#dc3545;" onclick="logout()" id="btn-logout">🚪 Logout</button>
@@ -280,5 +287,43 @@
   </div>
 
 <script src="../../assets/script.js"></script>
+<script>
+  // PWA Install Support
+  let deferredPrompt;
+  const installBtn = document.getElementById('installBtn');
+
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    installBtn.style.display = 'flex';
+  });
+
+  function promptInstall() {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      deferredPrompt.userChoice.then((choiceResult) => {
+        if (choiceResult.outcome === 'accepted') {
+          console.log('App installed');
+        } else {
+          console.log('Install prompt dismissed');
+        }
+        deferredPrompt = null;
+        installBtn.style.display = 'none';
+      });
+    }
+  }
+
+  window.addEventListener('appinstalled', () => {
+    console.log('PWA app installed successfully');
+    installBtn.style.display = 'none';
+  });
+
+  // Service Worker Registration (optional for online-only mode)
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('../../sw.js').catch(() => {
+      // Service worker not available, app will work in online mode only
+    });
+  }
+</script>
 </body>
 </html>
