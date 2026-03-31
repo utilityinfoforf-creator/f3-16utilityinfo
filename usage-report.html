@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Monthly Comparison - F3-16 Utility Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    .page-container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+    .page-header {
+      color: #fff;
+      text-align: center;
+      margin-bottom: 30px;
+      padding: 30px 20px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-radius: 12px;
+    }
+    .page-header h1 { font-size: 28px; margin-bottom: 10px; }
+    .back-link {
+      display: inline-block;
+      margin-bottom: 20px;
+      padding: 8px 16px;
+      background: #667eea;
+      color: #fff;
+      border-radius: 6px;
+      text-decoration: none;
+      font-weight: 600;
+    }
+    .back-link:hover { background: #764ba2; }
+    .chart-container {
+      background: var(--bg-primary);
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 2px 12px var(--card-shadow);
+      margin-bottom: 30px;
+      color: var(--text-primary);
+    }
+    .chart-title {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 15px;
+      color: var(--text-primary);
+    }
+    .table-container {
+      background: var(--bg-primary);
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 2px 12px var(--card-shadow);
+      color: var(--text-primary);
+    }
+    .table-container table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .table-container th {
+      background: var(--bg-secondary);
+      padding: 12px;
+      text-align: left;
+      font-weight: 700;
+      color: var(--text-primary);
+      border-bottom: 2px solid var(--border-color);
+    }
+    .table-container td {
+      padding: 12px;
+      border-bottom: 1px solid var(--border-color);
+      color: var(--text-primary);
+    }
+    .table-container tr:hover { background: var(--bg-secondary); }
+    .export-btn {
+      background: #667eea;
+      color: #fff;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      margin-top: 20px;
+    }
+    .export-btn:hover { background: #764ba2; }
+    .empty-state { text-align: center; padding: 40px; color: var(--text-secondary); }
+    .loading { text-align: center; padding: 40px; color: var(--text-secondary); }
+    .comparison-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 15px;
+      margin-bottom: 30px;
+    }
+    .comparison-card {
+      background: var(--bg-primary);
+      padding: 15px;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px var(--card-shadow);
+      color: var(--text-primary);
+    }
+    .comparison-card h3 { margin-bottom: 10px; color: #667eea; }
+    .comparison-stat {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--border-color);
+    }
+    .comparison-stat:last-child { border-bottom: none; }
+  </style>
+</head>
+<body>
+  <div class="page-container">
+    <a href="index.html" class="back-link">← Back to Dashboard</a>
+
+    <div class="page-header">
+      <h1>📊 Monthly Comparison (Last 6 Months)</h1>
+      <p>Compare your consumption across recent months</p>
+    </div>
+
+    <div class="chart-container">
+      <div class="chart-title">📈 Consumption Comparison</div>
+      <canvas id="comparisonChart"></canvas>
+    </div>
+
+    <div id="comparisonCardsContainer" class="comparison-grid"></div>
+
+    <div class="table-container">
+      <table id="comparisonTable">
+        <thead>
+          <tr>
+            <th>Month</th>
+            <th>Electric (kWh)</th>
+            <th>Water (L)</th>
+            <th>Gas (m³)</th>
+            <th>Total Usage</th>
+          </tr>
+        </thead>
+        <tbody id="comparisonBody">
+          <tr class="loading"><td colspan="5">Loading monthly comparison...</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <button class="export-btn" onclick="downloadChart()">📥 Download Chart as Image</button>
+  </div>
+
+  <script>
+    const API_BASE = "https://script.google.com/macros/s/AKfycbzUQeJKLBRCjQG928fnIdJ7Tlg-JR0072ENK-K2_07NBOxWsH9zs0qd5CrcoQW_Mbz3lA/exec";
+    let customerId = localStorage.getItem("customerId");
+    let chart = null;
+    let comparisonData = [];
+
+    function initTheme() {
+      const savedTheme = localStorage.getItem('theme') || 'light';
+      if (savedTheme === 'dark') {
+        document.documentElement.classList.add('dark-mode');
+      }
+    }
+
+    async function loadMonthlyComparison() {
+      if (!customerId) {
+        document.getElementById('comparisonBody').innerHTML = '<tr><td colspan="5" class="empty-state">Please login first</td></tr>';
+        return;
+      }
+
+      try {
+        const response = await fetch(`${API_BASE}?id=${encodeURIComponent(customerId)}&action=getMonthlyComparison`);
+        const data = await response.json();
+
+        if (data.months && data.months.length > 0) {
+          comparisonData = data.months;
+          displayTable(data.months);
+          displayCards(data.months);
+          displayChart(data.months);
+        } else {
+          document.getElementById('comparisonBody').innerHTML = '<tr><td colspan="5" class="empty-state">No comparison data available</td></tr>';
+        }
+      } catch (error) {
+        console.error('Error loading monthly comparison:', error);
+        document.getElementById('comparisonBody').innerHTML = '<tr><td colspan="5" class="empty-state">Error loading data. Please try again.</td></tr>';
+      }
+    }
+
+    function displayTable(months) {
+      const tbody = document.getElementById('comparisonBody');
+      tbody.innerHTML = months.map(month => `
+        <tr>
+          <td><strong>${month.month}</strong></td>
+          <td>${parseFloat(month.electric).toFixed(2)} kWh</td>
+          <td>${parseFloat(month.water).toFixed(2)} L</td>
+          <td>${parseFloat(month.gas).toFixed(2)} m³</td>
+          <td><strong>৳ ${parseFloat(month.total).toFixed(2)}</strong></td>
+        </tr>
+      `).join('');
+    }
+
+    function displayCards(months) {
+      const container = document.getElementById('comparisonCardsContainer');
+      container.innerHTML = months.map(month => `
+        <div class="comparison-card">
+          <h3>${month.month}</h3>
+          <div class="comparison-stat">
+            <span>Electric</span>
+            <strong>${parseFloat(month.electric).toFixed(2)} kWh</strong>
+          </div>
+          <div class="comparison-stat">
+            <span>Water</span>
+            <strong>${parseFloat(month.water).toFixed(2)} L</strong>
+          </div>
+          <div class="comparison-stat">
+            <span>Gas</span>
+            <strong>${parseFloat(month.gas).toFixed(2)} m³</strong>
+          </div>
+          <div class="comparison-stat">
+            <span>Total</span>
+            <strong style="color: #667eea;">৳ ${parseFloat(month.total).toFixed(2)}</strong>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function displayChart(months) {
+      const ctx = document.getElementById('comparisonChart').getContext('2d');
+      const labels = months.map(m => m.month);
+      const electricData = months.map(m => parseFloat(m.electric));
+      const waterData = months.map(m => parseFloat(m.water));
+      const gasData = months.map(m => parseFloat(m.gas));
+
+      chart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [
+            {
+              label: 'Electric (kWh)',
+              data: electricData,
+              backgroundColor: 'rgba(102, 126, 234, 0.8)'
+            },
+            {
+              label: 'Water (L)',
+              data: waterData,
+              backgroundColor: 'rgba(67, 160, 71, 0.8)'
+            },
+            {
+              label: 'Gas (m³)',
+              data: gasData,
+              backgroundColor: 'rgba(251, 140, 0, 0.8)'
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: true,
+          plugins: {
+            legend: {
+              labels: {
+                color: getComputedStyle(document.documentElement).getPropertyValue('--text-primary') || '#111'
+              }
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: {
+                color: getComputedStyle(document.documentElement).getPropertyValue('--text-secondary') || '#666'
+              },
+              grid: {
+                color: getComputedStyle(document.documentElement).getPropertyValue('--border-color') || '#ddd'
+              }
+            },
+            x: {
+              ticks: {
+                color: getComputedStyle(document.documentElement).getPropertyValue('--text-secondary') || '#666'
+              },
+              grid: {
+                color: getComputedStyle(document.documentElement).getPropertyValue('--border-color') || '#ddd'
+              }
+            }
+          }
+        }
+      });
+    }
+
+    function downloadChart() {
+      if (chart) {
+        const image = chart.toBase64Image();
+        const link = document.createElement('a');
+        link.href = image;
+        link.download = `monthly-comparison-${customerId}-${new Date().toISOString().split('T')[0]}.png`;
+        link.click();
+      }
+    }
+
+    initTheme();
+    loadMonthlyComparison();
+  </script>
+</body>
+</html>

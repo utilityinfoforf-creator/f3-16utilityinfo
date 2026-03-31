@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Billing History - F3-16 Utility Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .page-container { max-width: 1000px; margin: 0 auto; padding: 20px; }
+    .page-header {
+      color: #fff;
+      text-align: center;
+      margin-bottom: 30px;
+      padding: 30px 20px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-radius: 12px;
+    }
+    .page-header h1 { font-size: 28px; margin-bottom: 10px; }
+    .back-link {
+      display: inline-block;
+      margin-bottom: 20px;
+      padding: 8px 16px;
+      background: #667eea;
+      color: #fff;
+      border-radius: 6px;
+      text-decoration: none;
+      font-weight: 600;
+    }
+    .back-link:hover { background: #764ba2; }
+    .table-container {
+      background: var(--bg-primary);
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 2px 12px var(--card-shadow);
+      color: var(--text-primary);
+    }
+    .table-container table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .table-container th {
+      background: var(--bg-secondary);
+      padding: 12px;
+      text-align: left;
+      font-weight: 700;
+      color: var(--text-primary);
+      border-bottom: 2px solid var(--border-color);
+    }
+    .table-container td {
+      padding: 12px;
+      border-bottom: 1px solid var(--border-color);
+      color: var(--text-primary);
+    }
+    .table-container tr:hover { background: var(--bg-secondary); }
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      margin-bottom: 30px;
+    }
+    .stat-box {
+      background: var(--bg-primary);
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px var(--card-shadow);
+      text-align: center;
+      color: var(--text-primary);
+    }
+    .stat-value { font-size: 24px; font-weight: 700; color: #667eea; }
+    .stat-label { font-size: 12px; color: var(--text-secondary); margin-top: 5px; }
+    .export-btn {
+      background: #667eea;
+      color: #fff;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      margin-top: 20px;
+    }
+    .export-btn:hover { background: #764ba2; }
+    .empty-state { text-align: center; padding: 40px; color: var(--text-secondary); }
+    .loading { text-align: center; padding: 40px; color: var(--text-secondary); }
+  </style>
+</head>
+<body>
+  <div class="page-container">
+    <a href="index.html" class="back-link">← Back to Dashboard</a>
+
+    <div class="page-header">
+      <h1>📋 Billing History</h1>
+      <p>View your complete balance update history</p>
+    </div>
+
+    <div class="stats-grid" id="statsGrid"></div>
+
+    <div class="table-container">
+      <table id="billingTable">
+        <thead>
+          <tr>
+            <th>Date & Time</th>
+            <th>Electric Balance</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody id="billingBody">
+          <tr class="loading"><td colspan="3">Loading billing history...</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <button class="export-btn" onclick="exportToCSV()">📥 Export as CSV</button>
+  </div>
+
+  <script>
+    const API_BASE = "https://script.google.com/macros/s/AKfycbzUQeJKLBRCjQG928fnIdJ7Tlg-JR0072ENK-K2_07NBOxWsH9zs0qd5CrcoQW_Mbz3lA/exec";
+    let customerId = localStorage.getItem("customerId");
+    let billingData = [];
+
+    function initTheme() {
+      const savedTheme = localStorage.getItem('theme') || 'light';
+      if (savedTheme === 'dark') {
+        document.documentElement.classList.add('dark-mode');
+      }
+    }
+
+    async function loadBillingHistory() {
+      if (!customerId) {
+        document.getElementById('billingBody').innerHTML = '<tr><td colspan="3" class="empty-state">Please login first</td></tr>';
+        return;
+      }
+
+      try {
+        const response = await fetch(`${API_BASE}?id=${encodeURIComponent(customerId)}&history=true`);
+        const data = await response.json();
+
+        if (data.history && data.history.length > 0) {
+          billingData = data.history;
+          displayBillingHistory(data.history);
+          displayStats(data.history);
+        } else {
+          document.getElementById('billingBody').innerHTML = '<tr><td colspan="3" class="empty-state">No billing history available</td></tr>';
+        }
+      } catch (error) {
+        console.error('Error loading billing history:', error);
+        document.getElementById('billingBody').innerHTML = '<tr><td colspan="3" class="empty-state">Error loading data. Please try again.</td></tr>';
+      }
+    }
+
+    function displayBillingHistory(history) {
+      const tbody = document.getElementById('billingBody');
+      tbody.innerHTML = history.map(item => `
+        <tr>
+          <td>${item.date}</td>
+          <td>৳ ${parseFloat(item.balance).toFixed(2)}</td>
+          <td>${item.description}</td>
+        </tr>
+      `).join('');
+    }
+
+    function displayStats(history) {
+      const grid = document.getElementById('statsGrid');
+      const balances = history.map(h => parseFloat(h.balance));
+      const latest = balances[0];
+      const highest = Math.max(...balances);
+      const lowest = Math.min(...balances);
+      const average = (balances.reduce((a, b) => a + b, 0) / balances.length).toFixed(2);
+
+      grid.innerHTML = `
+        <div class="stat-box">
+          <div class="stat-label">Latest Balance</div>
+          <div class="stat-value">৳ ${latest.toFixed(2)}</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Highest Balance</div>
+          <div class="stat-value">৳ ${highest.toFixed(2)}</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Lowest Balance</div>
+          <div class="stat-value">৳ ${lowest.toFixed(2)}</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Average Balance</div>
+          <div class="stat-value">৳ ${average}</div>
+        </div>
+      `;
+    }
+
+    function exportToCSV() {
+      if (!billingData || billingData.length === 0) {
+        alert('No data to export');
+        return;
+      }
+
+      let csv = 'Date & Time,Electric Balance,Description\n';
+      billingData.forEach(item => {
+        csv += `"${item.date}","${item.balance}","${item.description}"\n`;
+      });
+
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `billing-history-${customerId}-${new Date().toISOString().split('T')[0]}.csv`;
+      a.click();
+    }
+
+    initTheme();
+    loadBillingHistory();
+  </script>
+</body>
+</html>
