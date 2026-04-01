@@ -272,81 +272,236 @@ async function fetchWebVersion() {
   }
 }
 
-// ----- Login -----
-async function login() {
+// ----- 2FA Login Flow -----
+let currentOTPSession = null;
+let otpCountdownInterval = null;
+
+async function submitCustomerId() {
   const idEl = document.getElementById("customerId");
   if (!idEl) return;
   const id = idEl.value.trim();
 
-  setToggleMessage("", "");
-  const emailInput = document.getElementById("emailAddress");
-  if (emailInput) emailInput.classList.remove("input-error");
-
   if (!id) {
-    const errorEl = document.getElementById("error");
-    if (errorEl) {
-      errorEl.innerText = "Enter Customer ID";
-      errorEl.style.display = "block";
-    }
+    showError(document.getElementById("error"), "Enter Customer ID");
     return;
   }
 
   try {
-    const res = await fetch(`${API_BASE}?id=${encodeURIComponent(id)}`);
+    const res = await fetch(`${API_BASE}?id=${encodeURIComponent(id)}&action=getOTPStep`);
     if (!res.ok) throw new Error("Network response was not ok");
     const data = await res.json();
 
     if (data.error) {
-      const errorEl = document.getElementById("error");
-      if (errorEl) {
-        errorEl.innerText = data.error;
-        errorEl.style.display = "block";
-      }
+      showError(document.getElementById("error"), data.error);
       return;
     }
 
-    const setText = (id, value) => {
-      const e = document.getElementById(id);
-      if (e) e.innerText = value || "";
+    // Successfully sent OTP, move to step 2
+    currentOTPSession = {
+      customerId: id,
+      email: data.email,
+      expiresIn: data.expiresIn || 600,
+      startTime: Date.now(),
+      attempts: 0
     };
 
-    setText("name", data.name || "");
-    setText("electricBalance", data.electricBalance || "");
-    setText("waterBillDue", data.waterBillDue || "");
-    setText("gasBillDue", data.gasBillDue || "");
-    setText("internetConnected", data.internetConnected || "");
-    setText("internetBillDue", data.internetBillDue || "");
-    setText("flatNumber", data.flatNumber || "");
-    setText("lastUpdated", data.lastUpdated || "");
+    document.getElementById("loginStep1").style.display = "none";
+    document.getElementById("loginStep2").style.display = "flex";
+    document.getElementById("otpEmail").innerText = data.email || "your email";
+    document.getElementById("otp1").focus();
 
-    const emailToggleEl = document.getElementById("emailToggle");
-    if (emailToggleEl) emailToggleEl.checked = (String(data.subscribed) === "true");
-    if (emailInput) emailInput.value = data.email || "";
-
-    sessionStorage.setItem("customerId", id);
-    localStorage.setItem("customerId", id);
-    localStorage.setItem("customerName", data.name || "");
-    localStorage.setItem("customerEmail", data.email || "");
-
-    const errorEl = document.getElementById("error");
-    if (errorEl) {
-      errorEl.innerText = "";
-      errorEl.style.display = "none";
-    }
-    const loginEl = document.getElementById("login");
-    if (loginEl) loginEl.style.display = "none";
-    const dashEl = document.getElementById("dashboard");
-    if (dashEl) dashEl.style.display = "block";
-
-    updatePageLanguage();
+    startOTPCountdown();
+    setupOTPAutoAdvance();
   } catch (err) {
-    const errorEl = document.getElementById("error");
-    if (errorEl) {
-      errorEl.innerText = "Network error";
-      errorEl.style.display = "block";
-    }
-    console.error("login error", err);
+    showError(document.getElementById("error"), "Network error: " + err.message);
+    console.error("submitCustomerId error", err);
   }
+}
+
+async function verifyOTP() {
+  if (!currentOTPSession) {
+    showError(document.getElementById("otpError"), "Session expired. Please try again.");
+    return;
+  }
+
+  const otp = Array.from({length: 6}, (_, i) =>
+    document.getElementById(`otp${i + 1}`).value
+  ).join("");
+
+  if (otp.length !== 6) {
+    showError(document.getElementById("otpError"), "Please enter a 6-digit code");
+    return;
+  }
+
+  try {
+    const payload = {
+      action: "verifyOTP",
+      customerId: currentOTPSession.customerId,
+      otp: otp
+    };
+
+    const res = await fetch(API_BASE, {
+      method: "POST",
+      body: JSON.stringify(payload),
+      headers: { "Content-Type": "application/json" }
+    });
+
+    if (!res.ok) throw new Error("Network response was not ok");
+    const data = await res.json();
+
+    if (data.error) {
+      currentOTPSession.attempts++;
+      showError(document.getElementById("otpError"), data.error);
+      if (currentOTPSession.attempts >= 3) {
+        goBackToStep1();
+      }
+      // Clear OTP fields
+      for (let i = 1; i <= 6; i++) {
+        document.getElementById(`otp${i}`).value = "";
+      }
+      document.getElementById("otp1").focus();
+      return;
+    }
+
+    if (data.success) {
+      // Login successful
+      loginWithData(data, currentOTPSession.customerId);
+    }
+  } catch (err) {
+    showError(document.getElementById("otpError"), "Network error: " + err.message);
+    console.error("verifyOTP error", err);
+  }
+}
+
+function loginWithData(data, id) {
+  const setText = (id, value) => {
+    const e = document.getElementById(id);
+    if (e) e.innerText = value || "";
+  };
+
+  setText("name", data.name || "");
+  setText("electricBalance", data.electricBalance || "");
+  setText("waterBillDue", data.waterBillDue || "");
+  setText("gasBillDue", data.gasBillDue || "");
+  setText("internetConnected", data.internetConnected || "");
+  setText("internetBillDue", data.internetBillDue || "");
+  setText("flatNumber", data.flatNumber || "");
+  setText("lastUpdated", data.lastUpdated || "");
+
+  const emailInput = document.getElementById("emailAddress");
+  const emailToggleEl = document.getElementById("emailToggle");
+  if (emailToggleEl) emailToggleEl.checked = (String(data.subscribed) === "true");
+  if (emailInput) emailInput.value = data.email || "";
+
+  sessionStorage.setItem("customerId", id);
+  localStorage.setItem("customerId", id);
+  localStorage.setItem("customerName", data.name || "");
+  localStorage.setItem("customerEmail", data.email || "");
+
+  document.getElementById("loginStep2").style.display = "none";
+  document.getElementById("dashboard").style.display = "block";
+
+  if (otpCountdownInterval) clearInterval(otpCountdownInterval);
+  currentOTPSession = null;
+
+  updatePageLanguage();
+}
+
+function goBackToStep1() {
+  if (otpCountdownInterval) clearInterval(otpCountdownInterval);
+  currentOTPSession = null;
+
+  document.getElementById("loginStep2").style.display = "none";
+  document.getElementById("loginStep1").style.display = "flex";
+  document.getElementById("customerId").value = "";
+  document.getElementById("customerId").focus();
+
+  // Clear OTP fields and errors
+  for (let i = 1; i <= 6; i++) {
+    document.getElementById(`otp${i}`).value = "";
+  }
+  document.getElementById("otpError").style.display = "none";
+}
+
+function resendOTP() {
+  if (!currentOTPSession) return;
+
+  const btn = document.getElementById("resendBtn");
+  btn.disabled = true;
+
+  // Reset the countdown
+  currentOTPSession.startTime = Date.now();
+
+  // Clear OTP fields
+  for (let i = 1; i <= 6; i++) {
+    document.getElementById(`otp${i}`).value = "";
+  }
+  document.getElementById("otp1").focus();
+  document.getElementById("otpError").style.display = "none";
+
+  startOTPCountdown();
+  btn.disabled = false;
+}
+
+function startOTPCountdown() {
+  if (otpCountdownInterval) clearInterval(otpCountdownInterval);
+
+  const updateTimer = () => {
+    if (!currentOTPSession) return;
+
+    const elapsed = Math.floor((Date.now() - currentOTPSession.startTime) / 1000);
+    const remaining = Math.max(0, currentOTPSession.expiresIn - elapsed);
+
+    const minutes = Math.floor(remaining / 60);
+    const seconds = remaining % 60;
+    const timeStr = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+
+    document.getElementById("timerDisplay").innerText = timeStr;
+
+    if (remaining === 0) {
+      clearInterval(otpCountdownInterval);
+      document.getElementById("otpSubmitBtn").disabled = true;
+      document.getElementById("timerDisplay").innerText = "Expired";
+      document.getElementById("otpTimer").classList.add("expired");
+    }
+  };
+
+  updateTimer();
+  otpCountdownInterval = setInterval(updateTimer, 1000);
+}
+
+function setupOTPAutoAdvance() {
+  for (let i = 1; i <= 6; i++) {
+    const field = document.getElementById(`otp${i}`);
+
+    field.addEventListener("input", function(e) {
+      // Only allow numeric characters
+      this.value = this.value.replace(/[^0-9]/g, '');
+
+      if (this.value.length === 1) {
+        this.classList.add("filled");
+        if (i < 6) {
+          document.getElementById(`otp${i + 1}`).focus();
+        } else {
+          // Auto-submit on 6th digit
+          verifyOTP();
+        }
+      } else {
+        this.classList.remove("filled");
+      }
+    });
+
+    field.addEventListener("keydown", function(e) {
+      if (e.key === "Backspace" && this.value.length === 0 && i > 1) {
+        document.getElementById(`otp${i - 1}`).focus();
+      }
+    });
+  }
+}
+
+async function login() {
+  // For backward compatibility, call submitCustomerId
+  submitCustomerId();
 }
 
 // ---- Payment steps display (bKash, Nagad, Pathao: only Pay Now block for Pathao) ----
@@ -613,15 +768,40 @@ async function toggleEmail() {
 function logout() {
   const dashboard = document.getElementById("dashboard");
   if (dashboard) dashboard.style.display = "none";
-  const loginEl = document.getElementById("login");
-  if (loginEl) loginEl.style.display = "flex";
+
+  // Show login step 1, hide step 2
+  const loginStep1 = document.getElementById("loginStep1");
+  if (loginStep1) loginStep1.style.display = "flex";
+  const loginStep2 = document.getElementById("loginStep2");
+  if (loginStep2) loginStep2.style.display = "none";
+
+  // Clear OTP state
+  if (otpCountdownInterval) clearInterval(otpCountdownInterval);
+  currentOTPSession = null;
+
   const errorEl = document.getElementById("error");
   if (errorEl) {
     errorEl.innerText = "";
     errorEl.style.display = "none";
   }
+  const otpErrorEl = document.getElementById("otpError");
+  if (otpErrorEl) {
+    otpErrorEl.innerText = "";
+    otpErrorEl.style.display = "none";
+  }
+
   const idEl = document.getElementById("customerId");
   if (idEl) idEl.value = "";
+
+  // Clear OTP fields
+  for (let i = 1; i <= 6; i++) {
+    const field = document.getElementById(`otp${i}`);
+    if (field) {
+      field.value = "";
+      field.classList.remove("filled");
+    }
+  }
+
   const emailToggleEl = document.getElementById("emailToggle");
   if (emailToggleEl) emailToggleEl.checked = false;
   const emailInput = document.getElementById("emailAddress");
@@ -1297,8 +1477,10 @@ window.addEventListener("load", function() {
     sessionStorage.setItem('customerId', cid);
     localStorage.setItem('customerId', cid);
     // hide login and show dashboard UI if present
-    const loginEl = document.getElementById('login');
-    if (loginEl) loginEl.style.display = 'none';
+    const loginStep1 = document.getElementById('loginStep1');
+    if (loginStep1) loginStep1.style.display = 'none';
+    const loginStep2 = document.getElementById('loginStep2');
+    if (loginStep2) loginStep2.style.display = 'none';
     const dashEl = document.getElementById('dashboard');
     if (dashEl) dashEl.style.display = 'block';
   }

@@ -14,17 +14,50 @@
 </head>
 <body>
   <div class="container">
-    <!-- Login Page -->
-    <div id="login" class="login-container">
+    <!-- Login Page: Step 1 - Customer ID -->
+    <div id="loginStep1" class="login-container">
       <div class="login-box">
         <h1>⚡ Utility Portal</h1>
+        <p style="text-align:center; color:#666; margin-bottom:20px; font-size:14px;">Step 1: Enter your Customer ID</p>
         <div class="form-group">
           <input id="customerId" placeholder="Enter your Customer ID" type="text">
         </div>
         <div class="form-group">
-          <button onclick="login()">Login</button>
+          <button onclick="submitCustomerId()">Continue</button>
         </div>
         <div id="error" class="error" style="display:none;"></div>
+      </div>
+    </div>
+
+    <!-- Login Page: Step 2 - OTP Verification -->
+    <div id="loginStep2" class="login-container" style="display:none;">
+      <div class="login-box">
+        <h1>⚡ Utility Portal</h1>
+        <p style="text-align:center; color:#666; margin-bottom:5px; font-size:14px;">Step 2: Verify Your Code</p>
+        <p style="text-align:center; color:#999; margin-bottom:20px; font-size:13px;">Code sent to <span id="otpEmail" style="font-weight:bold;"></span></p>
+
+        <div class="otp-input" id="otpInputs">
+          <input class="otp-field" id="otp1" type="text" maxlength="1" inputmode="numeric">
+          <input class="otp-field" id="otp2" type="text" maxlength="1" inputmode="numeric">
+          <input class="otp-field" id="otp3" type="text" maxlength="1" inputmode="numeric">
+          <input class="otp-field" id="otp4" type="text" maxlength="1" inputmode="numeric">
+          <input class="otp-field" id="otp5" type="text" maxlength="1" inputmode="numeric">
+          <input class="otp-field" id="otp6" type="text" maxlength="1" inputmode="numeric">
+        </div>
+
+        <div class="form-group" style="margin-top:20px;">
+          <button id="otpSubmitBtn" onclick="verifyOTP()" style="width:100%;">Verify Code</button>
+        </div>
+
+        <div style="text-align:center; margin-top:15px;">
+          <p id="otpTimer" style="font-size:12px; color:#999; margin-bottom:8px;">Expires in: <span style="font-weight:bold;" id="timerDisplay">10:00</span></p>
+          <button id="resendBtn" onclick="resendOTP()" style="background:none; border:none; color:#667eea; cursor:pointer; font-size:13px; text-decoration:underline;">Didn't receive code? Resend</button>
+        </div>
+
+        <div id="otpError" class="error" style="display:none; margin-top:15px;"></div>
+        <div id="backLink" style="text-align:center; margin-top:20px;">
+          <button onclick="goBackToStep1()" style="background:none; border:none; color:#667eea; cursor:pointer; font-size:13px; text-decoration:underline;">← Back to Customer ID</button>
+        </div>
       </div>
     </div>
 
@@ -317,10 +350,12 @@
     console.log('PWA app installed successfully');
   });
 
-  // Service Worker Registration (optional for online-only mode)
+  // Service Worker Registration
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('../../sw.js').catch(() => {
-      // Service worker not available, app will work in online mode only
+    navigator.serviceWorker.register('../../service-worker.js').then(reg => {
+      console.log('Service Worker registered successfully');
+    }).catch(err => {
+      console.log('Service Worker registration failed:', err);
     });
   }
 </script>
