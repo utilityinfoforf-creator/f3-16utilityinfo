@@ -764,6 +764,89 @@ async function toggleEmail() {
   }
 }
 
+// ---- Bill Reminders Toggle ----
+async function toggleBillReminders() {
+  const id = (document.getElementById("customerId") || {}).value || sessionStorage.getItem('customerId') || localStorage.getItem('customerId') || "";
+  const remindersToggleEl = document.getElementById("remindersToggle");
+  const enabled = remindersToggleEl ? remindersToggleEl.checked : false;
+  const emailInput = document.getElementById("emailAddress");
+  const email = emailInput ? emailInput.value.trim() : "";
+  const t = translations[currentLanguage] || translations.en;
+
+  if (!id) {
+    if (remindersToggleEl) remindersToggleEl.checked = false;
+    return;
+  }
+
+  if (enabled && !email) {
+    setToggleMessage(t.emailError, "error");
+    if (remindersToggleEl) remindersToggleEl.checked = false;
+    return;
+  }
+
+  try {
+    // Save to backend
+    const payload = {
+      action: "updateReminders",
+      customerId: id,
+      email: email,
+      enabled: enabled,
+      frequency: "weekly"
+    };
+
+    const res = await fetch(API_BASE, {
+      method: "POST",
+      body: JSON.stringify(payload),
+      headers: { "Content-Type": "application/json" }
+    });
+
+    if (!res.ok) throw new Error("Network response was not ok");
+    const data = await res.json();
+
+    if (data.success) {
+      setToggleMessage(enabled ? t.remindersEnabled : t.remindersDisabled, "success");
+      localStorage.setItem(`reminders_${id}`, JSON.stringify({
+        enabled: enabled,
+        frequency: "weekly",
+        timestamp: new Date().toISOString()
+      }));
+    } else {
+      setToggleMessage(data.error || "Could not save changes.", "error");
+      if (remindersToggleEl) remindersToggleEl.checked = !enabled;
+    }
+  } catch (err) {
+    console.error('toggleBillReminders error', err);
+    setToggleMessage("Network error while saving reminder settings.", "error");
+    if (remindersToggleEl) remindersToggleEl.checked = !enabled;
+  }
+}
+
+// ---- 2FA Toggle ----
+async function toggle2FA() {
+  const id = (document.getElementById("customerId") || {}).value || sessionStorage.getItem('customerId') || localStorage.getItem('customerId') || "";
+  const twoFAToggleEl = document.getElementById("2faToggle");
+  const enabled = twoFAToggleEl ? twoFAToggleEl.checked : false;
+  const t = translations[currentLanguage] || translations.en;
+
+  if (!id) {
+    if (twoFAToggleEl) twoFAToggleEl.checked = false;
+    return;
+  }
+
+  try {
+    // Save to localStorage (2FA is currently always enabled for login)
+    setToggleMessage(enabled ? t.twoFAEnabled : t.twoFADisabled, "success");
+    localStorage.setItem(`2fa_${id}`, JSON.stringify({
+      enabled: enabled,
+      timestamp: new Date().toISOString()
+    }));
+  } catch (err) {
+    console.error('toggle2FA error', err);
+    setToggleMessage("Error saving security settings.", "error");
+    if (twoFAToggleEl) twoFAToggleEl.checked = !enabled;
+  }
+}
+
 // ---- Logout / Navigation ----
 function logout() {
   const dashboard = document.getElementById("dashboard");

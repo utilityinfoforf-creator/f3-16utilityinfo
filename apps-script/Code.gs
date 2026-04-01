@@ -300,6 +300,15 @@ function doPost(e) {
       return jsonWithCORS_(result, e);
     }
 
+    if (action === 'updateReminders') {
+      var customerId = String(payload.customerId || '').trim();
+      var email = String(payload.email || '').trim();
+      var enabled = payload.enabled === 'true' || payload.enabled === true;
+      var frequency = String(payload.frequency || 'weekly').trim();
+      var result = updateReminders_(customerId, email, enabled, frequency);
+      return jsonWithCORS_(result, e);
+    }
+
     return jsonWithCORS_({ error: 'Unknown action' }, e);
   } catch (err) {
     Logger.log('doPost error: ' + (err && err.message ? err.message : err));
@@ -405,7 +414,8 @@ function getSheetName_(key) {
     'VERIFICATION_SHEET': 'EmailVerification',
     'USAGE_SHEET': 'UsageData',
     'PAYMENTLOG_SHEET': 'PaymentLog',
-    'OTP_SHEET': 'OTPLog'
+    'OTP_SHEET': 'OTPLog',
+    'REMINDERS_SHEET': 'BillReminders'
   };
   return props.getProperty(key) || defaults[key] || key;
 }
@@ -1168,4 +1178,125 @@ function cleanupExpiredOTPs_() {
   }
 
   return { cleaned: rowsToDelete.length };
+}
+
+/***** BILL REMINDERS (Weekly Notifications) *****/
+function getOrCreateRemindersSheet_() {
+  var ss = getSpreadsheet_();
+  var name = getSheetName_('REMINDERS_SHEET');
+  var sheet = ss.getSheetByName(name);
+  if (!sheet) {
+    sheet = ss.insertSheet(name);
+    sheet.appendRow(["CustomerID", "Email", "Enabled", "Frequency", "LastReminderSent", "CreatedAt", "UpdatedAt"]);
+  }
+  return sheet;
+}
+
+function updateReminders_(customerId, email, enabled, frequency) {
+  if (!customerId) return { success: false, error: "Missing Customer ID" };
+  if (enabled && !email) return { success: false, error: "Email required for reminders" };
+
+  var remindersSheet = getOrCreateRemindersSheet_();
+  var data = remindersSheet.getDataRange().getValues();
+  var enabledStr = enabled ? "true" : "false";
+  frequency = frequency || "weekly";
+  var now = new Date();
+  var formattedTime = Utilities.formatDate(now, Session.getScriptTimeZone(), "yyyy-MM-dd'T'HH:mm:ss'Z'");
+
+  // Search for existing entry
+  for (var i = 1; i < data.length; i++) {
+    if (String(data[i][0]).trim() === customerId) {
+      remindersSheet.getRange(i + 1, 2).setValue(email || "");
+      remindersSheet.getRange(i + 1, 3).setValue(enabledStr);
+      remindersSheet.getRange(i + 1, 4).setValue(frequency);
+      remindersSheet.getRange(i + 1, 7).setValue(formattedTime);
+      return { success: true, status: enabled ? "Reminders enabled" : "Reminders disabled" };
+    }
+  }
+
+  // Create new entry
+  remindersSheet.appendRow([customerId, email || "", enabledStr, frequency, "", formattedTime, formattedTime]);
+  return { success: true, status: enabled ? "Reminders enabled" : "Reminders disabled" };
+}
+
+function sendBillReminderEmail_(email, customerInfo) {
+  if (!email) return false;
+  var subject = "Weekly Bill Reminder — F3-16 Utility";
+  var now = new Date();
+  var formattedDate = Utilities.formatDate(now, Session.getScriptTimeZone(), "EEEE, MMM dd");
+
+  var electricBill = customerInfo.electricBalance || "0";
+  var waterBill = customerInfo.waterBillDue || "0";
+  var gasBill = customerInfo.gasBillDue || "0";
+  var flatNumber = customerInfo.flatNumber || "N/A";
+  var customerName = customerInfo.name || "Valued Customer";
+
+  var plainBody =
+    "Hello " + customerName + ",\n\n" +
+    "This is your weekly utility bill reminder for " + formattedDate + ".\n\n" +
+    "==== Current Balances ====\n" +
+    "Flat: " + flatNumber + "\n" +
+    "Electric Balance: ৳ " + electricBill + "\n" +
+    "Water Bill Due: ৳ " + waterBill + "\n" +
+    "Gas Bill Due: ৳ " + gasBill + "\n\n" +
+    "Please log in to your dashboard to view detailed information and make payments.\n\n" +
+    "Best regards,\n" +
+    "F3-16 Utility Corporations\n";
+
+  try {
+    MailApp.sendEmail({
+      to: email,
+      subject: subject,
+      body: plainBody,
+      name: "F3-16 UTILITY CORPORATIONS"
+    });
+    return true;
+  } catch (err) {
+    Logger.log("Bill reminder email failed for " + email + ": " + err.message);
+    return false;
+  }
+}
+
+function sendWeeklyBillReminders_() {
+  var remindersSheet = getOrCreateRemindersSheet_();
+  var data = remindersSheet.getDataRange().getValues();
+  var ss = getSpreadsheet_();
+  var dashSheet = ss.getSheetByName(getSheetName_('DASHBOARD_SHEET'));
+  var dashData = dashSheet.getDataRange().getValues();
+  var sentCount = 0;
+
+  for (var i = 1; i < data.length; i++) {
+    var customerId = String(data[i][0]).trim();
+    var email = String(data[i][1]).trim();
+    var enabled = String(data[i][2]).trim().toLowerCase() === "true";
+    var frequency = String(data[i][3]).trim();
+
+    if (!enabled || !email || frequency !== "weekly") continue;
+
+    // Get customer info
+    for (var j = 1; j < dashData.length; j++) {
+      if (String(dashData[j][0]).trim() === customerId) {
+        var customerInfo = {
+          name: dashData[j][1] || "",
+          electricBalance: dashData[j][2] || "0",
+          waterBillDue: dashData[j][3] || "0",
+          gasBillDue: dashData[j][4] || "0",
+          flatNumber: dashData[j][6] || "",
+          customerId: customerId
+        };
+
+        if (sendBillReminderEmail_(email, customerInfo)) {
+          // Update LastReminderSent
+          var now = new Date();
+          var formattedTime = Utilities.formatDate(now, Session.getScriptTimeZone(), "yyyy-MM-dd'T'HH:mm:ss'Z'");
+          remindersSheet.getRange(i + 1, 5).setValue(formattedTime);
+          sentCount++;
+        }
+        break;
+      }
+    }
+  }
+
+  Logger.log("Weekly bill reminders sent: " + sentCount);
+  return { sent: sentCount, timestamp: new Date().toString() };
 }
