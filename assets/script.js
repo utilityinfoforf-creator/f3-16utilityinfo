@@ -816,8 +816,8 @@ function logout() {
   sessionStorage.removeItem("customerId");
 }
 
-function goToPayment() { window.location.href = "payment.html"; }
-function goToTerms() { window.location.href = "terms.html"; }
+function goToPayment() { window.location.href = "../other/payment.html"; }
+function goToTerms() { window.location.href = "../other/terms.html"; }
 function backToDashboard() {
   const dash = document.getElementById("dashboard");
   if (dash) dash.style.display = "block";
@@ -1465,7 +1465,8 @@ window.addEventListener("load", function() {
   const savedId = localStorage.getItem("customerId");
   if (savedId && document.getElementById("customerId")) {
     document.getElementById("customerId").value = savedId;
-    login();
+    // Trigger 2FA flow by calling submitCustomerId (replaces old login() behavior)
+    submitCustomerId();
   }
 
   // If opened with ?transaction=...&customerId=... prefill the transaction field and auto-login if customerId provided.
@@ -1474,15 +1475,8 @@ window.addEventListener("load", function() {
   const cid = params.get('customerId');
   if (cid && document.getElementById('customerId')) {
     document.getElementById('customerId').value = cid;
-    sessionStorage.setItem('customerId', cid);
-    localStorage.setItem('customerId', cid);
-    // hide login and show dashboard UI if present
-    const loginStep1 = document.getElementById('loginStep1');
-    if (loginStep1) loginStep1.style.display = 'none';
-    const loginStep2 = document.getElementById('loginStep2');
-    if (loginStep2) loginStep2.style.display = 'none';
-    const dashEl = document.getElementById('dashboard');
-    if (dashEl) dashEl.style.display = 'block';
+    // For URL-based login, also trigger 2FA
+    submitCustomerId();
   }
   if (tx && document.getElementById('transactionNumber')) {
     document.getElementById('transactionNumber').value = tx;
