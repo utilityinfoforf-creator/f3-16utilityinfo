@@ -1,50 +1,81 @@
 {
-  "name": "F3-16 Utility Dashboard",
+  "name": "Utility Information Dashboard",
   "short_name": "Utility Portal",
-  "description": "Manage your utility bills, payments, and consumption in one place",
-  "start_url": "pages/main/index.html",
-  "scope": "/",
+  "description": "Manage your electrical, water, and gas consumption with real-time tracking and analytics",
+  "start_url": "/f3-16utilityinfo/pages/main/index.html",
+  "scope": "/f3-16utilityinfo/",
   "display": "standalone",
   "orientation": "portrait-primary",
-  "theme_color": "#667eea",
   "background_color": "#ffffff",
+  "theme_color": "#667eea",
   "icons": [
     {
-      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect fill='%23667eea' width='192' height='192'/><text x='50%' y='50%' font-size='120' font-weight='bold' fill='%23fff' text-anchor='middle' dominant-baseline='middle'>⚡</text></svg>",
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect fill='%23667eea' width='192' height='192'/><text x='96' y='120' font-size='100' text-anchor='middle' fill='white' font-weight='bold'>⚡</text></svg>",
       "sizes": "192x192",
       "type": "image/svg+xml",
       "purpose": "any"
     },
     {
-      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect fill='%23667eea' width='192' height='192'/><text x='50%' y='50%' font-size='120' font-weight='bold' fill='%23fff' text-anchor='middle' dominant-baseline='middle'>⚡</text></svg>",
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect fill='%23667eea' width='512' height='512'/><text x='256' y='380' font-size='280' text-anchor='middle' fill='white' font-weight='bold'>⚡</text></svg>",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect fill='%23667eea' width='192' height='192'/><text x='96' y='120' font-size='100' text-anchor='middle' fill='white' font-weight='bold'>⚡</text></svg>",
       "sizes": "192x192",
       "type": "image/svg+xml",
       "purpose": "maskable"
     }
   ],
+  "categories": ["utilities", "productivity"],
   "screenshots": [
     {
-      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 540 720'><rect fill='%23f5f5f5' width='540' height='720'/><text x='50%' y='50%' font-size='48' font-weight='bold' fill='%23667eea' text-anchor='middle' dominant-baseline='middle'>Utility Dashboard</text></svg>",
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 540 720'><rect fill='%23f5f5f5' width='540' height='720'/><text x='270' y='100' font-size='40' text-anchor='middle' fill='%23333'>Utility Dashboard</text><rect x='20' y='150' width='500' height='200' fill='%23667eea' rx='8'/><text x='270' y='260' font-size='30' text-anchor='middle' fill='white'>Your Consumption Overview</text></svg>",
       "sizes": "540x720",
       "type": "image/svg+xml",
       "form_factor": "narrow"
     }
   ],
-  "categories": ["utilities", "finance"],
   "shortcuts": [
     {
-      "name": "Make Payment",
-      "short_name": "Pay",
-      "description": "Go to payment page",
-      "url": "pages/other/payment.html",
-      "icons": []
+      "name": "View Billing History",
+      "short_name": "Billing",
+      "description": "Check your billing history and balance",
+      "url": "/f3-16utilityinfo/pages/analytics/billing-history.html",
+      "icons": [
+        {
+          "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 96 96'><rect fill='%23667eea' width='96' height='96'/><text x='48' y='70' font-size='50' text-anchor='middle' fill='white'>📋</text></svg>",
+          "sizes": "96x96",
+          "type": "image/svg+xml"
+        }
+      ]
     },
     {
-      "name": "View Bills",
-      "short_name": "Bills",
-      "description": "Check billing history",
-      "url": "pages/analytics/billing-history.html",
-      "icons": []
+      "name": "Make Payment",
+      "short_name": "Payment",
+      "description": "Pay your utility bills",
+      "url": "/f3-16utilityinfo/pages/other/payment.html",
+      "icons": [
+        {
+          "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 96 96'><rect fill='%23667eea' width='96' height='96'/><text x='48' y='70' font-size='50' text-anchor='middle' fill='white'>💳</text></svg>",
+          "sizes": "96x96",
+          "type": "image/svg+xml"
+        }
+      ]
+    },
+    {
+      "name": "Usage Trends",
+      "short_name": "Trends",
+      "description": "View 12-month consumption trends",
+      "url": "/f3-16utilityinfo/pages/analytics/usage-trends.html",
+      "icons": [
+        {
+          "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 96 96'><rect fill='%23667eea' width='96' height='96'/><text x='48' y='70' font-size='50' text-anchor='middle' fill='white'>📈</text></svg>",
+          "sizes": "96x96",
+          "type": "image/svg+xml"
+        }
+      ]
     }
   ]
 }
