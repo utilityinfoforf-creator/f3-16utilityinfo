@@ -129,138 +129,153 @@ function onFormSubmit(e) {
 
 /***** WEB APP: GET *****/
 function doGet(e) {
-  var ss = getSpreadsheet_();
-  var dashSheet = ss.getSheetByName(getSheetName_('DASHBOARD_SHEET'));
-  if (!dashSheet) {
-    return jsonWithCORS_({ error: "DashboardData sheet not found. Please run initializeSpreadsheet() or contact admin." }, e);
-  }
-  var subsSheet = getOrCreateSubsSheet_(ss);
-
-  var id = (e.parameter.id || '').trim();
-  var action = (e.parameter.action || '').trim();
-  var subscribe = e.parameter.subscribe;
-  var email = (e.parameter.email || '').trim();
-  // Diagnostic endpoint for debugging deployments
-  if (action === 'diagnose') {
+  try {
+    // Initialize spreadsheet first
     try {
-      var props = getScriptProperties_();
-      var sheets = [];
-      try { sheets = listAvailableSheets_(); } catch(e){ sheets = ['error_reading_sheets: '+ (e.message || e)]; }
-      return jsonWithCORS_({ status: 'ok', properties: props, sheets: sheets }, e);
+      initializeSpreadsheet();
     } catch (err) {
-      return jsonWithCORS_({ error: 'diagnose_failed', message: (err && err.message) ? err.message : String(err) }, e);
+      Logger.log('doGet: error initializing spreadsheet: ' + err.message);
+      return jsonWithCORS_({ error: 'Server error: spreadsheet initialization failed' }, e);
     }
-  }
 
-  // 2FA: Get OTP step (send OTP and return intermediate state)
-  if (action === 'getOTPStep') {
-    if (!id) return jsonWithCORS_({ error: 'Missing Customer ID' }, e);
-    try {
-      // Verify customer exists
-      var data = dashSheet.getDataRange().getValues();
-      for (var i = 1; i < data.length; i++) {
-        if (String(data[i][0]).trim() === id) {
-          var email = String(data[i][1] || '').trim(); // Assuming name column has email, or we need email column
-          // For now, try to get email from subscriptions sheet
-          var subsSheet = getOrCreateSubsSheet_(ss);
-          var subInfo = getSubscription_(subsSheet, id);
-          var customerEmail = subInfo.email || '';
+    var ss = getSpreadsheet_();
+    var dashSheetName = getSheetName_('DASHBOARD_SHEET');
+    var dashSheet = ss.getSheetByName(dashSheetName);
+    if (!dashSheet) {
+      return jsonWithCORS_({ error: "DashboardData sheet not found. Please run initializeSpreadsheet() or contact admin." }, e);
+    }
+    var subsSheet = getOrCreateSubsSheet_(ss);
 
-          if (!customerEmail) {
-            return jsonWithCORS_({ error: 'Email not found for customer. Please contact support.' }, e);
-          }
+    var id = (e.parameter.id || '').trim();
+    var action = (e.parameter.action || '').trim();
+    var subscribe = e.parameter.subscribe;
+    var email = (e.parameter.email || '').trim();
 
-          var otp = generateOTP_();
-          var emailSent = sendOTPEmail_(customerEmail, otp);
-          if (!emailSent) {
-            return jsonWithCORS_({ error: 'Failed to send OTP email. Please try again.' }, e);
-          }
-          storeOTP_(id, otp, customerEmail);
-
-          var maskedEmail = maskEmail_(customerEmail);
-          return jsonWithCORS_({
-            step: 'awaiting_otp',
-            customerId: id,
-            email: maskedEmail,
-            expiresIn: 600
-          }, e);
-        }
+    // Diagnostic endpoint for debugging deployments
+    if (action === 'diagnose') {
+      try {
+        var props = getScriptProperties_();
+        var sheets = [];
+        try { sheets = listAvailableSheets_(); } catch(errDiag){ sheets = ['error_reading_sheets: '+ (errDiag.message || errDiag)]; }
+        return jsonWithCORS_({ status: 'ok', properties: props, sheets: sheets }, e);
+      } catch (errDiag) {
+        return jsonWithCORS_({ error: 'diagnose_failed', message: (errDiag && errDiag.message) ? errDiag.message : String(errDiag) }, e);
       }
-      return jsonWithCORS_({ error: 'Customer not found' }, e);
-    } catch (err) {
-      return jsonWithCORS_({ error: 'OTP step failed: ' + (err.message || err) }, e);
     }
-  }
 
-  // Public action: get current deployed web-app version (no id required)
-  if (action === 'getVersion') {
-    return jsonWithCORS_({ version: WEB_APP_VERSION, timestamp: Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "yyyy-MM-dd'T'HH:mm:ss'Z'") }, e);
-  }
+    // 2FA: Get OTP step (send OTP and return intermediate state)
+    if (action === 'getOTPStep') {
+      if (!id) return jsonWithCORS_({ error: 'Missing Customer ID' }, e);
+      try {
+        // Verify customer exists
+        var data = dashSheet.getDataRange().getValues();
+        for (var i = 1; i < data.length; i++) {
+          if (String(data[i][0]).trim() === id) {
+            // Try to get email from subscriptions sheet first, otherwise fallback
+            var subInfo = getSubscription_(subsSheet, id);
+            var customerEmail = subInfo.email || '';
 
-  // Export all data as JSON for static dashboard (no id required)
-  if (action === 'export') {
-    return doGet_Export(e);
-  }
+            if (!customerEmail) {
+              // For demo/testing: if no email exists, return error asking them to set it
+              return jsonWithCORS_({ error: 'Email not configured for this customer. Please contact support.' }, e);
+            }
 
-  // Admin/dev helper: seed sample data (no id required)
-  if (action === 'seedSample' || action === 'populateSample') {
-    try {
-      var result = populateSampleData_();
-      return jsonWithCORS_({ status: 'ok', result: result }, e);
-    } catch (err) {
-      return jsonWithCORS_({ error: 'seed_failed', message: (err && err.message) ? err.message : String(err) }, e);
+            var otp = generateOTP_();
+            var emailSent = sendOTPEmail_(customerEmail, otp);
+            if (!emailSent) {
+              return jsonWithCORS_({ error: 'Failed to send OTP email. Please try again.' }, e);
+            }
+            storeOTP_(id, otp, customerEmail);
+
+            var maskedEmail = maskEmail_(customerEmail);
+            return jsonWithCORS_({
+              step: 'awaiting_otp',
+              customerId: id,
+              email: maskedEmail,
+              expiresIn: 600
+            }, e);
+          }
+        }
+        return jsonWithCORS_({ error: 'Customer not found' }, e);
+      } catch (errOTP) {
+        return jsonWithCORS_({ error: 'OTP step failed: ' + (errOTP.message || errOTP) }, e);
+      }
     }
-  }
 
-  // Read-only helpers: list sheets or return sheet rows as JSON (no id required)
-  if (!id && action) {
-    if (action === 'listSheets') {
-      return jsonWithCORS_({ sheets: listAvailableSheets_() }, e);
+    // Public action: get current deployed web-app version (no id required)
+    if (action === 'getVersion') {
+      return jsonWithCORS_({ version: WEB_APP_VERSION, timestamp: Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "yyyy-MM-dd'T'HH:mm:ss'Z'") }, e);
     }
-    if (action === 'getSheet') {
-      var sheetName = (e.parameter.sheet || '').trim();
-      if (!sheetName) return jsonWithCORS_({ error: 'Missing sheet parameter' }, e);
-      return jsonWithCORS_(getSheetDataObjects_(sheetName), e);
+
+    // Export all data as JSON for static dashboard (no id required)
+    if (action === 'export') {
+      return doGet_Export(e);
     }
-  }
 
-  if (!id) return jsonWithCORS_({ error: 'Missing Customer ID' }, e);
-
-  if (e.parameter.history === 'true') return jsonWithCORS_({ history: getCustomerHistory_(ss, id) }, e);
-
-  if (action === 'getUsageTrends') return jsonWithCORS_(getUsageTrends_(ss, id), e);
-  if (action === 'getUsageReport') return jsonWithCORS_(getUsageReport_(ss, id), e);
-  if (action === 'getMonthlyComparison') return jsonWithCORS_(getMonthlyComparison_(ss, id), e);
-  if (action === 'getPaymentHistory') return jsonWithCORS_(getPaymentHistory_(ss, id), e);
-  if (action === 'request') return jsonWithCORS_(requestEmailVerification_(id, email), e);
-  if (action === 'confirm') return jsonWithCORS_(confirmEmailVerification_(id, e.parameter.code), e);
-
-  if (subscribe !== undefined) {
-    upsertSubscription_(subsSheet, id, email, subscribe);
-    return jsonWithCORS_({ status: subscribe === 'true' ? 'Email updates enabled' : 'Email updates disabled' }, e);
-  }
-
-  var data = dashSheet.getDataRange().getValues();
-  for (var i = 1; i < data.length; i++) {
-    if (String(data[i][0]).trim() === id) {
-      var subInfo = getSubscription_(subsSheet, id);
-      var lastUpdatedRaw = data[i][5];
-      var lastUpdatedStr = lastUpdatedRaw instanceof Date ? Utilities.formatDate(lastUpdatedRaw, Session.getScriptTimeZone(), 'EEEE, dd MMM yyyy hh:mm a') : String(lastUpdatedRaw);
-      return jsonWithCORS_({
-        name: data[i][1] || '',
-        electricBalance: data[i][2] || '0',
-        waterBillDue: data[i][3] || '0',
-        gasBillDue: data[i][4] || '0',
-        internetConnected: data[i][7] || 'Unknown',
-        internetBillDue: data[i][8] || '0',
-        lastUpdated: lastUpdatedStr,
-        flatNumber: data[i][6] || '',
-        subscribed: subInfo.subscribed,
-        email: subInfo.email
-      }, e);
+    // Admin/dev helper: seed sample data (no id required)
+    if (action === 'seedSample' || action === 'populateSample') {
+      try {
+        var result = populateSampleData_();
+        return jsonWithCORS_({ status: 'ok', result: result }, e);
+      } catch (errSeed) {
+        return jsonWithCORS_({ error: 'seed_failed', message: (errSeed && errSeed.message) ? errSeed.message : String(errSeed) }, e);
+      }
     }
+
+    // Read-only helpers: list sheets or return sheet rows as JSON (no id required)
+    if (!id && action) {
+      if (action === 'listSheets') {
+        return jsonWithCORS_({ sheets: listAvailableSheets_() }, e);
+      }
+      if (action === 'getSheet') {
+        var sheetName = (e.parameter.sheet || '').trim();
+        if (!sheetName) return jsonWithCORS_({ error: 'Missing sheet parameter' }, e);
+        return jsonWithCORS_(getSheetDataObjects_(sheetName), e);
+      }
+    }
+
+    if (!id) return jsonWithCORS_({ error: 'Missing Customer ID' }, e);
+
+    if (e.parameter.history === 'true') return jsonWithCORS_({ history: getCustomerHistory_(ss, id) }, e);
+
+    if (action === 'getUsageTrends') return jsonWithCORS_(getUsageTrends_(ss, id), e);
+    if (action === 'getUsageReport') return jsonWithCORS_(getUsageReport_(ss, id), e);
+    if (action === 'getMonthlyComparison') return jsonWithCORS_(getMonthlyComparison_(ss, id), e);
+    if (action === 'getPaymentHistory') return jsonWithCORS_(getPaymentHistory_(ss, id), e);
+    if (action === 'request') return jsonWithCORS_(requestEmailVerification_(id, email), e);
+    if (action === 'confirm') return jsonWithCORS_(confirmEmailVerification_(id, e.parameter.code), e);
+
+    if (subscribe !== undefined) {
+      upsertSubscription_(subsSheet, id, email, subscribe);
+      return jsonWithCORS_({ status: subscribe === 'true' ? 'Email updates enabled' : 'Email updates disabled' }, e);
+    }
+
+    var data = dashSheet.getDataRange().getValues();
+    for (var i = 1; i < data.length; i++) {
+      if (String(data[i][0]).trim() === id) {
+        var subInfo = getSubscription_(subsSheet, id);
+        var lastUpdatedRaw = data[i][5];
+        var lastUpdatedStr = lastUpdatedRaw instanceof Date ? Utilities.formatDate(lastUpdatedRaw, Session.getScriptTimeZone(), 'EEEE, dd MMM yyyy hh:mm a') : String(lastUpdatedRaw);
+        return jsonWithCORS_({
+          success: true,
+          name: data[i][1] || '',
+          electricBalance: data[i][2] || '0',
+          waterBillDue: data[i][3] || '0',
+          gasBillDue: data[i][4] || '0',
+          internetConnected: data[i][7] || 'Unknown',
+          internetBillDue: data[i][8] || '0',
+          lastUpdated: lastUpdatedStr,
+          flatNumber: data[i][6] || '',
+          subscribed: subInfo.subscribed,
+          email: subInfo.email
+        }, e);
+      }
+    }
+    return jsonWithCORS_({ error: 'Customer not found' }, e);
+  } catch (err) {
+    Logger.log('doGet error: ' + (err && err.message ? err.message : err));
+    return jsonWithCORS_({ error: 'Server error: ' + (err.message || err) }, e);
   }
-  return jsonWithCORS_({ error: 'Customer not found' }, e);
 }
 
 /***** WEB APP: POST *****/
@@ -271,7 +286,15 @@ function doPost(e) {
 
     var payload = JSON.parse(raw);
     var action = payload.action || '';
-    var ss = getSpreadsheet_();
+
+    // Initialize spreadsheet first
+    try {
+      var ss = getSpreadsheet_();
+      initializeSpreadsheet(); // Ensure all sheets exist
+    } catch (err) {
+      Logger.log('doPost: error initializing spreadsheet: ' + err.message);
+      return jsonWithCORS_({ error: 'Server error: spreadsheet not accessible' }, e);
+    }
 
     // API key enforcement (optional): stored in Script Properties
     var requiredKey = PropertiesService.getScriptProperties().getProperty('API_KEY') || '';
