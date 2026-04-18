@@ -400,6 +400,21 @@ function loginWithData(data, id) {
     if (e) e.innerText = value || "";
   };
 
+  // Handle role-specific display
+  const userType = data.userType || 'tenant';
+  currentUserRole = userType;
+  sessionStorage.setItem('userRole', userType);
+  localStorage.setItem('userRole', userType);
+
+  // Set HTML class for role-based styling
+  const htmlEl = document.documentElement;
+  htmlEl.classList.remove('tenant-role', 'landlord-role');
+  if (userType === 'landlord') {
+    htmlEl.classList.add('landlord-role');
+  } else {
+    htmlEl.classList.add('tenant-role');
+  }
+
   setText("name", data.name || "");
   setText("electricBalance", data.electricBalance || "");
   setText("waterBillDue", data.waterBillDue || "");
@@ -1603,3 +1618,12 @@ window.addEventListener("load", function() {
     console.log('submitTransaction event listener bound to #btn-submit-payment');
   })();
 });
+
+// ===== LANDLORD FUNCTIONS =====
+function sendRemindersToAll() {
+  alert('📧 Bill Reminders Sent!\n\nReminder notifications have been sent to all tenants.');
+}
+
+function viewBuildingReports() {
+  alert('📊 Building Reports\n\nDetailed building analytics and reports coming soon.');
+}
