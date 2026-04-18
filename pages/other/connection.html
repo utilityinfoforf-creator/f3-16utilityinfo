@@ -2,46 +2,390 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>Request Internet Connection</title>
+  <title>Request Internet Connection - Utility Dashboard</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="stylesheet" href="../../../assets/styles.css">
+  <link rel="stylesheet" href="../../assets/styles.css">
+  <style>
+    .page-content {
+      padding: var(--space-2xl) var(--space-lg) var(--space-3xl);
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    .page-header {
+      margin-bottom: var(--space-3xl);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-lg);
+    }
+
+    .page-header-content h1 {
+      font-size: 32px;
+      margin-bottom: var(--space-sm);
+    }
+
+    .page-header-content p {
+      font-size: 14px;
+      color: var(--text-secondary);
+    }
+
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-sm);
+      padding: var(--space-sm) var(--space-md);
+      background: var(--bg-tertiary);
+      border-radius: 8px;
+      text-decoration: none;
+      color: var(--text-primary);
+      transition: all 0.2s;
+      white-space: nowrap;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .back-link:hover {
+      background: var(--color-primary);
+      color: white;
+      transform: translateX(-4px);
+    }
+
+    .form-card {
+      background: var(--bg-secondary);
+      border-radius: 12px;
+      border: 1px solid var(--border-color);
+      padding: var(--space-2xl);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .form-title {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: var(--space-lg);
+      display: flex;
+      align-items: center;
+      gap: var(--space-md);
+    }
+
+    .form-title-icon {
+      font-size: 24px;
+    }
+
+    .form-divider {
+      border: none;
+      border-top: 1px solid var(--border-color);
+      margin: var(--space-2xl) 0;
+    }
+
+    .form-section {
+      margin-bottom: var(--space-2xl);
+    }
+
+    .form-section-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: var(--space-md);
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: var(--space-sm);
+    }
+
+    .form-group input,
+    .form-group textarea,
+    .form-group select {
+      width: 100%;
+      padding: var(--space-md);
+      border: 2px solid var(--border-color);
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 14px;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      transition: all 0.2s ease;
+      box-sizing: border-box;
+    }
+
+    .form-group input::placeholder,
+    .form-group textarea::placeholder {
+      color: var(--text-tertiary);
+      opacity: 0.7;
+    }
+
+    .form-group input:focus,
+    .form-group textarea:focus,
+    .form-group select:focus {
+      outline: none;
+      border-color: var(--color-primary);
+      box-shadow: var(--shadow-focus);
+    }
+
+    .form-group textarea {
+      resize: vertical;
+      min-height: 120px;
+    }
+
+    .form-group-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-lg);
+    }
+
+    .form-help {
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin-top: var(--space-xs);
+    }
+
+    .form-actions {
+      display: flex;
+      gap: var(--space-md);
+      justify-content: flex-end;
+      margin-top: var(--space-2xl);
+      padding-top: var(--space-lg);
+      border-top: 1px solid var(--border-color);
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--space-sm);
+      padding: var(--space-md) var(--space-lg);
+      font-size: 14px;
+      font-weight: 600;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s ease-out;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+    }
+
+    .btn-primary {
+      background: var(--color-primary);
+      color: white;
+      box-shadow: 0 1px 3px rgba(0, 102, 255, 0.2);
+    }
+
+    .btn-primary:hover {
+      background: var(--color-primary-dark);
+      box-shadow: 0 4px 12px rgba(0, 102, 255, 0.3);
+    }
+
+    .btn-secondary {
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+      border: 1px solid var(--border-color);
+    }
+
+    .btn-secondary:hover {
+      background: var(--color-primary-light);
+      border-color: var(--color-primary);
+    }
+
+    .info-banner {
+      background: var(--color-info-light);
+      border: 1px solid var(--color-info);
+      border-radius: 8px;
+      padding: var(--space-md) var(--space-lg);
+      margin-bottom: var(--space-2xl);
+      color: var(--color-info);
+      font-size: 13px;
+      line-height: 1.6;
+      display: flex;
+      gap: var(--space-md);
+      align-items: flex-start;
+    }
+
+    .info-banner-icon {
+      font-size: 20px;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    .iframe-container {
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid var(--border-color);
+      margin-bottom: var(--space-2xl);
+    }
+
+    .iframe-container iframe {
+      width: 100%;
+      display: block;
+      background: var(--bg-primary);
+    }
+
+    @media (max-width: 768px) {
+      .page-content {
+        padding: var(--space-xl) var(--space-md) var(--space-2xl);
+      }
+
+      .page-header {
+        flex-direction: column;
+        align-items: flex-start;
+        margin-bottom: var(--space-2xl);
+      }
+
+      .page-header-content h1 {
+        font-size: 24px;
+      }
+
+      .form-card {
+        padding: var(--space-lg);
+      }
+
+      .form-group-row {
+        grid-template-columns: 1fr;
+      }
+
+      .form-actions {
+        flex-direction: column;
+      }
+
+      .form-actions .btn {
+        width: 100%;
+      }
+
+      .info-banner {
+        font-size: 12px;
+      }
+    }
+  </style>
 </head>
 <body>
-  <div class="container">
-    <div class="page-header">
-      <h1 id="conn-title">🌐 Request Internet Connection</h1>
-      <p id="conn-subtitle">Fill out the form below to request a connection</p>
+  <!-- GLOBAL HEADER -->
+  <header class="header">
+    <a href="../../pages/main/index.html" class="header-brand">
+      <span class="header-brand-icon">⚡</span>
+      <span>Utility</span>
+    </a>
+    <div class="header-user">
+      <div class="user-greeting">
+        <div class="user-greeting-name" id="headerName">Connection</div>
+        <div class="user-greeting-sub">New Request</div>
+      </div>
     </div>
-    
-    <div class="card">
-      <h2 id="conn-form-title">Request Form</h2>
-      <iframe src="https://docs.google.com/forms/d/e/1FAIpQLSdq6jALfPqeGmK8GD3LJ8NzT_0zXQUvHOK3ntsRf4mLIh2Xhw/viewform?embedded=true" 
-              frameborder="0" marginheight="0" marginwidth="0" style="width:100%; min-height:800px;">
-        Loading…
-      </iframe>
+    <div class="header-actions">
+      <button class="theme-toggle" onclick="toggleTheme()" title="Toggle dark/light mode">🌙</button>
+      <a href="../../pages/main/index.html" class="back-link">← Back</a>
+    </div>
+    <button class="nav-toggle" onclick="toggleNav()">☰</button>
+  </header>
+
+  <!-- MAIN CONTENT -->
+  <div class="page-content">
+    <div class="page-header">
+      <div class="page-header-content">
+        <h1 id="conn-title">🌐 Request Internet Connection</h1>
+        <p id="conn-subtitle">Fill out the form below to request a new connection</p>
+      </div>
     </div>
 
-    <button class="btn" onclick="window.location.href='../../main/index.html'" id="conn-back">← Back to Dashboard</button>
+    <div class="info-banner">
+      <div class="info-banner-icon">ℹ️</div>
+      <div>
+        <strong>Before you proceed:</strong> Ensure you have your customer ID, service address, and contact information ready. We'll process your request within 2-3 business days.
+      </div>
+    </div>
+
+    <div class="form-card">
+      <div class="form-title">
+        <span class="form-title-icon">📋</span>
+        <span id="conn-form-title">Connection Request Form</span>
+      </div>
+
+      <div class="form-divider"></div>
+
+      <!-- EMBEDDED GOOGLE FORM -->
+      <div class="iframe-container">
+        <iframe src="https://docs.google.com/forms/d/e/1FAIpQLSdq6jALfPqeGmK8GD3LJ8NzT_0zXQUvHOK3ntsRf4mLIh2Xhw/viewform?embedded=true"
+                frameborder="0" marginheight="0" marginwidth="0" style="min-height: 600px;">
+          Loading…
+        </iframe>
+      </div>
+
+      <div class="form-divider"></div>
+
+      <div class="form-section">
+        <h3 class="form-section-title">Need Help?</h3>
+        <p style="font-size: 13px; color: var(--text-secondary); line-height: 1.6;">
+          If you encounter any issues with the form, please contact our customer support team at <strong>support@utility.com</strong> or call <strong>+1-800-UTILITY</strong> for immediate assistance.
+        </p>
+      </div>
+
+      <div class="form-actions">
+        <a href="../../pages/main/index.html" class="btn btn-secondary" id="conn-back">← Back to Dashboard</a>
+      </div>
+    </div>
   </div>
 
-  <script src="../../../assets/script.js"></script>
   <script>
+    // Initialize theme
+    function initTheme() {
+      const savedTheme = localStorage.getItem('theme') || 'light';
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      const theme = savedTheme === 'dark' || (savedTheme === 'auto' && prefersDark) ? 'dark' : 'light';
+
+      if (theme === 'dark') {
+        document.documentElement.classList.add('dark-mode');
+      }
+    }
+
+    // Toggle theme
+    function toggleTheme() {
+      const isDark = document.documentElement.classList.toggle('dark-mode');
+      localStorage.setItem('theme', isDark ? 'dark' : 'light');
+      updateThemeIcon();
+    }
+
+    function updateThemeIcon() {
+      const isDark = document.documentElement.classList.contains('dark-mode');
+      document.querySelector('.theme-toggle').textContent = isDark ? '☀️' : '🌙';
+    }
+
+    // Toggle navigation
+    function toggleNav() {
+      // Navigation toggle for mobile
+      console.log('Nav toggle clicked');
+    }
+
     function updateConnectionLanguage() {
       if (typeof currentLanguage === 'undefined') return;
       if (currentLanguage === 'bn') {
         document.getElementById('conn-title').innerText = "🌐 ইন্টারনেট সংযোগের অনুরোধ";
         document.getElementById('conn-subtitle').innerText = "সংযোগের অনুরোধ জানাতে নিচের ফর্ম পূরণ করুন";
-        document.getElementById('conn-form-title').innerText = "অনুরোধ ফর্ম";
+        document.getElementById('conn-form-title').innerText = "সংযোগ অনুরোধ ফর্ম";
         document.getElementById('conn-back').innerText = "← ড্যাশবোর্ডে ফিরে যান";
       } else {
         document.getElementById('conn-title').innerText = "🌐 Request Internet Connection";
-        document.getElementById('conn-subtitle').innerText = "Fill out the form below to request a connection";
-        document.getElementById('conn-form-title').innerText = "Request Form";
+        document.getElementById('conn-subtitle').innerText = "Fill out the form below to request a new connection";
+        document.getElementById('conn-form-title').innerText = "Connection Request Form";
         document.getElementById('conn-back').innerText = "← Back to Dashboard";
       }
     }
-    
-    window.addEventListener("load", updateConnectionLanguage);
+
+    initTheme();
+    updateThemeIcon();
+
+    window.addEventListener("load", function() {
+      if (typeof updateConnectionLanguage === 'function') updateConnectionLanguage();
+      updateConnectionLanguage();
+    });
   </script>
 </body>
 </html>

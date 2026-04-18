@@ -6,361 +6,440 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="../../assets/styles.css">
   <link rel="manifest" href="../../manifest.json">
-  <meta name="theme-color" content="#667eea">
+  <meta name="theme-color" content="#0066FF">
   <meta name="description" content="Manage your utility bills, payments, and consumption">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Utility Portal">
 </head>
 <body>
-  <div class="container">
-    <!-- Login Page: Step 1 - Customer ID -->
-    <div id="loginStep1" class="login-container">
-      <div class="login-box">
-        <h1>⚡ Utility Portal</h1>
-        <p style="text-align:center; color:#666; margin-bottom:20px; font-size:14px;">Step 1: Enter your Customer ID</p>
-        <div class="form-group">
-          <input id="customerId" placeholder="Enter your Customer ID" type="text">
-        </div>
-        <div class="form-group">
-          <button onclick="submitCustomerId()">Continue</button>
-        </div>
-        <div id="error" class="error" style="display:none;"></div>
+  <!-- GLOBAL HEADER -->
+  <header class="header" id="mainHeader">
+    <a href="#" class="header-brand">
+      <span class="header-brand-icon">⚡</span>
+      <span>Utility</span>
+    </a>
+    <div class="header-user">
+      <div class="user-greeting">
+        <div class="user-greeting-name" id="headerName">Welcome</div>
+        <div class="user-greeting-sub">Utility Dashboard</div>
       </div>
     </div>
+    <div class="header-actions">
+      <button class="theme-toggle" onclick="toggleTheme()" title="Toggle dark/light mode">🌙</button>
+      <div class="lang-toggle">
+        <button class="lang-btn active" onclick="switchLanguage('en')">EN</button>
+        <button class="lang-btn" onclick="switchLanguage('bn')">BN</button>
+      </div>
+      <button class="btn btn-text" onclick="logout()" id="btn-logout">🚪 Logout</button>
+    </div>
+    <button class="nav-toggle" onclick="toggleNav()">☰</button>
+  </header>
 
-    <!-- Login Page: Step 2 - OTP Verification -->
-    <div id="loginStep2" class="login-container" style="display:none;">
-      <div class="login-box">
-        <h1>⚡ Utility Portal</h1>
-        <p style="text-align:center; color:#666; margin-bottom:5px; font-size:14px;">Step 2: Verify Your Code</p>
-        <p style="text-align:center; color:#999; margin-bottom:20px; font-size:13px;">Code sent to <span id="otpEmail" style="font-weight:bold;"></span></p>
+  <!-- LOGIN FORM -->
+  <div id="loginStep1" class="login-container" style="padding-top: 64px;">
+    <div class="login-box">
+      <div class="login-title">⚡ Utility Portal</div>
 
-        <div class="otp-input" id="otpInputs">
-          <input class="otp-field" id="otp1" type="text" maxlength="1" inputmode="numeric">
-          <input class="otp-field" id="otp2" type="text" maxlength="1" inputmode="numeric">
-          <input class="otp-field" id="otp3" type="text" maxlength="1" inputmode="numeric">
-          <input class="otp-field" id="otp4" type="text" maxlength="1" inputmode="numeric">
-          <input class="otp-field" id="otp5" type="text" maxlength="1" inputmode="numeric">
-          <input class="otp-field" id="otp6" type="text" maxlength="1" inputmode="numeric">
-        </div>
+      <div class="login-step-info">
+        <div class="login-step-title" id="login-step-label">Step 1: Enter Your Customer ID</div>
+        <div class="login-step-subtitle">Access your account</div>
+      </div>
 
-        <div class="form-group" style="margin-top:20px;">
-          <button id="otpSubmitBtn" onclick="verifyOTP()" style="width:100%;">Verify Code</button>
-        </div>
+      <div class="form-group">
+        <label for="customerId">Customer ID</label>
+        <input id="customerId" placeholder="e.g., CUST-12345" type="text">
+      </div>
 
-        <div style="text-align:center; margin-top:15px;">
-          <p id="otpTimer" style="font-size:12px; color:#999; margin-bottom:8px;">Expires in: <span style="font-weight:bold;" id="timerDisplay">10:00</span></p>
-          <button id="resendBtn" onclick="resendOTP()" style="background:none; border:none; color:#667eea; cursor:pointer; font-size:13px; text-decoration:underline;">Didn't receive code? Resend</button>
-        </div>
+      <button class="btn btn-primary" style="width: 100%; margin-top: 8px;" onclick="submitCustomerId()">Continue →</button>
+      <div id="error" class="alert alert-error" style="display:none; margin-top: 16px;"></div>
+    </div>
+  </div>
 
-        <div id="otpError" class="error" style="display:none; margin-top:15px;"></div>
-        <div id="backLink" style="text-align:center; margin-top:20px;">
-          <button onclick="goBackToStep1()" style="background:none; border:none; color:#667eea; cursor:pointer; font-size:13px; text-decoration:underline;">← Back to Customer ID</button>
-        </div>
+  <!-- OTP VERIFICATION -->
+  <div id="loginStep2" class="login-container" style="display:none; padding-top: 64px;">
+    <div class="login-box">
+      <div class="login-title">⚡ Utility Portal</div>
+
+      <div class="login-step-info">
+        <div class="login-step-title" id="otp-step-label">Step 2: Verify Your Code</div>
+        <div class="login-step-subtitle">Enter the 6-digit code sent to <span id="otpEmail" style="font-weight: 600;"></span></div>
+      </div>
+
+      <div class="otp-input" id="otpInputs">
+        <input class="otp-field" id="otp1" type="text" maxlength="1" inputmode="numeric">
+        <input class="otp-field" id="otp2" type="text" maxlength="1" inputmode="numeric">
+        <input class="otp-field" id="otp3" type="text" maxlength="1" inputmode="numeric">
+        <input class="otp-field" id="otp4" type="text" maxlength="1" inputmode="numeric">
+        <input class="otp-field" id="otp5" type="text" maxlength="1" inputmode="numeric">
+        <input class="otp-field" id="otp6" type="text" maxlength="1" inputmode="numeric">
+      </div>
+
+      <div style="text-align: center; margin-bottom: 20px;">
+        <p style="font-size: 12px; color: var(--text-secondary); margin-bottom: 8px;">Expires in: <span id="timerDisplay" style="font-weight: 600; color: var(--text-primary);">10:00</span></p>
+        <button class="btn btn-text" id="resendBtn" onclick="resendOTP()">Didn't receive code? Resend</button>
+      </div>
+
+      <button class="btn btn-primary" style="width: 100%;" id="otpSubmitBtn" onclick="verifyOTP()">Verify Code</button>
+
+      <div id="otpError" class="alert alert-error" style="display:none; margin-top: 16px;"></div>
+
+      <div style="text-align: center; margin-top: 20px;">
+        <button class="btn btn-text" onclick="goBackToStep1()">← Back to Customer ID</button>
       </div>
     </div>
+  </div>
 
-    <!-- Login Page: Step 3 - Device Selection -->
-    <div id="loginStep3" class="login-container" style="display:none;">
-      <div class="login-box">
-        <h1>⚡ Utility Portal</h1>
-        <p style="text-align:center; color:#666; margin-bottom:10px; font-size:14px;">Step 3: Select Your Device</p>
-        <p style="text-align:center; color:#999; margin-bottom:30px; font-size:13px;">Choose how you'll use the dashboard:</p>
-        <div class="device-selection">
-          <button class="device-btn" onclick="selectDevice('mobile')">📱 Mobile</button>
-          <button class="device-btn" onclick="selectDevice('desktop')">💻 Desktop</button>
-        </div>
+  <!-- DEVICE SELECTION -->
+  <div id="loginStep3" class="login-container" style="display:none; padding-top: 64px;">
+    <div class="login-box">
+      <div class="login-title">⚡ Utility Portal</div>
+
+      <div class="login-step-info">
+        <div class="login-step-title">Step 3: Choose Your View</div>
+        <div class="login-step-subtitle">Select your preferred experience</div>
+      </div>
+
+      <div class="grid" style="margin-top: 32px;">
+        <button class="btn btn-secondary" style="height: 120px; flex-direction: column; font-size: 16px;" onclick="selectDevice('mobile')">
+          📱 <span>Mobile</span>
+          <span style="font-size: 12px; color: var(--text-secondary); margin-top: 8px;">Optimized for phones</span>
+        </button>
+        <button class="btn btn-secondary" style="height: 120px; flex-direction: column; font-size: 16px;" onclick="selectDevice('desktop')">
+          💻 <span>Desktop</span>
+          <span style="font-size: 12px; color: var(--text-secondary); margin-top: 8px;">Full features</span>
+        </button>
       </div>
     </div>
+  </div>
 
-    <!-- Dashboard Page -->
-    <div id="dashboard" style="display:none;">
-      <div class="language-toggle">
-        <button class="theme-toggle" onclick="toggleTheme()" title="Toggle dark/light mode">🌙</button>
-        <button class="theme-toggle" id="installBtn" onclick="promptInstall()" title="Install app">⬇️ Install</button>
-        <button class="lang-btn active" onclick="switchLanguage('en')">English</button>
-        <button class="lang-btn" onclick="switchLanguage('bn')">বাংলা</button>
-        <button class="lang-btn" style="margin-left:8px; background:#dc3545; color:#fff; border-color:#dc3545;" onclick="logout()" id="btn-logout">🚪 Logout</button>
+  <!-- MAIN DASHBOARD -->
+  <div id="dashboard" style="display:none; padding: 0 var(--space-md) var(--space-2xl); margin-bottom: 32px;">
+    <div class="container">
+
+      <!-- DASHBOARD HERO -->
+      <div class="dashboard-hero">
+        <h1 id="welcomeHeader">Welcome back! 👋</h1>
+        <p class="dashboard-hero-subtitle" id="dashboardSubtitle">Here's your utility account summary</p>
       </div>
 
-      <div class="dashboard-header">
-        <h1>Welcome, <span id="name">User</span>! 👋</h1>
-        <p id="dashboardSubtitle">Your Utility Dashboard</p>
-        <p id="warningBox" style="margin-top:6px; font-size:13px; color:#fff; opacity:0.95;"></p>
-        <div id="webVersion" style="position:absolute; right:14px; top:12px; font-size:12px; color:#fff; opacity:0.9;"></div>
-      </div>
-
-      <!-- Main Dashboard Grid: Left Sidebar + Right Content -->
-      <div class="dashboard-main">
-        
-        <!-- LEFT SIDEBAR: Key Metrics & Info -->
-        <div class="sidebar-left">
-          
-          <!-- Quick Stats Cards -->
-          <div class="quick-stats">
-            <div class="stat-card balance-card">
-              <div class="stat-icon">⚡</div>
-              <div class="stat-info">
-                <div class="stat-label" id="label-electric">Electric Balance</div>
-                <div class="stat-value" id="electricBalance">৳0.00</div>
-                <div class="stat-status">Active</div>
-              </div>
-            </div>
-
-            <div class="stat-card warning-card" id="warningCard">
-              <div class="stat-icon">⚠️</div>
-              <div class="stat-info">
-                <div class="stat-label">Alert Zone</div>
-                <div class="stat-value">200 ৳</div>
-                <div class="stat-status warning" id="warningStatus">Safe</div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Bills Due Section -->
-          <div class="bills-due-section">
-            <h3>💰 Bills Due</h3>
-            <div class="bill-item">
-              <span id="label-water">Water Bill</span>
-              <span class="bill-amount" id="waterBillDue">৳0.00</span>
-            </div>
-            <div class="bill-item">
-              <span id="label-gas">Gas Bill</span>
-              <span class="bill-amount" id="gasBillDue">৳0.00</span>
-            </div>
-            <div class="bill-item">
-              <span id="label-internet-bill">Internet Bill</span>
-              <span class="bill-amount" id="internetBillDue">৳0.00</span>
-            </div>
-            <div class="bill-item total-bill">
-              <span>Total Due</span>
-              <span class="bill-amount-total" id="totalDue">৳0.00</span>
-            </div>
-          </div>
-
-          <!-- Connection Status -->
-          <div class="connection-status">
-            <h3>🌐 Connection Status</h3>
-            <div class="status-item">
-              <span id="label-internet">Internet</span>
-              <span class="status-badge active" id="internetConnected">Active</span>
-            </div>
-            <div class="status-item">
-              <span id="label-flat">Customer ID</span>
-              <span class="status-value" id="flatNumber">N/A</span>
-            </div>
-            <div class="status-item">
-              <span id="label-updated">Last Updated</span>
-              <span class="status-value" id="lastUpdated">N/A</span>
-            </div>
-          </div>
-
-          <!-- Quick Actions -->
-          <div class="quick-actions">
-            <button class="btn btn-primary-side" onclick="goToPayment()" id="btn-payment">💳 Pay Now</button>
-            <button class="btn btn-secondary-side" onclick="goToTerms()" id="btn-terms">📋 Terms</button>
-            <button class="btn btn-secondary-side" onclick="window.location.href='../other/connection.html'" id="btn-internet">🌐 New Connection</button>
-            <a href="../other/about.html" class="btn btn-secondary-side" style="text-decoration:none; display:flex; align-items:center; justify-content:center;">📰 Updates</a>
-          </div>
-
-          <!-- Email Section -->
-          <div class="sidebar-email-section">
-            <h3 id="label-email">📧 Notifications</h3>
-            <div class="checkbox-group">
-              <input type="checkbox" id="emailToggle" onchange="toggleEmail()">
-              <label for="emailToggle" id="label-email-toggle">Email Updates</label>
-            </div>
-            <input id="emailAddress" type="email" placeholder="your@email.com">
-            <div id="toggleMsg" class="email-msg"></div>
-          </div>
-
+      <!-- TOP STATS GRID -->
+      <div class="grid grid-cols-3 mb-lg">
+        <div class="stat-card gradient-primary">
+          <div class="stat-icon">⚡</div>
+          <div class="stat-label" id="label-electric">Electric Balance</div>
+          <div class="stat-value" id="electricBalance">৳0.00</div>
+          <div class="stat-subvalue" id="electric-status">Active • Current</div>
         </div>
 
-        <!-- RIGHT CONTENT: Analytics, Charts & Alerts -->
-        <div class="content-right">
-
-          <!-- Alerts Section -->
-          <div class="alerts-section">
-            <h3 id="label-notifications">🔔 Active Alerts</h3>
-            <div class="alerts-container" id="alertsContainer">
-              <div class="alert-item alert-info">
-                <div class="alert-icon">⚡</div>
-                <div class="alert-content">
-                  <div class="alert-title" id="label-low-balance-alert">Low Balance Warning</div>
-                  <div class="alert-desc" id="label-low-balance-desc">Your balance is below 200 tk</div>
-                </div>
-              </div>
-              <div class="alert-item alert-success">
-                <div class="alert-icon">✅</div>
-                <div class="alert-content">
-                  <div class="alert-title" id="label-payment-confirm">Last Payment</div>
-                  <div class="alert-desc" id="label-payment-confirm-desc">Received successfully</div>
-                </div>
-              </div>
-              <div class="alert-item alert-warning">
-                <div class="alert-icon">🟢</div>
-                <div class="alert-content">
-                  <div class="alert-title" id="label-outage-alert">Service Status</div>
-                  <div class="alert-desc" id="label-outage-desc">All services running normally</div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Analytics Cards Grid -->
-          <div class="analytics-section">
-            <h3 id="label-analytics">📈 Analytics & Reports</h3>
-            <div class="analytics-grid">
-              <div class="analytics-card">
-                <div class="card-icon">📊</div>
-                <h4 id="label-billing-chart">Billing History</h4>
-                <p>Last 12 months</p>
-                <a href="../analytics/billing-history.html" class="btn btn-small" style="text-decoration:none; display:block;">View</a>
-              </div>
-              <div class="analytics-card">
-                <div class="card-icon">📈</div>
-                <h4 id="label-usage-trends">Usage Trends</h4>
-                <p>Consumption patterns</p>
-                <a href="../analytics/usage-trends.html" class="btn btn-small" style="text-decoration:none; display:block;">View</a>
-              </div>
-              <div class="analytics-card">
-                <div class="card-icon">📅</div>
-                <h4 id="label-payment-history">Payment History</h4>
-                <p>Recent payments</p>
-                <a href="../analytics/payment-history.html" class="btn btn-small" style="text-decoration:none; display:block;">View</a>
-              </div>
-              <div class="analytics-card">
-                <div class="card-icon">📋</div>
-                <h4>Monthly Comparison</h4>
-                <p>6-month analysis</p>
-                <a href="../analytics/usage-report.html" class="btn btn-small" style="text-decoration:none; display:block;">View</a>
-              </div>
-            </div>
-          </div>
-
-          <!-- Export Section -->
-          <div class="export-section">
-            <h3 id="label-reporting">📑 Export & Download</h3>
-            <div class="export-buttons">
-              <button class="btn btn-secondary" onclick="exportUsageReport()" id="btn-export-report">📑 Usage Report</button>
-              <button class="btn btn-secondary" onclick="downloadBillsPDF()" id="btn-pdf-bills">💾 Download PDF</button>
-              <button class="btn btn-secondary" onclick="printBills()" id="btn-print-bills">🖨️ Print Bills</button>
-              <a href="../analytics/billing-history.html" class="btn btn-secondary" style="text-decoration:none; display:block; text-align:center;">📋 History</a>
-            </div>
-          </div>
-
-          <!-- Security Section -->
-          <div class="security-section">
-            <h3 id="label-security">🔐 Security & Preferences</h3>
-            <div class="security-grid">
-              <div class="security-card">
-                <h4 id="label-2fa-title">Two-Factor Auth</h4>
-                <p id="label-2fa-toggle">Extra security layer</p>
-                <div class="toggle-wrapper">
-                  <input type="checkbox" id="2faToggle" onchange="toggle2FA()" class="toggle-input">
-                  <label for="2faToggle" class="toggle-label"></label>
-                </div>
-              </div>
-              <div class="security-card">
-                <h4 id="label-bill-reminders">Bill Reminders</h4>
-                <p id="label-reminders-toggle">Weekly notifications</p>
-                <div class="toggle-wrapper">
-                  <input type="checkbox" id="remindersToggle" onchange="toggleBillReminders()" class="toggle-input">
-                  <label for="remindersToggle" class="toggle-label"></label>
-                </div>
-              </div>
-            </div>
-          </div>
-
+        <div class="stat-card gradient-success">
+          <div class="stat-icon">💧</div>
+          <div class="stat-label" id="label-water">Water Status</div>
+          <div class="stat-value">Active</div>
+          <div class="stat-subvalue" id="water-status">All systems normal</div>
         </div>
 
-      </div>
-
-      <!-- Modals (unchanged) -->
-      <div id="historyModal" class="modal" style="display:none;">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h2 id="modal-history-title">📋 Update History</h2>
-            <button class="close-btn" onclick="closeUpdateHistory()">&times;</button>
-          </div>
-          <div id="historyContainer" class="history-container"></div>
+        <div class="stat-card">
+          <div class="stat-icon">⚠️</div>
+          <div class="stat-label">Alert Zone</div>
+          <div class="stat-value">200 ৳</div>
+          <div class="stat-subvalue" id="warningStatus">Safe</div>
         </div>
       </div>
 
-      <div id="comparativeModal" class="modal" style="display:none;">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h2 id="modal-comparative-title">📊 Monthly Comparison Analysis</h2>
-            <button class="close-btn" onclick="closeComparativeAnalysis()">&times;</button>
+      <!-- MAIN CONTENT GRID -->
+      <div class="grid grid-cols-2">
+
+        <!-- LEFT COLUMN -->
+        <div>
+          <!-- BILLS DUE CARD -->
+          <div class="card mb-lg">
+            <div class="section-header">
+              <h3 class="section-title">💰 Bills Due</h3>
+            </div>
+            <div class="card-body">
+              <div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--border-color);">
+                <span id="label-water">Water Bill</span>
+                <span class="text-sm" style="font-weight: 600;" id="waterBillDue">৳0.00</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--border-color);">
+                <span id="label-gas">Gas Bill</span>
+                <span class="text-sm" style="font-weight: 600;" id="gasBillDue">৳0.00</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--border-color);">
+                <span id="label-internet-bill">Internet Bill</span>
+                <span class="text-sm" style="font-weight: 600;" id="internetBillDue">৳0.00</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; padding: 16px 0; border-top: 2px solid var(--color-primary); margin-top: 8px;">
+                <span style="font-weight: 600;">Total Due</span>
+                <span style="font-weight: 700; font-size: 16px; color: var(--color-error);" id="totalDue">৳0.00</span>
+              </div>
+            </div>
+            <div class="card-footer">
+              <button class="btn btn-primary" style="flex: 1;" onclick="goToPayment()" id="btn-payment">💳 Pay Now</button>
+            </div>
           </div>
-          <div id="comparativeContainer" class="comparative-container"></div>
+
+          <!-- CONNECTION STATUS CARD -->
+          <div class="card">
+            <div class="section-header">
+              <h3 class="section-title">🌐 Connection Status</h3>
+            </div>
+            <div class="card-body">
+              <div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--border-color);">
+                <span id="label-internet">Internet</span>
+                <span class="badge badge-success" id="internetConnected">Active</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--border-color);">
+                <span id="label-flat">Customer ID</span>
+                <span class="text-sm" style="font-weight: 600;" id="flatNumber">N/A</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; padding: 12px 0;">
+                <span id="label-updated">Last Updated</span>
+                <span class="text-sm" style="font-weight: 600;" id="lastUpdated">N/A</span>
+              </div>
+            </div>
+            <div class="card-footer">
+              <button class="btn btn-secondary" style="flex: 1;" onclick="window.location.href='../other/connection.html'" id="btn-internet">🌐 New Connection</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- RIGHT COLUMN -->
+        <div>
+          <!-- QUICK ACTIONS CARD -->
+          <div class="card mb-lg">
+            <div class="section-header">
+              <h3 class="section-title">⚡ Quick Actions</h3>
+            </div>
+            <div class="card-body" style="gap: var(--space-md);">
+              <button class="btn btn-primary" style="width: 100%; justify-content: center;" onclick="goToPayment()" id="btn-payment-secondary">💳 Payment Methods</button>
+              <button class="btn btn-secondary" style="width: 100%; justify-content: center;" onclick="goToTerms()" id="btn-terms">📋 Terms & Conditions</button>
+              <a href="../other/about.html" class="btn btn-secondary" style="width: 100%; text-decoration:none; justify-content: center;">📰 Latest Updates</a>
+            </div>
+          </div>
+
+          <!-- NOTIFICATIONS CARD -->
+          <div class="card">
+            <div class="section-header">
+              <h3 class="section-title">📧 Notifications</h3>
+            </div>
+            <div class="card-body">
+              <div class="toggle-switch">
+                <input type="checkbox" id="emailToggle" class="toggle-input" onchange="toggleEmail()">
+                <label for="emailToggle" class="toggle-label"></label>
+                <span id="label-email-toggle">Email Updates</span>
+              </div>
+              <input id="emailAddress" type="email" placeholder="your@email.com" style="margin-top: 12px; width: 100%; padding: 10px 12px; border: 1px solid var(--border-color); border-radius: 6px; font-size: 13px;">
+              <div id="toggleMsg" class="text-xs" style="margin-top: 8px; color: var(--text-secondary);"></div>
+            </div>
+          </div>
         </div>
       </div>
 
-      <div id="billingHistoryModal" class="modal" style="display:none;">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h2 id="modal-billing-title">📊 Billing History - Last 12 Months</h2>
-            <button class="close-btn" onclick="closeBillingHistory()">&times;</button>
+      <!-- ANALYTICS SECTION -->
+      <div class="mt-lg">
+        <div class="section-header mb-lg">
+          <h3 class="section-title">📊 Analytics & Reports</h3>
+        </div>
+        <div class="grid grid-auto">
+          <div class="card" style="text-align: center;">
+            <div style="font-size: 32px; margin-bottom: 12px;">📊</div>
+            <h4 id="label-billing-chart">Billing History</h4>
+            <p class="text-sm">Last 12 months</p>
+            <a href="../analytics/billing-history.html" class="btn btn-primary btn-sm" style="width: 100%; margin-top: 12px; justify-content: center; text-decoration: none;">View →</a>
           </div>
-          <div id="billingHistoryContainer" class="billing-history-container"></div>
+
+          <div class="card" style="text-align: center;">
+            <div style="font-size: 32px; margin-bottom: 12px;">📈</div>
+            <h4 id="label-usage-trends">Usage Trends</h4>
+            <p class="text-sm">Consumption patterns</p>
+            <a href="../analytics/usage-trends.html" class="btn btn-primary btn-sm" style="width: 100%; margin-top: 12px; justify-content: center; text-decoration: none;">View →</a>
+          </div>
+
+          <div class="card" style="text-align: center;">
+            <div style="font-size: 32px; margin-bottom: 12px;">📅</div>
+            <h4 id="label-payment-history">Payment History</h4>
+            <p class="text-sm">Recent payments</p>
+            <a href="../analytics/payment-history.html" class="btn btn-primary btn-sm" style="width: 100%; margin-top: 12px; justify-content: center; text-decoration: none;">View →</a>
+          </div>
+
+          <div class="card" style="text-align: center;">
+            <div style="font-size: 32px; margin-bottom: 12px;">📋</div>
+            <h4>Monthly Comparison</h4>
+            <p class="text-sm">6-month analysis</p>
+            <a href="../analytics/usage-report.html" class="btn btn-primary btn-sm" style="width: 100%; margin-top: 12px; justify-content: center; text-decoration: none;">View →</a>
+          </div>
         </div>
       </div>
 
-      <div id="usageTrendsModal" class="modal" style="display:none;">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h2 id="modal-usage-title">📈 Usage Trends & Consumption Patterns</h2>
-            <button class="close-btn" onclick="closeUsageTrends()">&times;</button>
-          </div>
-          <div id="usageTrendsContainer" class="usage-trends-container"></div>
+      <!-- EXPORT & DOWNLOAD SECTION -->
+      <div class="mt-lg">
+        <div class="section-header mb-lg">
+          <h3 class="section-title">📑 Export & Download</h3>
+        </div>
+        <div class="grid grid-cols-2">
+          <button class="btn btn-secondary" style="justify-content: center;" onclick="exportUsageReport()" id="btn-export-report">📑 Usage Report</button>
+          <button class="btn btn-secondary" style="justify-content: center;" onclick="downloadBillsPDF()" id="btn-pdf-bills">💾 Download PDF</button>
+          <button class="btn btn-secondary" style="justify-content: center;" onclick="printBills()" id="btn-print-bills">🖨️ Print Bills</button>
+          <a href="../analytics/billing-history.html" class="btn btn-secondary" style="justify-content: center; text-decoration: none;">📋 History</a>
         </div>
       </div>
 
-      <div id="paymentHistoryModal" class="modal" style="display:none;">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h2 id="modal-payment-title">📅 Payment History & Receipts</h2>
-            <button class="btn btn-primary" onclick="sendBalanceWhatsApp()" id="btn-send-whatsapp">📲 Send Balance via WhatsApp</button>
-            <button class="close-btn" onclick="closePaymentHistory()">&times;</button>
+      <!-- ALERTS SECTION -->
+      <div class="mt-lg">
+        <div class="section-header mb-lg">
+          <h3 class="section-title">🔔 Active Alerts</h3>
+        </div>
+        <div id="alertsContainer">
+          <div class="alert alert-info">
+            <span class="alert-icon">ℹ️</span>
+            <div class="alert-content">
+              <div class="alert-title" id="label-low-balance-alert">Low Balance Warning</div>
+              <div class="alert-message" id="label-low-balance-desc">Your balance is below 200 tk</div>
+            </div>
           </div>
-          <div id="paymentHistoryContainer" class="payment-history-container"></div>
+          <div class="alert alert-success">
+            <span class="alert-icon">✅</span>
+            <div class="alert-content">
+              <div class="alert-title" id="label-payment-confirm">Last Payment</div>
+              <div class="alert-message" id="label-payment-confirm-desc">Received successfully</div>
+            </div>
+          </div>
+          <div class="alert alert-info">
+            <span class="alert-icon">🟢</span>
+            <div class="alert-content">
+              <div class="alert-title" id="label-outage-alert">Service Status</div>
+              <div class="alert-message" id="label-outage-desc">All services running normally</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SECURITY SECTION -->
+      <div class="mt-2xl">
+        <div class="section-header mb-lg">
+          <h3 class="section-title">🔐 Security & Preferences</h3>
+        </div>
+        <div class="grid grid-cols-2">
+          <div class="card">
+            <h4 id="label-2fa-title">Two-Factor Authentication</h4>
+            <p class="text-sm mb-md" id="label-2fa-toggle">Extra security layer</p>
+            <div class="toggle-switch">
+              <input type="checkbox" id="2faToggle" class="toggle-input" onchange="toggle2FA()">
+              <label for="2faToggle" class="toggle-label"></label>
+            </div>
+          </div>
+
+          <div class="card">
+            <h4 id="label-bill-reminders">Bill Reminders</h4>
+            <p class="text-sm mb-md" id="label-reminders-toggle">Weekly notifications</p>
+            <div class="toggle-switch">
+              <input type="checkbox" id="remindersToggle" class="toggle-input" onchange="toggleBillReminders()">
+              <label for="remindersToggle" class="toggle-label"></label>
+            </div>
+          </div>
         </div>
       </div>
 
     </div>
   </div>
 
+  <!-- MODALS -->
+  <!-- Update History Modal -->
+  <div id="historyModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title" id="modal-history-title">📋 Update History</h2>
+        <button class="modal-close" onclick="closeUpdateHistory()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div id="historyContainer" class="billing-history-table"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Billing History Modal -->
+  <div id="billingHistoryModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title" id="modal-billing-title">📊 Billing History - Last 12 Months</h2>
+        <button class="modal-close" onclick="closeBillingHistory()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div id="billingHistoryContainer" class="billing-history-table"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Usage Trends Modal -->
+  <div id="usageTrendsModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title" id="modal-usage-title">📈 Usage Trends & Consumption Patterns</h2>
+        <button class="modal-close" onclick="closeUsageTrends()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div id="usageTrendsContainer" class="usage-trends-container"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Payment History Modal -->
+  <div id="paymentHistoryModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title" id="modal-payment-title">📅 Payment History & Receipts</h2>
+        <button class="btn btn-primary btn-sm" onclick="sendBalanceWhatsApp()" id="btn-send-whatsapp">📲 Send Balance via WhatsApp</button>
+        <button class="modal-close" onclick="closePaymentHistory()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div id="paymentHistoryContainer" class="payment-history-container"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Comparative Modal -->
+  <div id="comparativeModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title" id="modal-comparative-title">📊 Monthly Comparison Analysis</h2>
+        <button class="modal-close" onclick="closeComparativeAnalysis()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div id="comparativeContainer" class="comparative-container"></div>
+      </div>
+    </div>
+  </div>
+
 <script src="../../assets/script.js"></script>
 <script>
-  // PWA Install Support
-  let deferredPrompt;
-  const installBtn = document.getElementById('installBtn');
-
-  window.addEventListener('beforeinstallprompt', (e) => {
-    e.preventDefault();
-    deferredPrompt = e;
-  });
-
-  function promptInstall() {
-    if (deferredPrompt) {
-      deferredPrompt.prompt();
-      deferredPrompt.userChoice.then((choiceResult) => {
-        if (choiceResult.outcome === 'accepted') {
-          console.log('App installed');
-        } else {
-          console.log('Install prompt dismissed');
-        }
-        deferredPrompt = null;
-      });
-    } else {
-      alert('Installation not available on this browser. Try using Chrome, Edge, or Firefox.');
+  // Initialize header
+  function updateHeaderUserName() {
+    const name = localStorage.getItem('customerName') || 'User';
+    const headerName = document.getElementById('headerName');
+    if (headerName) {
+      headerName.textContent = 'Welcome, ' + name;
     }
   }
 
-  window.addEventListener('appinstalled', () => {
-    console.log('PWA app installed successfully');
+  window.addEventListener('load', updateHeaderUserName);
+
+  // Mobile Navigation Toggle
+  function toggleNav() {
+    const actions = document.querySelector('.header-actions');
+    if (actions.style.display === 'none') {
+      actions.style.display = 'flex';
+    } else {
+      actions.style.display = 'none';
+    }
+  }
+
+  // PWA Install Support
+  let deferredPrompt;
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
   });
 
   // Service Worker Registration

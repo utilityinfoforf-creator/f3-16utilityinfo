@@ -1,120 +1,213 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
+  <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Make Payment - Utility Dashboard</title>
+  <title>Payment Methods - Utility Dashboard</title>
   <link rel="stylesheet" href="../../../assets/styles.css">
+  <meta name="theme-color" content="#0066FF">
 </head>
 <body>
-  <div class="container">
-    <div class="page-header">
-      <h1 id="label-payment-title">💳 Make a Payment(under construction)</h1>
-      <p id="label-payment-subtitle">Choose your payment method</p>
+  <!-- GLOBAL HEADER -->
+  <header class="header">
+    <a href="../../pages/main/index.html" class="header-brand">
+      <span class="header-brand-icon">⚡</span>
+      <span>Utility</span>
+    </a>
+    <div class="header-user">
+      <div class="user-greeting">
+        <div class="user-greeting-name">Make Payment</div>
+        <div class="user-greeting-sub">Choose Payment Method</div>
+      </div>
     </div>
+    <div class="header-actions">
+      <button class="theme-toggle" onclick="toggleTheme()">🌙</button>
+      <a href="../../pages/main/index.html" class="btn btn-text">← Back</a>
+    </div>
+  </header>
 
-    <!-- Payment Section (hidden until login) -->
-    <div id="dashboard" style="display:none;">
-      <div class="card">
-        <h3 id="label-select-method">Select Payment Method</h3>
-        <p id="label-choose-how">Choose how you'd like to pay:</p>
-        <div class="options">
-          <button type="button" onclick="showSteps('bkash')">🏦 bKash</button>
-          <button type="button" onclick="showSteps('nagad')">💸 Nagad</button>
-          <button type="button" onclick="showSteps('pathao')">🛵 Pathao Pay</button>
-        </div>
+  <!-- PAGE CONTENT -->
+  <div style="padding: var(--space-lg) var(--space-md) var(--space-2xl);">
+    <div class="container" style="max-width: 800px;">
 
-        <!-- Accept notice: shows that Pathao Pay is accepted -->
-        <div class="accept-note" aria-live="polite">
-          We accept Pathao Pay for quick mobile payments.
-          <small>Click the Pathao Pay button to choose an amount and complete payment.</small>
-        </div>
+      <div class="mb-lg">
+        <h2>💳 Make a Payment</h2>
+        <p class="text-muted">Select your preferred payment method below</p>
       </div>
 
-      <div id="steps" class="steps"></div>
+      <!-- PAYMENT METHODS -->
+      <div id="dashboard" style="display:none;">
 
-      <!-- Transaction confirmation box -->
-      <div class="card">
-        <h3 id="label-confirm-payment">Confirm Your Payment</h3>
-        <p id="label-enter-details">Enter your transaction details:</p>
-        <div class="form-group">
-          <input id="transactionNumber" name="transactionNumber" placeholder="Enter Transaction Number" type="text" autocomplete="off">
+        <!-- Payment Method Cards -->
+        <div class="grid" style="margin-bottom: 32px; gap: var(--space-lg);">
+          <button class="card" style="border: 2px solid transparent; cursor: pointer; transition: all 0.3s; text-align: center; padding: 32px 24px;" onmouseover="this.style.borderColor='var(--color-primary)'" onmouseout="this.style.borderColor='transparent'" onclick="showSteps('bkash')">
+            <div style="font-size: 48px; margin-bottom: 16px;">🏦</div>
+            <h3 class="mt-0">bKash</h3>
+            <p class="text-sm">Send money directly to merchant</p>
+            <button class="btn btn-primary btn-sm" style="width: 100%; margin-top: 16px; justify-content: center;">Choose bKash →</button>
+          </button>
+
+          <button class="card" style="border: 2px solid transparent; cursor: pointer; transition: all 0.3s; text-align: center; padding: 32px 24px;" onmouseover="this.style.borderColor='var(--color-primary)'" onmouseout="this.style.borderColor='transparent'" onclick="showSteps('nagad')">
+            <div style="font-size: 48px; margin-bottom: 16px;">💸</div>
+            <h3 class="mt-0">Nagad</h3>
+            <p class="text-sm">Fast and secure mobile payment</p>
+            <button class="btn btn-primary btn-sm" style="width: 100%; margin-top: 16px; justify-content: center;">Choose Nagad →</button>
+          </button>
+
+          <button class="card" style="border: 2px solid transparent; cursor: pointer; transition: all 0.3s; text-align: center; padding: 32px 24px;" onmouseover="this.style.borderColor='var(--color-primary)'" onmouseout="this.style.borderColor='transparent'" onclick="showSteps('pathao')">
+            <div style="font-size: 48px; margin-bottom: 16px;">🛵</div>
+            <h3 class="mt-0">Pathao Pay</h3>
+            <p class="text-sm">Quick payment through Pathao</p>
+            <button class="btn btn-primary btn-sm" style="width: 100%; margin-top: 16px; justify-content: center;">Choose Pathao →</button>
+          </button>
         </div>
-        <div class="form-group">
-          <button type="button" class="submit-btn" id="btn-submit-payment">Submit Payment Confirmation</button>
+
+        <!-- Instructions Card -->
+        <div id="steps"></div>
+
+        <!-- Transaction Confirmation Card -->
+        <div class="card" id="confirmCard" style="display: none;">
+          <div class="section-header mb-lg">
+            <h3 class="section-title">Confirm Your Payment</h3>
+          </div>
+
+          <div class="form-group">
+            <label>Transaction Number</label>
+            <input id="transactionNumber" placeholder="Enter your transaction number" type="text" autocomplete="off">
+            <p class="form-help">You'll receive this after completing payment on your mobile payment app</p>
+          </div>
+
+          <button class="btn btn-primary" style="width: 100%; margin: 20px 0; justify-content: center;" onclick="submitTransaction()">Confirm Payment</button>
+          <div id="confirmMsg" role="status"></div>
         </div>
-        <div id="confirmMsg" role="status" aria-live="polite"></div>
+
       </div>
 
-      <div style="margin-top:10px;">
-        <button type="button" class="btn-back" onclick="backToDashboard()" id="btn-back-dash">← Back to Dashboard</button>
-      </div>
     </div>
   </div>
 
-  <!-- Single centralized JS file (script.js) -->
   <script src="../../../assets/script.js"></script>
   <script>
-    // Check if user is logged in on payment page load
+    function initTheme() {
+      const savedTheme = localStorage.getItem('theme') || 'light';
+      if (savedTheme === 'dark') {
+        document.documentElement.classList.add('dark-mode');
+      }
+    }
+
+    function toggleTheme() {
+      document.documentElement.classList.toggle('dark-mode');
+      const isDark = document.documentElement.classList.contains('dark-mode');
+      localStorage.setItem('theme', isDark ? 'dark' : 'light');
+    }
+
     window.addEventListener('DOMContentLoaded', function() {
+      initTheme();
       const customerId = localStorage.getItem('customerId');
       if (!customerId) {
         window.location.href = 'login.html?redirect=payment.html';
       } else {
-        // User is logged in, hide login and show dashboard
-        const loginEl = document.getElementById('login');
-        const dashEl = document.getElementById('dashboard');
-        if (loginEl) loginEl.style.display = 'none';
-        if (dashEl) dashEl.style.display = 'block';
+        document.getElementById('dashboard').style.display = 'block';
       }
     });
 
-    function backToDashboard() {
-      window.location.href = '../../main/index.html';
-    }
-
     function showSteps(method) {
       const stepsContainer = document.getElementById('steps');
-      let stepsHTML = '<div class="card"><h4>Payment Steps for ' + method.toUpperCase() + '</h4><ol>';
-      
+      const confirmCard = document.getElementById('confirmCard');
+
+      let methodName = '';
+      let stepsHTML = '';
+
       if (method === 'bkash') {
-        stepsHTML += `
-          <li>Open bKash app or dial <strong>*247#</strong></li>
-          <li>Select "Send Money"</li>
-          <li>Enter our Merchant number</li>
-          <li>Enter the amount you want to pay</li>
-          <li>Complete the transaction</li>
-          <li>You'll receive a confirmation message</li>
-          <li>Copy the Transaction ID and paste it above</li>
+        methodName = 'bKash';
+        stepsHTML = `
+          <div class="card mb-lg">
+            <h4 class="mb-md">Follow these steps to pay via bKash:</h4>
+            <ol style="margin-left: 20px; line-height: 2;">
+              <li>Open bKash app or dial <strong>*247#</strong></li>
+              <li>Select <strong>"Send Money"</strong></li>
+              <li>Enter our Merchant number: <strong>01234567890</strong></li>
+              <li>Enter the amount you want to pay</li>
+              <li>Complete the transaction with your PIN</li>
+              <li>You'll receive a confirmation message</li>
+              <li>Copy the <strong>Transaction ID</strong> from the message</li>
+              <li>Return here and paste it in the confirmation box below</li>
+            </ol>
+          </div>
         `;
       } else if (method === 'nagad') {
-        stepsHTML += `
-          <li>Open Nagad app or dial <strong>*167#</strong></li>
-          <li>Select "Send Money to Merchant"</li>
-          <li>Enter our Merchant account number</li>
-          <li>Enter the payment amount</li>
-          <li>Enter your PIN to confirm</li>
-          <li>Transaction will be processed instantly</li>
-          <li>Copy the Transaction ID and paste it above</li>
+        methodName = 'Nagad';
+        stepsHTML = `
+          <div class="card mb-lg">
+            <h4 class="mb-md">Follow these steps to pay via Nagad:</h4>
+            <ol style="margin-left: 20px; line-height: 2;">
+              <li>Open Nagad app or dial <strong>*167#</strong></li>
+              <li>Select <strong>"Send Money to Merchant"</strong></li>
+              <li>Enter our Merchant account: <strong>01234567890</strong></li>
+              <li>Enter the payment amount</li>
+              <li>Enter your PIN to confirm</li>
+              <li>Transaction will be processed instantly</li>
+              <li>Copy the <strong>Transaction ID</strong> from confirmation</li>
+              <li>Return here and paste it below</li>
+            </ol>
+          </div>
         `;
       } else if (method === 'pathao') {
-        stepsHTML += `
-          <li>Open Pathao Pay app</li>
-          <li>Select "Make Payment"</li>
-          <li>Choose utility bills</li>
-          <li>Enter your customer ID</li>
-          <li>Enter the amount to pay</li>
-          <li>Complete payment with your PIN</li>
-          <li>Copy the Transaction ID and paste it above</li>
+        methodName = 'Pathao Pay';
+        stepsHTML = `
+          <div class="card mb-lg">
+            <h4 class="mb-md">Follow these steps to pay via Pathao Pay:</h4>
+            <ol style="margin-left: 20px; line-height: 2;">
+              <li>Open Pathao app</li>
+              <li>Go to <strong>"Payment"</strong> section</li>
+              <li>Select <strong>"Pay Bill"</strong> option</li>
+              <li>Enter your <strong>Customer ID</strong></li>
+              <li>Enter the amount to pay</li>
+              <li>Review and confirm payment</li>
+              <li>Copy the <strong>Transaction/Receipt Number</strong></li>
+              <li>Return here and paste it below</li>
+            </ol>
+          </div>
         `;
       }
-      
-      stepsHTML += '</ol></div>';
+
       stepsContainer.innerHTML = stepsHTML;
+      confirmCard.style.display = 'block';
+      confirmCard.scrollIntoView({ behavior: 'smooth' });
     }
 
-    // Note: submitTransaction is provided by script.js. The broken inline implementation was removed.
-    // The submit button is bound to submitTransaction in script.js on load.
+    function submitTransaction() {
+      const transId = document.getElementById('transactionNumber').value;
+      if (!transId.trim()) {
+        const msg = document.getElementById('confirmMsg');
+        msg.innerHTML = '<div class="alert alert-error"><span class="alert-icon">❌</span><div class="alert-content"><div class="alert-title">Error</div><div class="alert-message">Please enter transaction number</div></div></div>';
+        return;
+      }
+
+      const customerId = localStorage.getItem('customerId');
+      const data = {
+        id: customerId,
+        action: 'payment',
+        transaction_id: transId
+      };
+
+      const msg = document.getElementById('confirmMsg');
+      msg.innerHTML = '<div class="alert alert-info"><span class="alert-icon">⏳</span><div class="alert-content"><div class="alert-title">Processing</div><div class="alert-message">Verifying your payment...</div></div></div>';
+
+      fetch('https://script.google.com/macros/s/AKfycbzUQeJKLBRCjQG928fnIdJ7Tlg-JR0072ENK-K2_07NBOxWsH9zs0qd5CrcoQW_Mbz3lA/exec', {
+        method: 'POST',
+        body: JSON.stringify(data)
+      })
+        .then(r => r.text())
+        .then(t => {
+          msg.innerHTML = ' <div class="alert alert-success"><span class="alert-icon">✅</span><div class="alert-content"><div class="alert-title">Payment Received</div><div class="alert-message">Your payment has been recorded. Thank you!</div></div></div>';
+          document.getElementById('transactionNumber').value = '';
+          setTimeout(() => window.location.href = '../../pages/main/index.html', 2000);
+        })
+        .catch(e => {
+          msg.innerHTML = '<div class="alert alert-error"><span class="alert-icon">❌</span><div class="alert-content"><div class="alert-title">Error</div><div class="alert-message">Could not process payment. Please try again.</div></div></div>';
+        });
+    }
   </script>
 </body>
 </html>
