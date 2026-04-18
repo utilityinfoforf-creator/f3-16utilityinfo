@@ -60,6 +60,7 @@
           <div style="font-size: 11px; opacity: 0.7; margin-top: 4px;">Manage properties</div>
         </button>
       </div>
+      <button class="btn btn-text" onclick="clearStorageAndReload()" style="font-size: 11px;">Clear cached data</button>
     </div>
   </div>
 </div>
@@ -254,12 +255,19 @@ function logout() {
   showScreen('role');
 }
 
+function clearStorageAndReload() {
+  localStorage.clear();
+  location.reload();
+}
+
 // Check if already logged in
 window.addEventListener('load', () => {
   const savedId = localStorage.getItem('customerId');
   if (savedId) {
     document.getElementById('user-name').textContent = localStorage.getItem('customerName') || 'User';
     showScreen('dashboard');
+  } else {
+    showScreen('role');
   }
 });
 </script>
