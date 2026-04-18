@@ -10,7 +10,7 @@
 <body>
   <!-- GLOBAL HEADER -->
   <header class="header">
-    <a href="../../pages/main/index.html" class="header-brand">
+    <a href="../main/index.html" class="header-brand">
       <span class="header-brand-icon">⚡</span>
       <span>Utility</span>
     </a>
@@ -22,7 +22,7 @@
     </div>
     <div class="header-actions">
       <button class="theme-toggle" onclick="toggleTheme()">🌙</button>
-      <a href="../../pages/main/index.html" class="btn btn-text">← Back</a>
+      <a href="../main/index.html" class="btn btn-text">← Back</a>
     </div>
   </header>
 
@@ -202,7 +202,7 @@
         .then(t => {
           msg.innerHTML = ' <div class="alert alert-success"><span class="alert-icon">✅</span><div class="alert-content"><div class="alert-title">Payment Received</div><div class="alert-message">Your payment has been recorded. Thank you!</div></div></div>';
           document.getElementById('transactionNumber').value = '';
-          setTimeout(() => window.location.href = '../../pages/main/index.html', 2000);
+          setTimeout(() => window.location.href = '../main/index.html', 2000);
         })
         .catch(e => {
           msg.innerHTML = '<div class="alert alert-error"><span class="alert-icon">❌</span><div class="alert-content"><div class="alert-title">Error</div><div class="alert-message">Could not process payment. Please try again.</div></div></div>';
