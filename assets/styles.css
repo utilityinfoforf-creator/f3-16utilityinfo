@@ -1262,4 +1262,54 @@ tbody tr:last-child td {
 .opacity-75 { opacity: 0.75; }
 
 .cursor-pointer { cursor: pointer; }
+
+/* ===== ROLE SELECTION BUTTONS ===== */
+.role-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-lg);
+  background: var(--bg-secondary);
+  border: 2px solid var(--border-color);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-align: center;
+  color: var(--text-primary);
+}
+
+.role-btn:hover {
+  border-color: var(--color-primary);
+  background: var(--bg-primary);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 102, 255, 0.15);
+}
+
+.role-btn:active {
+  transform: translateY(0);
+}
+
+.role-btn.active {
+  background: var(--color-primary);
+  color: white;
+  border-color: var(--color-primary);
+}
+
+/* Tenant only / Landlord only sections */
+.tenant-only {
+  display: block;
+}
+
+.landlord-only {
+  display: none;
+}
+
+html.landlord-role .tenant-only {
+  display: none;
+}
+
+html.landlord-role .landlord-only {
+  display: block;
+}
 .cursor-not-allowed { cursor: not-allowed; }

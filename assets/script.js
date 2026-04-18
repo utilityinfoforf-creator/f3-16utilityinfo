@@ -36,8 +36,29 @@ function initTheme() {
 // Initialize theme on page load
 initTheme();
 
+// ===== ROLE SELECTION =====
+function selectRole(role) {
+  currentUserRole = role;
+  sessionStorage.setItem('userRole', role);
+  localStorage.setItem('userRole', role);
+
+  // Hide role selection screen, show login step 1
+  document.getElementById('loginRoleSelect').style.display = 'none';
+  document.getElementById('loginStep1').style.display = 'flex';
+  document.getElementById('customerId').focus();
+
+  // Update UI to show selected role
+  const stepLabel = document.getElementById('login-step-label');
+  if (stepLabel) {
+    stepLabel.innerText = `Step 1: Enter Your ${role.charAt(0).toUpperCase() + role.slice(1)} ID`;
+  }
+}
+
 // Configuration (override these before this file runs if needed)
 const API_BASE = "https://script.google.com/macros/s/AKfycbzUQeJKLBRCjQG928fnIdJ7Tlg-JR0072ENK-K2_07NBOxWsH9zs0qd5CrcoQW_Mbz3lA/exec";
+
+// User role tracking (tenant or landlord)
+let currentUserRole = 'tenant';
 
 // Client-side API key (must match server Script Properties 'API_KEY').
 // IMPORTANT: For production, keep this value secret. If frontend is public, consider a different auth flow.
@@ -287,7 +308,7 @@ async function submitCustomerId() {
   }
 
   try {
-    const res = await fetch(`${API_BASE}?id=${encodeURIComponent(id)}&action=getOTPStep`);
+    const res = await fetch(`${API_BASE}?id=${encodeURIComponent(id)}&action=getOTPStep&role=${encodeURIComponent(currentUserRole)}`);
     if (!res.ok) throw new Error("Network response was not ok");
     const data = await res.json();
 

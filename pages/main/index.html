@@ -36,6 +36,31 @@
     <button class="nav-toggle" onclick="toggleNav()">☰</button>
   </header>
 
+  <!-- ROLE SELECTION -->
+  <div id="loginRoleSelect" class="login-container" style="padding-top: 64px;">
+    <div class="login-box" style="max-width: 500px;">
+      <div class="login-title">⚡ Utility Portal</div>
+
+      <div class="login-step-info">
+        <div class="login-step-title">Choose Your Role</div>
+        <div class="login-step-subtitle">Select how you want to login</div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 32px;">
+        <button class="role-btn role-tenant" onclick="selectRole('tenant')">
+          <div style="font-size: 32px; margin-bottom: 8px;">👤</div>
+          <div style="font-weight: 600; margin-bottom: 4px;">Tenant</div>
+          <div style="font-size: 12px; opacity: 0.7;">Manage your unit</div>
+        </button>
+        <button class="role-btn role-landlord" onclick="selectRole('landlord')">
+          <div style="font-size: 32px; margin-bottom: 8px;">🏢</div>
+          <div style="font-weight: 600; margin-bottom: 4px;">Landlord</div>
+          <div style="font-size: 12px; opacity: 0.7;">Manage properties</div>
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- LOGIN FORM -->
   <div id="loginStep1" class="login-container" style="padding-top: 64px;">
     <div class="login-box">
