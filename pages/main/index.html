@@ -84,10 +84,34 @@ input { width: 100%; padding: 12px; margin-bottom: 15px; border: 2px solid #ddd;
 
     <!-- Landlord Dashboard -->
     <div id="landlord-dashboard" style="display: none;">
-      <div style="margin-bottom: 20px;">
-        <h3 data-en="All Tenants" data-bn="সমস্ত ভাড়াটিয়া">All Tenants</h3>
+      <!-- Summary Stats -->
+      <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 30px;">
+        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 10px; text-align: center;">
+          <div style="font-size: 12px; opacity: 0.9; margin-bottom: 5px;">Total Tenants</div>
+          <div style="font-size: 28px; font-weight: bold;" id="total-tenants">0</div>
+        </div>
+        <div style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; padding: 20px; border-radius: 10px; text-align: center;">
+          <div style="font-size: 12px; opacity: 0.9; margin-bottom: 5px;">Total Balance</div>
+          <div style="font-size: 28px; font-weight: bold;" id="total-balance">৳0</div>
+        </div>
+        <div style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; padding: 20px; border-radius: 10px; text-align: center;">
+          <div style="font-size: 12px; opacity: 0.9; margin-bottom: 5px;">Water Bills</div>
+          <div style="font-size: 28px; font-weight: bold;" id="total-water">৳0</div>
+        </div>
+        <div style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); color: white; padding: 20px; border-radius: 10px; text-align: center;">
+          <div style="font-size: 12px; opacity: 0.9; margin-bottom: 5px;">Gas Bills</div>
+          <div style="font-size: 28px; font-weight: bold;" id="total-gas">৳0</div>
+        </div>
       </div>
-      <div id="tenants-list" style="display: grid; gap: 15px;"></div>
+
+      <!-- Tenants List Header -->
+      <div style="margin-bottom: 20px;">
+        <h3 style="margin: 0 0 10px 0;">📋 Tenant List</h3>
+        <input type="text" id="search-tenants" placeholder="Search by name or ID..." style="width: 100%; padding: 10px; border: 2px solid #ddd; border-radius: 6px; font-size: 14px;">
+      </div>
+
+      <!-- Tenants Grid -->
+      <div id="tenants-list" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 20px;"></div>
     </div>
 
     <button onclick="logout()" style="width: 100%; margin-top: 20px; padding: 12px; background: #e53935; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold;" data-en="Logout" data-bn="লগ আউট">Logout</button>
@@ -178,22 +202,78 @@ async function submit() {
       tenantsList.innerHTML = '';
 
       if (data.customers && data.customers.length > 0) {
+        // Calculate summary stats
+        let totalBalance = 0, totalWater = 0, totalGas = 0;
         data.customers.forEach(tenant => {
+          totalBalance += parseFloat(tenant.electricBalance) || 0;
+          totalWater += parseFloat(tenant.waterBillDue) || 0;
+          totalGas += parseFloat(tenant.gasBillDue) || 0;
+        });
+
+        document.getElementById('total-tenants').textContent = data.customers.length;
+        document.getElementById('total-balance').textContent = '৳' + totalBalance.toFixed(2);
+        document.getElementById('total-water').textContent = '৳' + totalWater.toFixed(2);
+        document.getElementById('total-gas').textContent = '৳' + totalGas.toFixed(2);
+
+        // Display tenant cards
+        data.customers.forEach(tenant => {
+          const totalDue = (parseFloat(tenant.electricBalance) || 0) + (parseFloat(tenant.waterBillDue) || 0) + (parseFloat(tenant.gasBillDue) || 0);
+          const statusColor = totalDue > 1000 ? '#ff6b6b' : (totalDue > 500 ? '#ffa500' : '#10b981');
+
           const card = `
-            <div style="background: white; padding: 15px; border-radius: 8px; border-left: 4px solid #4c63d2;">
-              <div style="font-weight: bold; margin-bottom: 8px;">${tenant.name} (${tenant.id})</div>
-              <div style="font-size: 12px; color: #666; margin-bottom: 4px;">Flat: ${tenant.flatNumber || 'N/A'}</div>
-              <div style="font-size: 12px; color: #666; margin-bottom: 8px;">💡 Balance: ৳${tenant.electricBalance || '0'}</div>
-              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 11px;">
-                <span>💧 Water: ৳${tenant.waterBillDue || '0'}</span>
-                <span>🔥 Gas: ৳${tenant.gasBillDue || '0'}</span>
+            <div class="tenant-card" style="background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1); transition: all 0.3s;">
+              <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 15px; color: white;">
+                <div style="font-size: 18px; font-weight: 700; margin-bottom: 4px;">${tenant.name}</div>
+                <div style="font-size: 12px; opacity: 0.9;">ID: ${tenant.id}</div>
+              </div>
+              <div style="padding: 20px;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 15px;">
+                  <div style="background: #f0f4ff; padding: 12px; border-radius: 8px; text-align: center;">
+                    <div style="font-size: 12px; color: #666; margin-bottom: 4px;">Flat</div>
+                    <div style="font-size: 16px; font-weight: 600; color: #333;">${tenant.flatNumber || 'N/A'}</div>
+                  </div>
+                  <div style="background: #f0f4ff; padding: 12px; border-radius: 8px; text-align: center;">
+                    <div style="font-size: 12px; color: #666; margin-bottom: 4px;">Status</div>
+                    <div style="font-size: 14px; font-weight: 600; color: ${statusColor};">● ${totalDue > 1000 ? 'Critical' : (totalDue > 500 ? 'Warning' : 'Good')}</div>
+                  </div>
+                </div>
+
+                <div style="border-top: 2px solid #f0f0f0; padding-top: 15px;">
+                  <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; text-align: center; margin-bottom: 12px;">
+                    <div>
+                      <div style="font-size: 11px; color: #999; margin-bottom: 4px;">💡 Electric</div>
+                      <div style="font-size: 14px; font-weight: 600; color: #1976d2;">৳${tenant.electricBalance || '0'}</div>
+                    </div>
+                    <div>
+                      <div style="font-size: 11px; color: #999; margin-bottom: 4px;">💧 Water</div>
+                      <div style="font-size: 14px; font-weight: 600; color: #00802f;">৳${tenant.waterBillDue || '0'}</div>
+                    </div>
+                    <div>
+                      <div style="font-size: 11px; color: #999; margin-bottom: 4px;">🔥 Gas</div>
+                      <div style="font-size: 14px; font-weight: 600; color: #ff6b00;">৳${tenant.gasBillDue || '0'}</div>
+                    </div>
+                  </div>
+                  <div style="background: #f9f9f9; padding: 10px; border-radius: 6px; text-align: center;">
+                    <div style="font-size: 11px; color: #999;">Total Due</div>
+                    <div style="font-size: 18px; font-weight: 700; color: ${statusColor};">৳${totalDue.toFixed(2)}</div>
+                  </div>
+                </div>
               </div>
             </div>
           `;
           tenantsList.innerHTML += card;
         });
+
+        // Add search functionality
+        document.getElementById('search-tenants').addEventListener('keyup', (e) => {
+          const searchTerm = e.target.value.toLowerCase();
+          document.querySelectorAll('.tenant-card').forEach(card => {
+            const text = card.textContent.toLowerCase();
+            card.style.display = text.includes(searchTerm) ? '' : 'none';
+          });
+        });
       } else {
-        tenantsList.innerHTML = '<div style="text-align: center; color: #999;">No tenants found</div>';
+        tenantsList.innerHTML = '<div style="text-align: center; color: #999; padding: 40px;">No tenants found</div>';
       }
     } else {
       // Tenant: fetch individual data
