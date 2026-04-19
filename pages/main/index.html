@@ -134,6 +134,12 @@ async function submit() {
     return;
   }
 
+  // Landlord access restriction - only RAIHAN5F allowed
+  if (role === 'landlord' && custid !== 'RAIHAN5F') {
+    document.getElementById('msg1').textContent = '⚠️ Landlord access restricted. Only RAIHAN5F authorized.';
+    return;
+  }
+
   try {
     // Fetch customer data from backend
     const url = 'https://script.google.com/macros/s/AKfycbzUQeJKLBRCjQG928fnIdJ7Tlg-JR0072ENK-K2_07NBOxWsH9zs0qd5CrcoQW_Mbz3lA/exec';
