@@ -137,7 +137,7 @@ async function submit() {
   try {
     // Fetch customer data from backend
     const url = 'https://script.google.com/macros/s/AKfycbzUQeJKLBRCjQG928fnIdJ7Tlg-JR0072ENK-K2_07NBOxWsH9zs0qd5CrcoQW_Mbz3lA/exec';
-    const res = await fetch(`${url}?id=${encodeURIComponent(custid)}&action=getCustomerData&role=${encodeURIComponent(role)}`);
+    const res = await fetch(`${url}?id=${encodeURIComponent(custid)}`);
     const data = await res.json();
 
     if (data.error) {
@@ -154,7 +154,7 @@ async function submit() {
     document.getElementById('electric-balance').textContent = '৳ ' + (data.electricBalance || '0.00');
     document.getElementById('water-bill').textContent = '৳ ' + (data.waterBillDue || '0.00');
     document.getElementById('gas-bill').textContent = '৳ ' + (data.gasBillDue || '0.00');
-    document.getElementById('status').textContent = data.status || 'Active';
+    document.getElementById('status').textContent = data.internetConnected || 'Active';
 
     show(4);
   } catch (e) {

@@ -14,29 +14,8 @@ function initializeSpreadsheet() {
   // Create Dashboard sheet if it doesn't exist
   if (!ss.getSheetByName(DASH)) {
     var dashSheet = ss.insertSheet(DASH);
-    dashSheet.appendRow(["CustomerID", "Name", "ElectricBalance", "WaterBillDue", "GasBillDue", "LastUpdated", "FlatNumber", "InternetConnected", "InternetBillDue", "UserType"]);
-    Logger.log("✅ " + DASH + " sheet created with UserType column");
-  } else {
-    // Check if UserType column exists, add if missing
-    var dashSheet = ss.getSheetByName(DASH);
-    var headers = dashSheet.getRange(1, 1, 1, dashSheet.getLastColumn()).getValues()[0];
-    var hasUserType = false;
-    for (var h = 0; h < headers.length; h++) {
-      if (String(headers[h]).trim() === "UserType") {
-        hasUserType = true;
-        break;
-      }
-    }
-    if (!hasUserType) {
-      dashSheet.insertSheet().insertColumns(dashSheet.getLastColumn() + 1);
-      dashSheet.getRange(1, dashSheet.getLastColumn()).setValue("UserType");
-      Logger.log("✅ UserType column added to " + DASH + " sheet");
-      // Set existing rows to "tenant" by default
-      var data = dashSheet.getDataRange().getValues();
-      for (var r = 1; r < data.length; r++) {
-        dashSheet.getRange(r + 1, dashSheet.getLastColumn()).setValue("tenant");
-      }
-    }
+    dashSheet.appendRow(["CustomerID", "Name", "ElectricBalance", "WaterBillDue", "GasBillDue", "LastUpdated", "FlatNumber", "InternetConnected", "InternetBillDue"]);
+    Logger.log("✅ " + DASH + " sheet created");
   }
 
   // Create FlatLookup sheet if it doesn't exist
@@ -187,20 +166,11 @@ function doGet(e) {
     // 2FA: Get OTP step (send OTP and return intermediate state)
     if (action === 'getOTPStep') {
       if (!id) return jsonWithCORS_({ error: 'Missing Customer ID' }, e);
-      var role = (e.parameter.role || 'tenant').trim();
-
       try {
-        // Verify customer exists and role matches
+        // Verify customer exists
         var data = dashSheet.getDataRange().getValues();
         for (var i = 1; i < data.length; i++) {
           if (String(data[i][0]).trim() === id) {
-            var userType = String(data[i][9] || 'tenant').trim().toLowerCase();
-
-            // Validate role matches
-            if (userType !== role) {
-              return jsonWithCORS_({ error: 'This Customer ID is registered as ' + userType + ', not ' + role }, e);
-            }
-
             // Try to get email from subscriptions sheet first, otherwise fallback
             var subInfo = getSubscription_(subsSheet, id);
             var customerEmail = subInfo.email || '';
@@ -222,8 +192,7 @@ function doGet(e) {
               step: 'awaiting_otp',
               customerId: id,
               email: maskedEmail,
-              expiresIn: 600,
-              userType: userType
+              expiresIn: 600
             }, e);
           }
         }
@@ -273,7 +242,6 @@ function doGet(e) {
     if (action === 'getUsageReport') return jsonWithCORS_(getUsageReport_(ss, id), e);
     if (action === 'getMonthlyComparison') return jsonWithCORS_(getMonthlyComparison_(ss, id), e);
     if (action === 'getPaymentHistory') return jsonWithCORS_(getPaymentHistory_(ss, id), e);
-    if (action === 'getCustomerData') return jsonWithCORS_(getCustomerData_(ss, id), e);
     if (action === 'request') return jsonWithCORS_(requestEmailVerification_(id, email), e);
     if (action === 'confirm') return jsonWithCORS_(confirmEmailVerification_(id, e.parameter.code), e);
 
@@ -288,8 +256,6 @@ function doGet(e) {
         var subInfo = getSubscription_(subsSheet, id);
         var lastUpdatedRaw = data[i][5];
         var lastUpdatedStr = lastUpdatedRaw instanceof Date ? Utilities.formatDate(lastUpdatedRaw, Session.getScriptTimeZone(), 'EEEE, dd MMM yyyy hh:mm a') : String(lastUpdatedRaw);
-        var userType = String(data[i][9] || 'tenant').trim().toLowerCase();
-
         return jsonWithCORS_({
           success: true,
           name: data[i][1] || '',
@@ -301,8 +267,7 @@ function doGet(e) {
           lastUpdated: lastUpdatedStr,
           flatNumber: data[i][6] || '',
           subscribed: subInfo.subscribed,
-          email: subInfo.email,
-          userType: userType
+          email: subInfo.email
         }, e);
       }
     }
@@ -1206,8 +1171,7 @@ function verifyOTP_(customerId, otp) {
             lastUpdated: lastUpdatedStr,
             flatNumber: dashData[j][6] || '',
             subscribed: subInfo.subscribed,
-            email: subInfo.email,
-            userType: String(dashData[j][9] || 'tenant').trim().toLowerCase()
+            email: subInfo.email
           };
         }
       }
@@ -1358,35 +1322,4 @@ function sendWeeklyBillReminders_() {
 
   Logger.log("Weekly bill reminders sent: " + sentCount);
   return { sent: sentCount, timestamp: new Date().toString() };
-}
-
-function getCustomerData_(ss, customerId) {
-  try {
-    var dashName = getSheetName_('DASHBOARD_SHEET');
-    var dashSheet = ss.getSheetByName(dashName);
-    if (!dashSheet) return { error: 'Dashboard sheet not found' };
-
-    var data = dashSheet.getDataRange().getValues();
-
-    for (var i = 1; i < data.length; i++) {
-      if (String(data[i][0]).trim() === customerId) {
-        var result = {
-          customerId: String(data[i][0]).trim(),
-          name: String(data[i][1] || '').trim(),
-          electricBalance: String(data[i][2] || '0').trim(),
-          waterBillDue: String(data[i][3] || '0').trim(),
-          gasBillDue: String(data[i][4] || '0').trim(),
-          lastUpdated: String(data[i][5] || '').trim(),
-          flatNumber: String(data[i][6] || '').trim(),
-          internetConnected: String(data[i][7] || 'No').trim(),
-          internetBillDue: String(data[i][8] || '0').trim(),
-          status: 'Active'
-        };
-        return result;
-      }
-    }
-    return { error: 'Customer not found' };
-  } catch (err) {
-    return { error: 'Error fetching customer data: ' + err.message };
-  }
 }
