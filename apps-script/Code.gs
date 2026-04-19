@@ -1362,11 +1362,11 @@ function sendWeeklyBillReminders_() {
 
 function getCustomerData_(ss, customerId) {
   try {
-    var dashSheet = ss.getSheetByName("Dashboard");
+    var dashName = getSheetName_('DASHBOARD_SHEET');
+    var dashSheet = ss.getSheetByName(dashName);
     if (!dashSheet) return { error: 'Dashboard sheet not found' };
 
     var data = dashSheet.getDataRange().getValues();
-    var headers = data[0];
 
     for (var i = 1; i < data.length; i++) {
       if (String(data[i][0]).trim() === customerId) {
