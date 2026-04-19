@@ -6,7 +6,11 @@
 <title>Login - Utility</title>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
-body { font-family: Arial, sans-serif; background: #4c63d2; min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+body { font-family: Arial, sans-serif; background: #4c63d2; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
+.lang-selector { position: absolute; top: 20px; right: 20px; display: flex; gap: 10px; }
+.lang-btn { padding: 8px 16px; border: 2px solid white; background: #4c63d2; color: white; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.2s; }
+.lang-btn.active { background: white; color: #4c63d2; }
+.lang-btn:hover { transform: scale(1.05); }
 .box { background: white; padding: 40px; border-radius: 10px; width: 100%; max-width: 400px; box-shadow: 0 10px 40px rgba(0,0,0,0.2); }
 h1 { font-size: 28px; margin-bottom: 10px; text-align: center; }
 p { text-align: center; color: #666; margin-bottom: 30px; }
@@ -19,43 +23,79 @@ input { width: 100%; padding: 12px; margin-bottom: 15px; border: 2px solid #ddd;
 </head>
 <body>
 
+<div class="lang-selector">
+  <button class="lang-btn active" onclick="setLang('en')">EN</button>
+  <button class="lang-btn" onclick="setLang('bn')">বাং</button>
+</div>
+
 <div class="box">
   <div id="screen1">
-    <h1>⚡ Login</h1>
-    <p>Choose your type</p>
+    <h1>⚡ <span data-en="Login" data-bn="লগইন">Login</span></h1>
+    <p data-en="Choose your type" data-bn="আপনার ধরন নির্বাচন করুন">Choose your type</p>
     <div class="buttons">
-      <button onclick="pick('tenant')">👤 Tenant</button>
-      <button onclick="pick('landlord')">🏢 Landlord</button>
+      <button onclick="pick('tenant')"><span data-en="👤 Tenant" data-bn="👤 ভাড়াটিয়া">👤 Tenant</span></button>
+      <button onclick="pick('landlord')"><span data-en="🏢 Landlord" data-bn="🏢 মালিক">🏢 Landlord</span></button>
     </div>
   </div>
 
   <div id="screen2" class="hidden">
-    <h1>🔐 Enter ID</h1>
-    <input id="custid" type="text" placeholder="Customer ID">
-    <button onclick="submit()">Continue</button>
-    <button onclick="back()">Back</button>
+    <h1>🔐 <span data-en="Enter ID" data-bn="আইডি প্রবেশ করুন">Enter ID</span></h1>
+    <input id="custid" type="text" placeholder="Customer ID" data-placeholder-en="Customer ID" data-placeholder-bn="গ্রাহক আইডি">
+    <button onclick="submit()" data-en="Continue" data-bn="চালিয়ে যান">Continue</button>
+    <button onclick="back()" data-en="Back" data-bn="ফিরে যান">Back</button>
     <p id="msg1" style="color: red;"></p>
   </div>
 
   <div id="screen3" class="hidden">
-    <h1>✓ OTP Code</h1>
-    <p>Enter 6 digits</p>
+    <h1>✓ <span data-en="OTP Code" data-bn="ওটিপি কোড">OTP Code</span></h1>
+    <p data-en="Enter 6 digits" data-bn="৬ টি অঙ্ক প্রবেশ করুন">Enter 6 digits</p>
     <input id="otp" type="text" placeholder="000000" maxlength="6">
-    <button onclick="verify()">Verify</button>
-    <button onclick="back()">Back</button>
+    <button onclick="verify()" data-en="Verify" data-bn="যাচাই করুন">Verify</button>
+    <button onclick="back()" data-en="Back" data-bn="ফিরে যান">Back</button>
     <p id="msg2" style="color: red;"></p>
   </div>
 
   <div id="screen4" class="hidden">
-    <h1>✅ Success!</h1>
-    <p>Logged in as <strong id="name">User</strong></p>
-    <button onclick="logout()">Logout</button>
+    <h1>✅ <span data-en="Success!" data-bn="সফল!">Success!</span></h1>
+    <p><span data-en="Logged in as" data-bn="হিসাবে লগইন করেছেন"></span> <strong id="name">User</strong></p>
+    <button onclick="logout()" data-en="Logout" data-bn="লগ আউট">Logout</button>
   </div>
 </div>
 
 <script>
+let lang = localStorage.getItem('lang') || 'en';
 let role = null;
 let custid = null;
+
+const trans = {
+  en: {
+    'Enter 6 digits': '⚠️ Enter 6 digits',
+    'Enter ID': '⚠️ Enter ID',
+    'Error:': '⚠️ Error: '
+  },
+  bn: {
+    'Enter 6 digits': '⚠️ ৬ টি অঙ্ক প্রবেশ করুন',
+    'Enter ID': '⚠️ আইডি প্রবেশ করুন',
+    'Error:': '⚠️ ত্রুটি: '
+  }
+};
+
+function setLang(l) {
+  lang = l;
+  localStorage.setItem('lang', l);
+  document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+  updateText();
+}
+
+function updateText() {
+  document.querySelectorAll('[data-en]').forEach(el => {
+    el.textContent = el.getAttribute('data-' + lang);
+  });
+  document.querySelectorAll('[data-placeholder-en]').forEach(el => {
+    el.placeholder = el.getAttribute('data-placeholder-' + lang);
+  });
+}
 
 function pick(r) { role = r; show(2); }
 function back() { show(1); }
@@ -68,7 +108,10 @@ function show(n) {
 
 async function submit() {
   custid = document.getElementById('custid').value.trim();
-  if (!custid) { document.getElementById('msg1').textContent = '⚠️ Enter ID'; return; }
+  if (!custid) {
+    document.getElementById('msg1').textContent = trans[lang]['Enter ID'];
+    return;
+  }
 
   try {
     const url = 'https://script.google.com/macros/s/AKfycbzUQeJKLBRCjQG928fnIdJ7Tlg-JR0072ENK-K2_07NBOxWsH9zs0qd5CrcoQW_Mbz3lA/exec';
@@ -77,13 +120,16 @@ async function submit() {
     if (data.error) { document.getElementById('msg1').textContent = '⚠️ ' + data.error; return; }
     show(3);
   } catch (e) {
-    document.getElementById('msg1').textContent = '⚠️ Error: ' + e.message;
+    document.getElementById('msg1').textContent = trans[lang]['Error:'] + e.message;
   }
 }
 
 async function verify() {
   const otp = document.getElementById('otp').value;
-  if (otp.length !== 6) { document.getElementById('msg2').textContent = '⚠️ Enter 6 digits'; return; }
+  if (otp.length !== 6) {
+    document.getElementById('msg2').textContent = trans[lang]['Enter 6 digits'];
+    return;
+  }
 
   try {
     const url = 'https://script.google.com/macros/s/AKfycbzUQeJKLBRCjQG928fnIdJ7Tlg-JR0072ENK-K2_07NBOxWsH9zs0qd5CrcoQW_Mbz3lA/exec';
@@ -95,7 +141,7 @@ async function verify() {
     document.getElementById('name').textContent = data.name || 'User';
     show(4);
   } catch (e) {
-    document.getElementById('msg2').textContent = '⚠️ Error: ' + e.message;
+    document.getElementById('msg2').textContent = trans[lang]['Error:'] + e.message;
   }
 }
 
@@ -107,6 +153,13 @@ function logout() {
 }
 
 window.addEventListener('load', () => {
+  updateText();
+  document.querySelector('.lang-btn').classList.add('active');
+  if (lang === 'bn') {
+    document.querySelectorAll('.lang-btn')[1].classList.add('active');
+    document.querySelectorAll('.lang-btn')[0].classList.remove('active');
+  }
+
   if (localStorage.getItem('customerId')) {
     document.getElementById('name').textContent = localStorage.getItem('customerName') || 'User';
     show(4);
