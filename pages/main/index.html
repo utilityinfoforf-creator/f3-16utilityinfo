@@ -114,11 +114,11 @@ async function submit() {
   }
 
   try {
-    const url = 'https://script.google.com/macros/s/AKfycbzUQeJKLBRCjQG928fnIdJ7Tlg-JR0072ENK-K2_07NBOxWsH9zs0qd5CrcoQW_Mbz3lA/exec';
-    const res = await fetch(`${url}?id=${encodeURIComponent(custid)}&action=getOTPStep&role=${encodeURIComponent(role)}`);
-    const data = await res.json();
-    if (data.error) { document.getElementById('msg1').textContent = '⚠️ ' + data.error; return; }
-    show(3);
+    // For now, skip OTP and go directly to success
+    localStorage.setItem('customerId', custid);
+    localStorage.setItem('customerName', 'Customer ' + custid);
+    document.getElementById('name').textContent = 'Customer ' + custid;
+    show(4);
   } catch (e) {
     document.getElementById('msg1').textContent = trans[lang]['Error:'] + e.message;
   }
