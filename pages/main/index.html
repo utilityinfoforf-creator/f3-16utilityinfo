@@ -98,26 +98,83 @@ input { width: 100%; padding: 12px; margin-bottom: 15px; border: 2px solid #ddd;
 
       <!-- Individual Tenant Details -->
       <div id="tenant-details" style="display: none;">
-        <p style="text-align: center; color: #666; margin-bottom: 20px;">Viewing: <strong id="selected-tenant-name">-</strong></p>
-
-        <div style="background: #f0f4ff; padding: 15px; border-radius: 8px; margin: 20px 0;">
-          <div style="font-size: 12px; color: #666; margin-bottom: 8px;" data-en="Electric Balance" data-bn="বিদ্যুত ভারসাম্য">Electric Balance</div>
-          <div style="font-size: 24px; font-weight: bold; color: #4c63d2;" id="selected-electric-balance">৳ 0.00</div>
+        <!-- Header with tenant name -->
+        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 10px; margin-bottom: 25px;">
+          <h2 style="margin: 0 0 5px 0; font-size: 28px;" id="selected-tenant-name">-</h2>
+          <p style="margin: 5px 0; font-size: 13px; opacity: 0.9;">ID: <strong id="selected-tenant-id">-</strong></p>
         </div>
 
-        <div style="background: #e8f5e9; padding: 15px; border-radius: 8px; margin: 20px 0;">
-          <div style="font-size: 12px; color: #666; margin-bottom: 8px;" data-en="Water Bill Due" data-bn="জল বিল বকেয়া">Water Bill Due</div>
-          <div style="font-size: 24px; font-weight: bold; color: #2e7d32;" id="selected-water-bill">৳ 0.00</div>
+        <!-- Personal Information Section -->
+        <div style="margin-bottom: 25px;">
+          <h3 style="margin: 0 0 15px 0; color: #333; border-bottom: 2px solid #4c63d2; padding-bottom: 10px;">Personal Information</h3>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+            <div style="background: #f5f5f5; padding: 12px; border-radius: 8px;">
+              <div style="font-size: 11px; color: #999; margin-bottom: 4px; text-transform: uppercase; font-weight: bold;">Flat Number</div>
+              <div style="font-size: 16px; font-weight: 600; color: #333;" id="selected-flat">N/A</div>
+            </div>
+            <div style="background: #f5f5f5; padding: 12px; border-radius: 8px;">
+              <div style="font-size: 11px; color: #999; margin-bottom: 4px; text-transform: uppercase; font-weight: bold;">Email</div>
+              <div style="font-size: 14px; font-weight: 500; color: #333;" id="selected-email">Not Set</div>
+            </div>
+            <div style="background: #f5f5f5; padding: 12px; border-radius: 8px;">
+              <div style="font-size: 11px; color: #999; margin-bottom: 4px; text-transform: uppercase; font-weight: bold;">Last Updated</div>
+              <div style="font-size: 13px; font-weight: 500; color: #333;" id="selected-last-updated">-</div>
+            </div>
+            <div style="background: #f5f5f5; padding: 12px; border-radius: 8px;">
+              <div style="font-size: 11px; color: #999; margin-bottom: 4px; text-transform: uppercase; font-weight: bold;">Notifications</div>
+              <div style="font-size: 14px; font-weight: 600; color: #4c63d2;" id="selected-subscribed">-</div>
+            </div>
+          </div>
         </div>
 
-        <div style="background: #fff3e0; padding: 15px; border-radius: 8px; margin: 20px 0;">
-          <div style="font-size: 12px; color: #666; margin-bottom: 8px;" data-en="Gas Bill Due" data-bn="গ্যাস বিল বকেয়া">Gas Bill Due</div>
-          <div style="font-size: 24px; font-weight: bold; color: #f57c00;" id="selected-gas-bill">৳ 0.00</div>
+        <!-- Billing Information Section -->
+        <div style="margin-bottom: 25px;">
+          <h3 style="margin: 0 0 15px 0; color: #333; border-bottom: 2px solid #f57c00; padding-bottom: 10px;">Billing Information</h3>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px;">
+            <div style="background: #f0f4ff; padding: 15px; border-radius: 8px; border-left: 4px solid #4c63d2;">
+              <div style="font-size: 11px; color: #666; margin-bottom: 8px; text-transform: uppercase; font-weight: bold;">💡 Electric Balance</div>
+              <div style="font-size: 26px; font-weight: bold; color: #4c63d2;" id="selected-electric-balance">৳ 0.00</div>
+            </div>
+
+            <div style="background: #e8f5e9; padding: 15px; border-radius: 8px; border-left: 4px solid #2e7d32;">
+              <div style="font-size: 11px; color: #666; margin-bottom: 8px; text-transform: uppercase; font-weight: bold;">💧 Water Bill Due</div>
+              <div style="font-size: 26px; font-weight: bold; color: #2e7d32;" id="selected-water-bill">৳ 0.00</div>
+            </div>
+
+            <div style="background: #fff3e0; padding: 15px; border-radius: 8px; border-left: 4px solid #f57c00;">
+              <div style="font-size: 11px; color: #666; margin-bottom: 8px; text-transform: uppercase; font-weight: bold;">🔥 Gas Bill Due</div>
+              <div style="font-size: 26px; font-weight: bold; color: #f57c00;" id="selected-gas-bill">৳ 0.00</div>
+            </div>
+          </div>
+
+          <!-- Internet Section -->
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px;">
+            <div style="background: #e3f2fd; padding: 15px; border-radius: 8px; border-left: 4px solid #1976d2;">
+              <div style="font-size: 11px; color: #666; margin-bottom: 8px; text-transform: uppercase; font-weight: bold;">🌐 Internet Status</div>
+              <div style="font-size: 18px; font-weight: bold; color: #1976d2;" id="selected-internet-status">Unknown</div>
+            </div>
+
+            <div style="background: #fce4ec; padding: 15px; border-radius: 8px; border-left: 4px solid #c2185b;">
+              <div style="font-size: 11px; color: #666; margin-bottom: 8px; text-transform: uppercase; font-weight: bold;">📡 Internet Bill Due</div>
+              <div style="font-size: 26px; font-weight: bold; color: #c2185b;" id="selected-internet-bill">৳ 0.00</div>
+            </div>
+          </div>
         </div>
 
-        <div style="background: #e3f2fd; padding: 15px; border-radius: 8px; margin: 20px 0;">
-          <div style="font-size: 12px; color: #666; margin-bottom: 8px;" data-en="Flat Number" data-bn="ফ্ল্যাট নম্বর">Flat Number</div>
-          <div style="font-size: 18px; font-weight: bold; color: #1976d2;" id="selected-flat">N/A</div>
+        <!-- Summary Section -->
+        <div style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; padding: 20px; border-radius: 10px;">
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+            <div>
+              <div style="font-size: 12px; opacity: 0.9; margin-bottom: 5px;">Total Outstanding</div>
+              <div style="font-size: 28px; font-weight: bold;" id="selected-total-due">৳ 0.00</div>
+            </div>
+            <div style="text-align: right;">
+              <div style="font-size: 12px; opacity: 0.9; margin-bottom: 5px;">Status</div>
+              <div style="font-size: 20px; font-weight: bold;" id="selected-status-badge">-</div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -318,11 +375,44 @@ function displayTenant(index) {
   if (index < 0 || index >= allTenants.length) return;
 
   const tenant = allTenants[index];
-  document.getElementById('selected-tenant-name').textContent = tenant.name;
-  document.getElementById('selected-electric-balance').textContent = '৳ ' + (tenant.electricBalance || '0.00');
-  document.getElementById('selected-water-bill').textContent = '৳ ' + (tenant.waterBillDue || '0.00');
-  document.getElementById('selected-gas-bill').textContent = '৳ ' + (tenant.gasBillDue || '0.00');
+
+  // Personal Information
+  document.getElementById('selected-tenant-name').textContent = tenant.name || '-';
+  document.getElementById('selected-tenant-id').textContent = tenant.id || '-';
   document.getElementById('selected-flat').textContent = tenant.flatNumber || 'N/A';
+  document.getElementById('selected-email').textContent = tenant.email || 'Not Set';
+  document.getElementById('selected-last-updated').textContent = tenant.lastUpdated || '-';
+  document.getElementById('selected-subscribed').textContent = tenant.subscribed ? '✓ Enabled' : '✗ Disabled';
+
+  // Billing Information
+  const electric = parseFloat(tenant.electricBalance) || 0;
+  const water = parseFloat(tenant.waterBillDue) || 0;
+  const gas = parseFloat(tenant.gasBillDue) || 0;
+  const internet = parseFloat(tenant.internetBillDue) || 0;
+  const total = electric + water + gas + internet;
+
+  document.getElementById('selected-electric-balance').textContent = '৳ ' + electric.toFixed(2);
+  document.getElementById('selected-water-bill').textContent = '৳ ' + water.toFixed(2);
+  document.getElementById('selected-gas-bill').textContent = '৳ ' + gas.toFixed(2);
+  document.getElementById('selected-internet-status').textContent = tenant.internetConnected || 'Unknown';
+  document.getElementById('selected-internet-bill').textContent = '৳ ' + internet.toFixed(2);
+
+  // Summary
+  document.getElementById('selected-total-due').textContent = '৳ ' + total.toFixed(2);
+
+  // Status Badge
+  let statusText = '✓ Good';
+  let statusColor = '#10b981';
+  if (total > 1000) {
+    statusText = '⚠️ Critical';
+    statusColor = '#ff6b6b';
+  } else if (total > 500) {
+    statusText = '⚠️ Warning';
+    statusColor = '#ffa500';
+  }
+  const badge = document.getElementById('selected-status-badge');
+  badge.textContent = statusText;
+  badge.style.color = statusColor;
 
   document.getElementById('tenant-details').style.display = 'block';
   document.getElementById('no-tenant-selected').style.display = 'none';
