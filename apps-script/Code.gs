@@ -273,6 +273,7 @@ function doGet(e) {
     if (action === 'getUsageReport') return jsonWithCORS_(getUsageReport_(ss, id), e);
     if (action === 'getMonthlyComparison') return jsonWithCORS_(getMonthlyComparison_(ss, id), e);
     if (action === 'getPaymentHistory') return jsonWithCORS_(getPaymentHistory_(ss, id), e);
+    if (action === 'getCustomerData') return jsonWithCORS_(getCustomerData_(ss, id), e);
     if (action === 'request') return jsonWithCORS_(requestEmailVerification_(id, email), e);
     if (action === 'confirm') return jsonWithCORS_(confirmEmailVerification_(id, e.parameter.code), e);
 
@@ -1357,4 +1358,35 @@ function sendWeeklyBillReminders_() {
 
   Logger.log("Weekly bill reminders sent: " + sentCount);
   return { sent: sentCount, timestamp: new Date().toString() };
+}
+
+function getCustomerData_(ss, customerId) {
+  try {
+    var dashSheet = ss.getSheetByName("Dashboard");
+    if (!dashSheet) return { error: 'Dashboard sheet not found' };
+
+    var data = dashSheet.getDataRange().getValues();
+    var headers = data[0];
+
+    for (var i = 1; i < data.length; i++) {
+      if (String(data[i][0]).trim() === customerId) {
+        var result = {
+          customerId: String(data[i][0]).trim(),
+          name: String(data[i][1] || '').trim(),
+          electricBalance: String(data[i][2] || '0').trim(),
+          waterBillDue: String(data[i][3] || '0').trim(),
+          gasBillDue: String(data[i][4] || '0').trim(),
+          lastUpdated: String(data[i][5] || '').trim(),
+          flatNumber: String(data[i][6] || '').trim(),
+          internetConnected: String(data[i][7] || 'No').trim(),
+          internetBillDue: String(data[i][8] || '0').trim(),
+          status: 'Active'
+        };
+        return result;
+      }
+    }
+    return { error: 'Customer not found' };
+  } catch (err) {
+    return { error: 'Error fetching customer data: ' + err.message };
+  }
 }
