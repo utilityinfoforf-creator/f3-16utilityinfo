@@ -85,40 +85,20 @@ input { width: 100%; padding: 12px; margin-bottom: 15px; border: 2px solid #ddd;
     <!-- Landlord Dashboard -->
     <div id="landlord-dashboard" style="display: none;">
       <!-- Tenant Slider Navigation -->
-      <div style="background: #f5f5f5; padding: 20px; border-radius: 10px; margin-bottom: 30px;">
+      <div style="margin-bottom: 30px; padding: 15px; background: #f9f9f9; border-radius: 8px;">
         <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
-          <button onclick="previousTenant()" style="padding: 10px 15px; background: #4c63d2; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold;">← Previous</button>
-          <div style="flex: 1; text-align: center; font-weight: bold; font-size: 14px;">Tenant <span id="current-tenant-num">1</span> of <span id="total-tenants-count">0</span></div>
-          <button onclick="nextTenant()" style="padding: 10px 15px; background: #4c63d2; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold;">Next →</button>
+          <button onclick="previousTenant()" style="padding: 10px 15px; background: #4c63d2; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; flex: 0 0 auto;">← Prev</button>
+          <select id="tenant-selector" onchange="selectTenant(this.value)" style="flex: 1; padding: 10px; border: 2px solid #ddd; border-radius: 6px; font-size: 14px; background: white;">
+            <option value="">Select a tenant...</option>
+          </select>
+          <button onclick="nextTenant()" style="padding: 10px 15px; background: #4c63d2; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; flex: 0 0 auto;">Next →</button>
         </div>
-        <select id="tenant-selector" onchange="selectTenant(this.value)" style="width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 6px; font-size: 14px; background: white;">
-          <option value="">Load a tenant...</option>
-        </select>
-      </div>
-
-      <!-- Landlord Summary Stats -->
-      <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 30px;">
-        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 10px; text-align: center;">
-          <div style="font-size: 12px; opacity: 0.9; margin-bottom: 5px;">Total Tenants</div>
-          <div style="font-size: 28px; font-weight: bold;" id="total-tenants">0</div>
-        </div>
-        <div style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; padding: 20px; border-radius: 10px; text-align: center;">
-          <div style="font-size: 12px; opacity: 0.9; margin-bottom: 5px;">Total Balance</div>
-          <div style="font-size: 28px; font-weight: bold;" id="total-balance">৳0</div>
-        </div>
-        <div style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; padding: 20px; border-radius: 10px; text-align: center;">
-          <div style="font-size: 12px; opacity: 0.9; margin-bottom: 5px;">Water Bills</div>
-          <div style="font-size: 28px; font-weight: bold;" id="total-water">৳0</div>
-        </div>
-        <div style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); color: white; padding: 20px; border-radius: 10px; text-align: center;">
-          <div style="font-size: 12px; opacity: 0.9; margin-bottom: 5px;">Gas Bills</div>
-          <div style="font-size: 28px; font-weight: bold;" id="total-gas">৳0</div>
-        </div>
+        <div style="text-align: center; font-size: 12px; color: #666;">Tenant <span id="current-tenant-num">-</span> of <span id="total-tenants-count">0</span></div>
       </div>
 
       <!-- Individual Tenant Details -->
       <div id="tenant-details" style="display: none;">
-        <h2 style="margin-bottom: 20px; color: #333;"><span id="selected-tenant-name">Select a Tenant</span></h2>
+        <p style="text-align: center; color: #666; margin-bottom: 20px;">Viewing: <strong id="selected-tenant-name">-</strong></p>
 
         <div style="background: #f0f4ff; padding: 15px; border-radius: 8px; margin: 20px 0;">
           <div style="font-size: 12px; color: #666; margin-bottom: 8px;" data-en="Electric Balance" data-bn="বিদ্যুত ভারসাম্য">Electric Balance</div>
@@ -143,7 +123,7 @@ input { width: 100%; padding: 12px; margin-bottom: 15px; border: 2px solid #ddd;
 
       <!-- No Tenant Selected -->
       <div id="no-tenant-selected" style="text-align: center; color: #999; padding: 40px;">
-        <p style="font-size: 16px;">Select a tenant from the dropdown above to view details</p>
+        <p style="font-size: 16px;">Select a tenant from dropdown to view details</p>
       </div>
     </div>
 
@@ -233,24 +213,12 @@ async function submit() {
       document.getElementById('landlord-dashboard').style.display = 'block';
 
       if (data.customers && data.customers.length > 0) {
-        // Calculate summary stats
-        let totalBalance = 0, totalWater = 0, totalGas = 0;
-        data.customers.forEach(tenant => {
-          totalBalance += parseFloat(tenant.electricBalance) || 0;
-          totalWater += parseFloat(tenant.waterBillDue) || 0;
-          totalGas += parseFloat(tenant.gasBillDue) || 0;
-        });
-
         allTenants = data.customers;
-        document.getElementById('total-tenants').textContent = data.customers.length;
         document.getElementById('total-tenants-count').textContent = data.customers.length;
-        document.getElementById('total-balance').textContent = '৳' + totalBalance.toFixed(2);
-        document.getElementById('total-water').textContent = '৳' + totalWater.toFixed(2);
-        document.getElementById('total-gas').textContent = '৳' + totalGas.toFixed(2);
 
         // Populate tenant selector dropdown
         const selector = document.getElementById('tenant-selector');
-        selector.innerHTML = '<option value="">Load a tenant...</option>';
+        selector.innerHTML = '<option value="">Select a tenant...</option>';
         data.customers.forEach((tenant, index) => {
           const option = document.createElement('option');
           option.value = index;
