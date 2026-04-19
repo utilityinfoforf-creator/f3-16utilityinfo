@@ -84,7 +84,19 @@ input { width: 100%; padding: 12px; margin-bottom: 15px; border: 2px solid #ddd;
 
     <!-- Landlord Dashboard -->
     <div id="landlord-dashboard" style="display: none;">
-      <!-- Summary Stats -->
+      <!-- Tenant Slider Navigation -->
+      <div style="background: #f5f5f5; padding: 20px; border-radius: 10px; margin-bottom: 30px;">
+        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
+          <button onclick="previousTenant()" style="padding: 10px 15px; background: #4c63d2; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold;">← Previous</button>
+          <div style="flex: 1; text-align: center; font-weight: bold; font-size: 14px;">Tenant <span id="current-tenant-num">1</span> of <span id="total-tenants-count">0</span></div>
+          <button onclick="nextTenant()" style="padding: 10px 15px; background: #4c63d2; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold;">Next →</button>
+        </div>
+        <select id="tenant-selector" onchange="selectTenant(this.value)" style="width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 6px; font-size: 14px; background: white;">
+          <option value="">Load a tenant...</option>
+        </select>
+      </div>
+
+      <!-- Landlord Summary Stats -->
       <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 30px;">
         <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 10px; text-align: center;">
           <div style="font-size: 12px; opacity: 0.9; margin-bottom: 5px;">Total Tenants</div>
@@ -104,14 +116,35 @@ input { width: 100%; padding: 12px; margin-bottom: 15px; border: 2px solid #ddd;
         </div>
       </div>
 
-      <!-- Tenants List Header -->
-      <div style="margin-bottom: 20px;">
-        <h3 style="margin: 0 0 10px 0;">📋 Tenant List</h3>
-        <input type="text" id="search-tenants" placeholder="Search by name or ID..." style="width: 100%; padding: 10px; border: 2px solid #ddd; border-radius: 6px; font-size: 14px;">
+      <!-- Individual Tenant Details -->
+      <div id="tenant-details" style="display: none;">
+        <h2 style="margin-bottom: 20px; color: #333;"><span id="selected-tenant-name">Select a Tenant</span></h2>
+
+        <div style="background: #f0f4ff; padding: 15px; border-radius: 8px; margin: 20px 0;">
+          <div style="font-size: 12px; color: #666; margin-bottom: 8px;" data-en="Electric Balance" data-bn="বিদ্যুত ভারসাম্য">Electric Balance</div>
+          <div style="font-size: 24px; font-weight: bold; color: #4c63d2;" id="selected-electric-balance">৳ 0.00</div>
+        </div>
+
+        <div style="background: #e8f5e9; padding: 15px; border-radius: 8px; margin: 20px 0;">
+          <div style="font-size: 12px; color: #666; margin-bottom: 8px;" data-en="Water Bill Due" data-bn="জল বিল বকেয়া">Water Bill Due</div>
+          <div style="font-size: 24px; font-weight: bold; color: #2e7d32;" id="selected-water-bill">৳ 0.00</div>
+        </div>
+
+        <div style="background: #fff3e0; padding: 15px; border-radius: 8px; margin: 20px 0;">
+          <div style="font-size: 12px; color: #666; margin-bottom: 8px;" data-en="Gas Bill Due" data-bn="গ্যাস বিল বকেয়া">Gas Bill Due</div>
+          <div style="font-size: 24px; font-weight: bold; color: #f57c00;" id="selected-gas-bill">৳ 0.00</div>
+        </div>
+
+        <div style="background: #e3f2fd; padding: 15px; border-radius: 8px; margin: 20px 0;">
+          <div style="font-size: 12px; color: #666; margin-bottom: 8px;" data-en="Flat Number" data-bn="ফ্ল্যাট নম্বর">Flat Number</div>
+          <div style="font-size: 18px; font-weight: bold; color: #1976d2;" id="selected-flat">N/A</div>
+        </div>
       </div>
 
-      <!-- Tenants Grid -->
-      <div id="tenants-list" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 20px;"></div>
+      <!-- No Tenant Selected -->
+      <div id="no-tenant-selected" style="text-align: center; color: #999; padding: 40px;">
+        <p style="font-size: 16px;">Select a tenant from the dropdown above to view details</p>
+      </div>
     </div>
 
     <button onclick="logout()" style="width: 100%; margin-top: 20px; padding: 12px; background: #e53935; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold;" data-en="Logout" data-bn="লগ আউট">Logout</button>
@@ -122,6 +155,8 @@ input { width: 100%; padding: 12px; margin-bottom: 15px; border: 2px solid #ddd;
 let lang = localStorage.getItem('lang') || 'en';
 let role = null;
 let custid = null;
+let allTenants = [];
+let currentTenantIndex = -1;
 
 const trans = {
   en: {
@@ -197,10 +232,6 @@ async function submit() {
       document.getElementById('tenant-dashboard').style.display = 'none';
       document.getElementById('landlord-dashboard').style.display = 'block';
 
-      // Load all tenants list
-      const tenantsList = document.getElementById('tenants-list');
-      tenantsList.innerHTML = '';
-
       if (data.customers && data.customers.length > 0) {
         // Calculate summary stats
         let totalBalance = 0, totalWater = 0, totalGas = 0;
@@ -210,70 +241,25 @@ async function submit() {
           totalGas += parseFloat(tenant.gasBillDue) || 0;
         });
 
+        allTenants = data.customers;
         document.getElementById('total-tenants').textContent = data.customers.length;
+        document.getElementById('total-tenants-count').textContent = data.customers.length;
         document.getElementById('total-balance').textContent = '৳' + totalBalance.toFixed(2);
         document.getElementById('total-water').textContent = '৳' + totalWater.toFixed(2);
         document.getElementById('total-gas').textContent = '৳' + totalGas.toFixed(2);
 
-        // Display tenant cards
-        data.customers.forEach(tenant => {
-          const totalDue = (parseFloat(tenant.electricBalance) || 0) + (parseFloat(tenant.waterBillDue) || 0) + (parseFloat(tenant.gasBillDue) || 0);
-          const statusColor = totalDue > 1000 ? '#ff6b6b' : (totalDue > 500 ? '#ffa500' : '#10b981');
-
-          const card = `
-            <div class="tenant-card" style="background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1); transition: all 0.3s;">
-              <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 15px; color: white;">
-                <div style="font-size: 18px; font-weight: 700; margin-bottom: 4px;">${tenant.name}</div>
-                <div style="font-size: 12px; opacity: 0.9;">ID: ${tenant.id}</div>
-              </div>
-              <div style="padding: 20px;">
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 15px;">
-                  <div style="background: #f0f4ff; padding: 12px; border-radius: 8px; text-align: center;">
-                    <div style="font-size: 12px; color: #666; margin-bottom: 4px;">Flat</div>
-                    <div style="font-size: 16px; font-weight: 600; color: #333;">${tenant.flatNumber || 'N/A'}</div>
-                  </div>
-                  <div style="background: #f0f4ff; padding: 12px; border-radius: 8px; text-align: center;">
-                    <div style="font-size: 12px; color: #666; margin-bottom: 4px;">Status</div>
-                    <div style="font-size: 14px; font-weight: 600; color: ${statusColor};">● ${totalDue > 1000 ? 'Critical' : (totalDue > 500 ? 'Warning' : 'Good')}</div>
-                  </div>
-                </div>
-
-                <div style="border-top: 2px solid #f0f0f0; padding-top: 15px;">
-                  <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; text-align: center; margin-bottom: 12px;">
-                    <div>
-                      <div style="font-size: 11px; color: #999; margin-bottom: 4px;">💡 Electric</div>
-                      <div style="font-size: 14px; font-weight: 600; color: #1976d2;">৳${tenant.electricBalance || '0'}</div>
-                    </div>
-                    <div>
-                      <div style="font-size: 11px; color: #999; margin-bottom: 4px;">💧 Water</div>
-                      <div style="font-size: 14px; font-weight: 600; color: #00802f;">৳${tenant.waterBillDue || '0'}</div>
-                    </div>
-                    <div>
-                      <div style="font-size: 11px; color: #999; margin-bottom: 4px;">🔥 Gas</div>
-                      <div style="font-size: 14px; font-weight: 600; color: #ff6b00;">৳${tenant.gasBillDue || '0'}</div>
-                    </div>
-                  </div>
-                  <div style="background: #f9f9f9; padding: 10px; border-radius: 6px; text-align: center;">
-                    <div style="font-size: 11px; color: #999;">Total Due</div>
-                    <div style="font-size: 18px; font-weight: 700; color: ${statusColor};">৳${totalDue.toFixed(2)}</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          `;
-          tenantsList.innerHTML += card;
-        });
-
-        // Add search functionality
-        document.getElementById('search-tenants').addEventListener('keyup', (e) => {
-          const searchTerm = e.target.value.toLowerCase();
-          document.querySelectorAll('.tenant-card').forEach(card => {
-            const text = card.textContent.toLowerCase();
-            card.style.display = text.includes(searchTerm) ? '' : 'none';
-          });
+        // Populate tenant selector dropdown
+        const selector = document.getElementById('tenant-selector');
+        selector.innerHTML = '<option value="">Load a tenant...</option>';
+        data.customers.forEach((tenant, index) => {
+          const option = document.createElement('option');
+          option.value = index;
+          option.textContent = `${tenant.name} (${tenant.id})`;
+          selector.appendChild(option);
         });
       } else {
-        tenantsList.innerHTML = '<div style="text-align: center; color: #999; padding: 40px;">No tenants found</div>';
+        allTenants = [];
+        document.getElementById('no-tenant-selected').innerHTML = '<div style="text-align: center; color: #999; padding: 40px;">No tenants found</div>';
       }
     } else {
       // Tenant: fetch individual data
@@ -330,7 +316,49 @@ function logout() {
   localStorage.removeItem('customerId');
   document.getElementById('custid').value = '';
   document.getElementById('otp').value = '';
+  allTenants = [];
+  currentTenantIndex = -1;
   show(1);
+}
+
+function selectTenant(index) {
+  if (index === '' || isNaN(index)) {
+    document.getElementById('tenant-details').style.display = 'none';
+    document.getElementById('no-tenant-selected').style.display = 'block';
+    currentTenantIndex = -1;
+    return;
+  }
+  currentTenantIndex = parseInt(index);
+  displayTenant(currentTenantIndex);
+}
+
+function nextTenant() {
+  if (allTenants.length === 0) return;
+  currentTenantIndex = (currentTenantIndex + 1) % allTenants.length;
+  displayTenant(currentTenantIndex);
+  document.getElementById('tenant-selector').value = currentTenantIndex;
+}
+
+function previousTenant() {
+  if (allTenants.length === 0) return;
+  currentTenantIndex = (currentTenantIndex - 1 + allTenants.length) % allTenants.length;
+  displayTenant(currentTenantIndex);
+  document.getElementById('tenant-selector').value = currentTenantIndex;
+}
+
+function displayTenant(index) {
+  if (index < 0 || index >= allTenants.length) return;
+
+  const tenant = allTenants[index];
+  document.getElementById('selected-tenant-name').textContent = tenant.name;
+  document.getElementById('selected-electric-balance').textContent = '৳ ' + (tenant.electricBalance || '0.00');
+  document.getElementById('selected-water-bill').textContent = '৳ ' + (tenant.waterBillDue || '0.00');
+  document.getElementById('selected-gas-bill').textContent = '৳ ' + (tenant.gasBillDue || '0.00');
+  document.getElementById('selected-flat').textContent = tenant.flatNumber || 'N/A';
+
+  document.getElementById('tenant-details').style.display = 'block';
+  document.getElementById('no-tenant-selected').style.display = 'none';
+  document.getElementById('current-tenant-num').textContent = index + 1;
 }
 
 window.addEventListener('load', () => {
