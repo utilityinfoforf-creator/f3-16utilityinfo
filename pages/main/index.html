@@ -59,24 +59,35 @@ input { width: 100%; padding: 12px; margin-bottom: 15px; border: 2px solid #ddd;
     <h1>✅ <span data-en="Dashboard" data-bn="ড্যাশবোর্ড">Dashboard</span></h1>
     <p><span data-en="Welcome" data-bn="স্বাগতম"></span> <strong id="name">User</strong></p>
 
-    <div style="background: #f0f4ff; padding: 15px; border-radius: 8px; margin: 20px 0;">
-      <div style="font-size: 12px; color: #666; margin-bottom: 8px;" data-en="Electric Balance" data-bn="বিদ্যুত ভারসাম্য">Electric Balance</div>
-      <div style="font-size: 24px; font-weight: bold; color: #4c63d2;" id="electric-balance">৳ 0.00</div>
+    <!-- Tenant Only Dashboard -->
+    <div id="tenant-dashboard">
+      <div style="background: #f0f4ff; padding: 15px; border-radius: 8px; margin: 20px 0;">
+        <div style="font-size: 12px; color: #666; margin-bottom: 8px;" data-en="Electric Balance" data-bn="বিদ্যুত ভারসাম্য">Electric Balance</div>
+        <div style="font-size: 24px; font-weight: bold; color: #4c63d2;" id="electric-balance">৳ 0.00</div>
+      </div>
+
+      <div style="background: #e8f5e9; padding: 15px; border-radius: 8px; margin: 20px 0;">
+        <div style="font-size: 12px; color: #666; margin-bottom: 8px;" data-en="Water Bill Due" data-bn="জল বিল বকেয়া">Water Bill Due</div>
+        <div style="font-size: 24px; font-weight: bold; color: #2e7d32;" id="water-bill">৳ 0.00</div>
+      </div>
+
+      <div style="background: #fff3e0; padding: 15px; border-radius: 8px; margin: 20px 0;">
+        <div style="font-size: 12px; color: #666; margin-bottom: 8px;" data-en="Gas Bill Due" data-bn="গ্যাস বিল বকেয়া">Gas Bill Due</div>
+        <div style="font-size: 24px; font-weight: bold; color: #f57c00;" id="gas-bill">৳ 0.00</div>
+      </div>
+
+      <div style="background: #e3f2fd; padding: 15px; border-radius: 8px; margin: 20px 0;">
+        <div style="font-size: 12px; color: #666; margin-bottom: 8px;" data-en="Connection Status" data-bn="সংযোগ অবস্থা">Connection Status</div>
+        <div style="font-size: 18px; font-weight: bold; color: #1976d2;">✓ <span id="status">Active</span></div>
+      </div>
     </div>
 
-    <div style="background: #e8f5e9; padding: 15px; border-radius: 8px; margin: 20px 0;">
-      <div style="font-size: 12px; color: #666; margin-bottom: 8px;" data-en="Water Bill Due" data-bn="জল বিল বকেয়া">Water Bill Due</div>
-      <div style="font-size: 24px; font-weight: bold; color: #2e7d32;" id="water-bill">৳ 0.00</div>
-    </div>
-
-    <div style="background: #fff3e0; padding: 15px; border-radius: 8px; margin: 20px 0;">
-      <div style="font-size: 12px; color: #666; margin-bottom: 8px;" data-en="Gas Bill Due" data-bn="গ্যাস বিল বকেয়া">Gas Bill Due</div>
-      <div style="font-size: 24px; font-weight: bold; color: #f57c00;" id="gas-bill">৳ 0.00</div>
-    </div>
-
-    <div style="background: #e3f2fd; padding: 15px; border-radius: 8px; margin: 20px 0;">
-      <div style="font-size: 12px; color: #666; margin-bottom: 8px;" data-en="Connection Status" data-bn="সংযোগ অবস্থা">Connection Status</div>
-      <div style="font-size: 18px; font-weight: bold; color: #1976d2;">✓ <span id="status">Active</span></div>
+    <!-- Landlord Dashboard -->
+    <div id="landlord-dashboard" style="display: none;">
+      <div style="margin-bottom: 20px;">
+        <h3 data-en="All Tenants" data-bn="সমস্ত ভাড়াটিয়া">All Tenants</h3>
+      </div>
+      <div id="tenants-list" style="display: grid; gap: 15px;"></div>
     </div>
 
     <button onclick="logout()" style="width: 100%; margin-top: 20px; padding: 12px; background: #e53935; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold;" data-en="Logout" data-bn="লগ আউট">Logout</button>
@@ -141,26 +152,72 @@ async function submit() {
   }
 
   try {
-    // Fetch customer data from backend
+    // Fetch data from backend
     const url = 'https://script.google.com/macros/s/AKfycbzUQeJKLBRCjQG928fnIdJ7Tlg-JR0072ENK-K2_07NBOxWsH9zs0qd5CrcoQW_Mbz3lA/exec';
-    const res = await fetch(`${url}?id=${encodeURIComponent(custid)}`);
-    const data = await res.json();
 
-    if (data.error) {
-      document.getElementById('msg1').textContent = '⚠️ ' + data.error;
-      return;
+    if (role === 'landlord') {
+      // Landlord: fetch all tenants
+      const res = await fetch(`${url}?action=export`);
+      const data = await res.json();
+
+      if (data.error) {
+        document.getElementById('msg1').textContent = '⚠️ ' + data.error;
+        return;
+      }
+
+      localStorage.setItem('customerId', custid);
+      localStorage.setItem('customerName', 'Landlord - ' + custid);
+      document.getElementById('name').textContent = 'Landlord - ' + custid;
+
+      // Show landlord dashboard
+      document.getElementById('tenant-dashboard').style.display = 'none';
+      document.getElementById('landlord-dashboard').style.display = 'block';
+
+      // Load all tenants list
+      const tenantsList = document.getElementById('tenants-list');
+      tenantsList.innerHTML = '';
+
+      if (data.customers && data.customers.length > 0) {
+        data.customers.forEach(tenant => {
+          const card = `
+            <div style="background: white; padding: 15px; border-radius: 8px; border-left: 4px solid #4c63d2;">
+              <div style="font-weight: bold; margin-bottom: 8px;">${tenant.name} (${tenant.id})</div>
+              <div style="font-size: 12px; color: #666; margin-bottom: 4px;">Flat: ${tenant.flatNumber || 'N/A'}</div>
+              <div style="font-size: 12px; color: #666; margin-bottom: 8px;">💡 Balance: ৳${tenant.electricBalance || '0'}</div>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 11px;">
+                <span>💧 Water: ৳${tenant.waterBillDue || '0'}</span>
+                <span>🔥 Gas: ৳${tenant.gasBillDue || '0'}</span>
+              </div>
+            </div>
+          `;
+          tenantsList.innerHTML += card;
+        });
+      } else {
+        tenantsList.innerHTML = '<div style="text-align: center; color: #999;">No tenants found</div>';
+      }
+    } else {
+      // Tenant: fetch individual data
+      const res = await fetch(`${url}?id=${encodeURIComponent(custid)}`);
+      const data = await res.json();
+
+      if (data.error) {
+        document.getElementById('msg1').textContent = '⚠️ ' + data.error;
+        return;
+      }
+
+      localStorage.setItem('customerId', custid);
+      localStorage.setItem('customerName', data.name || 'Customer ' + custid);
+
+      // Show tenant dashboard
+      document.getElementById('tenant-dashboard').style.display = 'block';
+      document.getElementById('landlord-dashboard').style.display = 'none';
+
+      document.getElementById('name').textContent = data.name || 'Customer ' + custid;
+      document.getElementById('electric-balance').textContent = '৳ ' + (data.electricBalance || '0.00');
+      document.getElementById('water-bill').textContent = '৳ ' + (data.waterBillDue || '0.00');
+      document.getElementById('gas-bill').textContent = '৳ ' + (data.gasBillDue || '0.00');
+      document.getElementById('status').textContent = data.internetConnected || 'Active';
     }
-
-    localStorage.setItem('customerId', custid);
-    localStorage.setItem('customerName', data.name || 'Customer ' + custid);
-    localStorage.setItem('customerData', JSON.stringify(data));
-
-    // Update dashboard with real data
-    document.getElementById('name').textContent = data.name || 'Customer ' + custid;
-    document.getElementById('electric-balance').textContent = '৳ ' + (data.electricBalance || '0.00');
-    document.getElementById('water-bill').textContent = '৳ ' + (data.waterBillDue || '0.00');
-    document.getElementById('gas-bill').textContent = '৳ ' + (data.gasBillDue || '0.00');
-    document.getElementById('status').textContent = data.internetConnected || 'Active';
 
     show(4);
   } catch (e) {
