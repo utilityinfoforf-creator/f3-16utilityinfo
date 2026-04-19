@@ -254,7 +254,15 @@ async function submit() {
     if (role === 'landlord') {
       // Landlord: fetch all tenants
       const res = await fetch(`${url}?action=export`);
-      const data = await res.json();
+      let data;
+      try {
+        data = await res.json();
+      } catch (e) {
+        const text = await res.text();
+        document.getElementById('msg1').textContent = '⚠️ Server error. Please try again.';
+        console.log('API Response:', text);
+        return;
+      }
 
       if (data.error) {
         document.getElementById('msg1').textContent = '⚠️ ' + data.error;
@@ -289,7 +297,15 @@ async function submit() {
     } else {
       // Tenant: fetch individual data
       const res = await fetch(`${url}?id=${encodeURIComponent(custid)}`);
-      const data = await res.json();
+      let data;
+      try {
+        data = await res.json();
+      } catch (e) {
+        const text = await res.text();
+        document.getElementById('msg1').textContent = '⚠️ Server error. Please try again.';
+        console.log('API Response:', text);
+        return;
+      }
 
       if (data.error) {
         document.getElementById('msg1').textContent = '⚠️ ' + data.error;
@@ -326,7 +342,15 @@ async function verify() {
   try {
     const url = 'https://script.google.com/macros/s/AKfycbzUQeJKLBRCjQG928fnIdJ7Tlg-JR0072ENK-K2_07NBOxWsH9zs0qd5CrcoQW_Mbz3lA/exec';
     const res = await fetch(url, { method: 'POST', body: JSON.stringify({ customerId: custid, otp: otp, action: 'verifyOTP', role: role }) });
-    const data = await res.json();
+    let data;
+    try {
+      data = await res.json();
+    } catch (e) {
+      const text = await res.text();
+      document.getElementById('msg2').textContent = '⚠️ Server error. Please try again.';
+      console.log('API Response:', text);
+      return;
+    }
     if (data.error) { document.getElementById('msg2').textContent = '⚠️ ' + data.error; return; }
     localStorage.setItem('customerId', custid);
     localStorage.setItem('customerName', data.name || 'User');
