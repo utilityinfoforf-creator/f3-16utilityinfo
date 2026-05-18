@@ -84,103 +84,152 @@ input { width: 100%; padding: 12px; margin-bottom: 15px; border: 2px solid #ddd;
 
     <!-- Landlord Dashboard -->
     <div id="landlord-dashboard" style="display: none;">
-      <!-- Tenant Slider Navigation -->
-      <div style="margin-bottom: 30px; padding: 15px; background: #f9f9f9; border-radius: 8px;">
-        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
-          <button onclick="previousTenant()" style="padding: 10px 15px; background: #4c63d2; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; flex: 0 0 auto;">← Prev</button>
-          <select id="tenant-selector" onchange="selectTenant(this.value)" style="flex: 1; padding: 10px; border: 2px solid #ddd; border-radius: 6px; font-size: 14px; background: white;">
-            <option value="">Select a tenant...</option>
-          </select>
-          <button onclick="nextTenant()" style="padding: 10px 15px; background: #4c63d2; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; flex: 0 0 auto;">Next →</button>
+      <!-- Dashboard Summary Statistics -->
+      <div id="summary-stats" style="display: none; margin-bottom: 35px;">
+        <h2 style="font-size: 20px; color: #333; margin: 0 0 20px 0; font-weight: 600;">Dashboard Overview</h2>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 18px;">
+          <!-- Total Tenants -->
+          <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 25px; border-radius: 12px; box-shadow: 0 8px 24px rgba(102, 126, 234, 0.3); transition: all 0.3s ease;">
+            <div style="font-size: 13px; opacity: 0.9; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; font-weight: 600;">👥 Total Tenants</div>
+            <div style="font-size: 36px; font-weight: 700; margin-bottom: 8px;" id="stats-total-tenants">0</div>
+            <div style="font-size: 11px; opacity: 0.8;">Active properties</div>
+          </div>
+
+          <!-- Total Outstanding Balance -->
+          <div style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; padding: 25px; border-radius: 12px; box-shadow: 0 8px 24px rgba(245, 87, 108, 0.3); transition: all 0.3s ease;">
+            <div style="font-size: 13px; opacity: 0.9; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; font-weight: 600;">💰 Total Outstanding</div>
+            <div style="font-size: 36px; font-weight: 700; margin-bottom: 8px;" id="stats-total-balance">৳ 0</div>
+            <div style="font-size: 11px; opacity: 0.8;">All tenants combined</div>
+          </div>
+
+          <!-- Average Balance -->
+          <div style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; padding: 25px; border-radius: 12px; box-shadow: 0 8px 24px rgba(79, 172, 254, 0.3); transition: all 0.3s ease;">
+            <div style="font-size: 13px; opacity: 0.9; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; font-weight: 600;">📊 Avg Per Tenant</div>
+            <div style="font-size: 36px; font-weight: 700; margin-bottom: 8px;" id="stats-avg-balance">৳ 0</div>
+            <div style="font-size: 11px; opacity: 0.8;">Per property average</div>
+          </div>
+
+          <!-- Critical Status Count -->
+          <div style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); color: white; padding: 25px; border-radius: 12px; box-shadow: 0 8px 24px rgba(250, 112, 154, 0.3); transition: all 0.3s ease;">
+            <div style="font-size: 13px; opacity: 0.9; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; font-weight: 600;">⚠️ Critical Status</div>
+            <div style="font-size: 36px; font-weight: 700; margin-bottom: 8px;" id="stats-critical-count">0</div>
+            <div style="font-size: 11px; opacity: 0.8;">Require immediate attention</div>
+          </div>
         </div>
-        <div style="text-align: center; font-size: 12px; color: #666;">Tenant <span id="current-tenant-num">-</span> of <span id="total-tenants-count">0</span></div>
+      </div>
+
+      <!-- Tenant Slider Navigation -->
+      <div style="margin-bottom: 30px; padding: 20px; background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08);">
+        <h2 style="font-size: 16px; color: #333; margin: 0 0 15px 0; font-weight: 600;">Browse Tenants</h2>
+        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 15px;">
+          <button onclick="previousTenant()" style="padding: 12px 18px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; flex: 0 0 auto; transition: all 0.3s ease; box-shadow: 0 4px 8px rgba(102, 126, 234, 0.3);">← Previous</button>
+          <select id="tenant-selector" onchange="selectTenant(this.value)" style="flex: 1; padding: 12px 14px; border: 2px solid #ddd; border-radius: 8px; font-size: 14px; background: white; font-weight: 500; transition: all 0.3s ease;">
+            <option value="">📍 Select a tenant...</option>
+          </select>
+          <button onclick="nextTenant()" style="padding: 12px 18px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; flex: 0 0 auto; transition: all 0.3s ease; box-shadow: 0 4px 8px rgba(102, 126, 234, 0.3);">Next →</button>
+        </div>
+        <div style="text-align: center; font-size: 12px; color: #666; font-weight: 500;">Viewing Tenant <span id="current-tenant-num" style="font-weight: 700; color: #4c63d2;">-</span> of <span id="total-tenants-count" style="font-weight: 700; color: #4c63d2;">0</span></div>
       </div>
 
       <!-- Individual Tenant Details -->
       <div id="tenant-details" style="display: none;">
         <!-- Header with tenant name -->
-        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 10px; margin-bottom: 25px;">
-          <h2 style="margin: 0 0 5px 0; font-size: 28px;" id="selected-tenant-name">-</h2>
-          <p style="margin: 5px 0; font-size: 13px; opacity: 0.9;">ID: <strong id="selected-tenant-id">-</strong></p>
+        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; border-radius: 14px; margin-bottom: 30px; box-shadow: 0 12px 32px rgba(102, 126, 234, 0.4); position: relative; overflow: hidden;">
+          <div style="position: absolute; top: -20px; right: -20px; width: 120px; height: 120px; background: rgba(255,255,255,0.1); border-radius: 50%;"></div>
+          <div style="position: relative;">
+            <h2 style="margin: 0 0 8px 0; font-size: 36px; font-weight: 700;" id="selected-tenant-name">-</h2>
+            <p style="margin: 5px 0 0 0; font-size: 14px; opacity: 0.95;">Customer ID: <strong id="selected-tenant-id">-</strong></p>
+            <div style="margin-top: 12px; display: inline-block; padding: 6px 14px; background: rgba(255,255,255,0.2); border-radius: 20px; font-size: 12px; font-weight: 600;">Status: <span id="tenant-header-status">Active</span></div>
+          </div>
         </div>
 
         <!-- Personal Information Section -->
-        <div style="margin-bottom: 25px;">
-          <h3 style="margin: 0 0 15px 0; color: #333; border-bottom: 2px solid #4c63d2; padding-bottom: 10px;">Personal Information</h3>
+        <div style="margin-bottom: 30px;">
+          <h3 style="margin: 0 0 15px 0; color: #333; font-size: 16px; font-weight: 700; position: relative; padding-bottom: 12px; border-bottom: 3px solid #4c63d2;">👤 Personal Information</h3>
 
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-            <div style="background: #f5f5f5; padding: 12px; border-radius: 8px;">
-              <div style="font-size: 11px; color: #999; margin-bottom: 4px; text-transform: uppercase; font-weight: bold;">Flat Number</div>
-              <div style="font-size: 16px; font-weight: 600; color: #333;" id="selected-flat">N/A</div>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px;">
+            <div style="background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); padding: 16px; border-radius: 10px; border-left: 4px solid #4c63d2; transition: all 0.3s ease;">
+              <div style="font-size: 11px; color: #666; margin-bottom: 6px; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;">Flat Number</div>
+              <div style="font-size: 24px; font-weight: 700; color: #333;" id="selected-flat">N/A</div>
             </div>
-            <div style="background: #f5f5f5; padding: 12px; border-radius: 8px;">
-              <div style="font-size: 11px; color: #999; margin-bottom: 4px; text-transform: uppercase; font-weight: bold;">Email</div>
-              <div style="font-size: 14px; font-weight: 500; color: #333;" id="selected-email">Not Set</div>
+            <div style="background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); padding: 16px; border-radius: 10px; border-left: 4px solid #2e7d32; transition: all 0.3s ease;">
+              <div style="font-size: 11px; color: #666; margin-bottom: 6px; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;">Email</div>
+              <div style="font-size: 13px; font-weight: 600; color: #333; word-break: break-all;" id="selected-email">Not Set</div>
             </div>
-            <div style="background: #f5f5f5; padding: 12px; border-radius: 8px;">
-              <div style="font-size: 11px; color: #999; margin-bottom: 4px; text-transform: uppercase; font-weight: bold;">Last Updated</div>
-              <div style="font-size: 13px; font-weight: 500; color: #333;" id="selected-last-updated">-</div>
+            <div style="background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); padding: 16px; border-radius: 10px; border-left: 4px solid #f57c00; transition: all 0.3s ease;">
+              <div style="font-size: 11px; color: #666; margin-bottom: 6px; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;">Last Updated</div>
+              <div style="font-size: 12px; font-weight: 600; color: #333;" id="selected-last-updated">-</div>
             </div>
-            <div style="background: #f5f5f5; padding: 12px; border-radius: 8px;">
-              <div style="font-size: 11px; color: #999; margin-bottom: 4px; text-transform: uppercase; font-weight: bold;">Notifications</div>
-              <div style="font-size: 14px; font-weight: 600; color: #4c63d2;" id="selected-subscribed">-</div>
+            <div style="background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); padding: 16px; border-radius: 10px; border-left: 4px solid #1976d2; transition: all 0.3s ease;">
+              <div style="font-size: 11px; color: #666; margin-bottom: 6px; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;">Notifications</div>
+              <div style="font-size: 13px; font-weight: 700; color: #4c63d2;" id="selected-subscribed">-</div>
             </div>
           </div>
         </div>
 
         <!-- Billing Information Section -->
-        <div style="margin-bottom: 25px;">
-          <h3 style="margin: 0 0 15px 0; color: #333; border-bottom: 2px solid #f57c00; padding-bottom: 10px;">Billing Information</h3>
+        <div style="margin-bottom: 30px;">
+          <h3 style="margin: 0 0 15px 0; color: #333; font-size: 16px; font-weight: 700; position: relative; padding-bottom: 12px; border-bottom: 3px solid #f57c00;">💳 Billing Information</h3>
 
-          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px;">
-            <div style="background: #f0f4ff; padding: 15px; border-radius: 8px; border-left: 4px solid #4c63d2;">
-              <div style="font-size: 11px; color: #666; margin-bottom: 8px; text-transform: uppercase; font-weight: bold;">💡 Electric Balance</div>
-              <div style="font-size: 26px; font-weight: bold; color: #4c63d2;" id="selected-electric-balance">৳ 0.00</div>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 15px;">
+            <div style="background: linear-gradient(135deg, #f0f4ff 0%, #e8f0ff 100%); padding: 20px; border-radius: 10px; border-left: 5px solid #4c63d2; box-shadow: 0 4px 12px rgba(76, 99, 210, 0.1); transition: all 0.3s ease;">
+              <div style="font-size: 11px; color: #666; margin-bottom: 10px; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;">💡 Electric Balance</div>
+              <div style="font-size: 32px; font-weight: 800; color: #4c63d2; margin-bottom: 4px;" id="selected-electric-balance">৳ 0.00</div>
+              <div style="font-size: 11px; color: #999;">Amount due</div>
             </div>
 
-            <div style="background: #e8f5e9; padding: 15px; border-radius: 8px; border-left: 4px solid #2e7d32;">
-              <div style="font-size: 11px; color: #666; margin-bottom: 8px; text-transform: uppercase; font-weight: bold;">💧 Water Bill Due</div>
-              <div style="font-size: 26px; font-weight: bold; color: #2e7d32;" id="selected-water-bill">৳ 0.00</div>
+            <div style="background: linear-gradient(135deg, #e8f5e9 0%, #f1f8f5 100%); padding: 20px; border-radius: 10px; border-left: 5px solid #2e7d32; box-shadow: 0 4px 12px rgba(46, 125, 50, 0.1); transition: all 0.3s ease;">
+              <div style="font-size: 11px; color: #666; margin-bottom: 10px; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;">💧 Water Bill Due</div>
+              <div style="font-size: 32px; font-weight: 800; color: #2e7d32; margin-bottom: 4px;" id="selected-water-bill">৳ 0.00</div>
+              <div style="font-size: 11px; color: #999;">Monthly charge</div>
             </div>
 
-            <div style="background: #fff3e0; padding: 15px; border-radius: 8px; border-left: 4px solid #f57c00;">
-              <div style="font-size: 11px; color: #666; margin-bottom: 8px; text-transform: uppercase; font-weight: bold;">🔥 Gas Bill Due</div>
-              <div style="font-size: 26px; font-weight: bold; color: #f57c00;" id="selected-gas-bill">৳ 0.00</div>
+            <div style="background: linear-gradient(135deg, #fff3e0 0%, #fff9f0 100%); padding: 20px; border-radius: 10px; border-left: 5px solid #f57c00; box-shadow: 0 4px 12px rgba(245, 124, 0, 0.1); transition: all 0.3s ease;">
+              <div style="font-size: 11px; color: #666; margin-bottom: 10px; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;">🔥 Gas Bill Due</div>
+              <div style="font-size: 32px; font-weight: 800; color: #f57c00; margin-bottom: 4px;" id="selected-gas-bill">৳ 0.00</div>
+              <div style="font-size: 11px; color: #999;">Usage charge</div>
             </div>
           </div>
 
           <!-- Internet Section -->
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px;">
-            <div style="background: #e3f2fd; padding: 15px; border-radius: 8px; border-left: 4px solid #1976d2;">
-              <div style="font-size: 11px; color: #666; margin-bottom: 8px; text-transform: uppercase; font-weight: bold;">🌐 Internet Status</div>
-              <div style="font-size: 18px; font-weight: bold; color: #1976d2;" id="selected-internet-status">Unknown</div>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+            <div style="background: linear-gradient(135deg, #e3f2fd 0%, #f0f8ff 100%); padding: 20px; border-radius: 10px; border-left: 5px solid #1976d2; box-shadow: 0 4px 12px rgba(25, 118, 210, 0.1); transition: all 0.3s ease;">
+              <div style="font-size: 11px; color: #666; margin-bottom: 10px; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;">🌐 Internet Status</div>
+              <div style="font-size: 24px; font-weight: 700; color: #1976d2; margin-bottom: 4px;" id="selected-internet-status">Unknown</div>
+              <div style="font-size: 11px; color: #999;">Connection status</div>
             </div>
 
-            <div style="background: #fce4ec; padding: 15px; border-radius: 8px; border-left: 4px solid #c2185b;">
-              <div style="font-size: 11px; color: #666; margin-bottom: 8px; text-transform: uppercase; font-weight: bold;">📡 Internet Bill Due</div>
-              <div style="font-size: 26px; font-weight: bold; color: #c2185b;" id="selected-internet-bill">৳ 0.00</div>
+            <div style="background: linear-gradient(135deg, #fce4ec 0%, #fff0f5 100%); padding: 20px; border-radius: 10px; border-left: 5px solid #c2185b; box-shadow: 0 4px 12px rgba(194, 24, 91, 0.1); transition: all 0.3s ease;">
+              <div style="font-size: 11px; color: #666; margin-bottom: 10px; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;">📡 Internet Bill Due</div>
+              <div style="font-size: 32px; font-weight: 800; color: #c2185b; margin-bottom: 4px;" id="selected-internet-bill">৳ 0.00</div>
+              <div style="font-size: 11px; color: #999;">Monthly service</div>
             </div>
           </div>
         </div>
 
         <!-- Summary Section -->
-        <div style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; padding: 20px; border-radius: 10px;">
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-            <div>
-              <div style="font-size: 12px; opacity: 0.9; margin-bottom: 5px;">Total Outstanding</div>
-              <div style="font-size: 28px; font-weight: bold;" id="selected-total-due">৳ 0.00</div>
-            </div>
-            <div style="text-align: right;">
-              <div style="font-size: 12px; opacity: 0.9; margin-bottom: 5px;">Status</div>
-              <div style="font-size: 20px; font-weight: bold;" id="selected-status-badge">-</div>
+        <div style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; padding: 30px; border-radius: 14px; box-shadow: 0 12px 32px rgba(245, 87, 108, 0.4); position: relative; overflow: hidden;">
+          <div style="position: absolute; top: -20px; right: -20px; width: 100px; height: 100px; background: rgba(255,255,255,0.1); border-radius: 50%;"></div>
+          <div style="position: relative;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+              <div>
+                <div style="font-size: 12px; opacity: 0.9; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; font-weight: 600;">Total Outstanding</div>
+                <div style="font-size: 40px; font-weight: 800;" id="selected-total-due">৳ 0.00</div>
+              </div>
+              <div style="text-align: right;">
+                <div style="font-size: 12px; opacity: 0.9; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; font-weight: 600;">Payment Status</div>
+                <div style="font-size: 24px; font-weight: 700;" id="selected-status-badge">-</div>
+              </div>
             </div>
           </div>
         </div>
       </div>
 
       <!-- No Tenant Selected -->
-      <div id="no-tenant-selected" style="text-align: center; color: #999; padding: 40px;">
-        <p style="font-size: 16px;">Select a tenant from dropdown to view details</p>
+      <div id="no-tenant-selected" style="text-align: center; color: #999; padding: 60px 20px; background: linear-gradient(135deg, rgba(100,100,100,0.05) 0%, rgba(150,150,150,0.05) 100%); border-radius: 12px; border: 2px dashed #ddd;">
+        <div style="font-size: 48px; margin-bottom: 12px;">📋</div>
+        <p style="font-size: 16px; font-weight: 500; margin: 0;">No tenant selected</p>
+        <p style="font-size: 13px; color: #bbb; margin: 6px 0 0 0;">Choose a tenant from the dropdown to view their details</p>
       </div>
     </div>
 
@@ -281,9 +330,32 @@ async function submit() {
         allTenants = data.customers;
         document.getElementById('total-tenants-count').textContent = data.customers.length;
 
+        // Calculate summary statistics
+        let totalBalance = 0, totalWater = 0, totalGas = 0, totalInternet = 0, criticalCount = 0;
+        data.customers.forEach(tenant => {
+          const balance = parseFloat(tenant.electricBalance) || 0;
+          const water = parseFloat(tenant.waterBillDue) || 0;
+          const gas = parseFloat(tenant.gasBillDue) || 0;
+          const internet = parseFloat(tenant.internetBillDue) || 0;
+          const total = balance + water + gas + internet;
+
+          totalBalance += balance;
+          totalWater += water;
+          totalGas += gas;
+          totalInternet += internet;
+          if (total > 1000) criticalCount++;
+        });
+
+        // Populate summary stats
+        document.getElementById('stats-total-tenants').textContent = data.customers.length;
+        document.getElementById('stats-total-balance').textContent = '৳ ' + (totalBalance + totalWater + totalGas + totalInternet).toLocaleString('bn-BD', { maximumFractionDigits: 0 });
+        document.getElementById('stats-avg-balance').textContent = '৳ ' + ((totalBalance + totalWater + totalGas + totalInternet) / data.customers.length).toLocaleString('bn-BD', { maximumFractionDigits: 0 });
+        document.getElementById('stats-critical-count').textContent = criticalCount;
+        document.getElementById('summary-stats').style.display = 'block';
+
         // Populate tenant selector dropdown
         const selector = document.getElementById('tenant-selector');
-        selector.innerHTML = '<option value="">Select a tenant...</option>';
+        selector.innerHTML = '<option value="">📍 Select a tenant...</option>';
         data.customers.forEach((tenant, index) => {
           const option = document.createElement('option');
           option.value = index;
@@ -292,7 +364,8 @@ async function submit() {
         });
       } else {
         allTenants = [];
-        document.getElementById('no-tenant-selected').innerHTML = '<div style="text-align: center; color: #999; padding: 40px;">No tenants found</div>';
+        document.getElementById('summary-stats').style.display = 'none';
+        document.getElementById('no-tenant-selected').innerHTML = '<div style="text-align: center; color: #999; padding: 60px 20px; background: linear-gradient(135deg, rgba(100,100,100,0.05) 0%, rgba(150,150,150,0.05) 100%); border-radius: 12px; border: 2px dashed #ddd;"><div style="font-size: 48px; margin-bottom: 12px;">📋</div><p style="font-size: 16px; font-weight: 500; margin: 0;">No tenants found</p></div>';
       }
     } else {
       // Tenant: fetch individual data
@@ -415,17 +488,17 @@ function displayTenant(index) {
   const internet = parseFloat(tenant.internetBillDue) || 0;
   const total = electric + water + gas + internet;
 
-  document.getElementById('selected-electric-balance').textContent = '৳ ' + electric.toFixed(2);
-  document.getElementById('selected-water-bill').textContent = '৳ ' + water.toFixed(2);
-  document.getElementById('selected-gas-bill').textContent = '৳ ' + gas.toFixed(2);
+  document.getElementById('selected-electric-balance').textContent = '৳ ' + electric.toLocaleString('bn-BD', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  document.getElementById('selected-water-bill').textContent = '৳ ' + water.toLocaleString('bn-BD', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  document.getElementById('selected-gas-bill').textContent = '৳ ' + gas.toLocaleString('bn-BD', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   document.getElementById('selected-internet-status').textContent = tenant.internetConnected || 'Unknown';
-  document.getElementById('selected-internet-bill').textContent = '৳ ' + internet.toFixed(2);
+  document.getElementById('selected-internet-bill').textContent = '৳ ' + internet.toLocaleString('bn-BD', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
   // Summary
-  document.getElementById('selected-total-due').textContent = '৳ ' + total.toFixed(2);
+  document.getElementById('selected-total-due').textContent = '৳ ' + total.toLocaleString('bn-BD', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
   // Status Badge
-  let statusText = '✓ Good';
+  let statusText = '✓ Good Standing';
   let statusColor = '#10b981';
   if (total > 1000) {
     statusText = '⚠️ Critical';
@@ -437,6 +510,11 @@ function displayTenant(index) {
   const badge = document.getElementById('selected-status-badge');
   badge.textContent = statusText;
   badge.style.color = statusColor;
+
+  // Header status badge
+  const headerStatus = document.getElementById('tenant-header-status');
+  headerStatus.textContent = statusText;
+  headerStatus.style.color = 'inherit';
 
   document.getElementById('tenant-details').style.display = 'block';
   document.getElementById('no-tenant-selected').style.display = 'none';
