@@ -287,21 +287,26 @@ input:focus { outline: none; border-color: #667eea; background: white; box-shado
         </div>
 
         <!-- Summary Section -->
-        <div style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; padding: 40px; border-radius: 16px; box-shadow: 0 12px 32px rgba(245, 87, 108, 0.4); position: relative; overflow: hidden;">
-          <div style="position: absolute; top: -20px; right: -20px; width: 150px; height: 150px; background: rgba(255,255,255,0.1); border-radius: 50%;"></div>
+        <div style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; padding: 50px; border-radius: 20px; box-shadow: 0 16px 40px rgba(245, 87, 108, 0.4); position: relative; overflow: hidden; margin-bottom: 40px;">
+          <div style="position: absolute; top: -40px; right: -40px; width: 180px; height: 180px; background: rgba(255,255,255,0.15); border-radius: 50%;"></div>
+          <div style="position: absolute; bottom: -50px; left: -50px; width: 200px; height: 200px; background: rgba(255,255,255,0.08); border-radius: 50%;"></div>
           <div style="position: relative;">
-            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 30px;">
-              <div>
-                <div style="font-size: 13px; opacity: 0.9; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px; font-weight: 600;">Total Outstanding</div>
-                <div style="font-size: 48px; font-weight: 800;" id="selected-total-due">৳ 0.00</div>
+            <h3 style="margin: 0 0 32px 0; font-size: 24px; font-weight: 800; text-align: center;">Financial Summary</h3>
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 40px;">
+              <div style="text-align: center;">
+                <div style="font-size: 14px; opacity: 0.95; margin-bottom: 14px; text-transform: uppercase; letter-spacing: 1.2px; font-weight: 700;">Total Outstanding</div>
+                <div style="font-size: 52px; font-weight: 900; margin-bottom: 8px;" id="selected-total-due">৳ 0.00</div>
+                <div style="font-size: 12px; opacity: 0.85; font-weight: 600;">All services combined</div>
               </div>
-              <div>
-                <div style="font-size: 13px; opacity: 0.9; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px; font-weight: 600;">Payment Status</div>
-                <div style="font-size: 28px; font-weight: 700;" id="selected-status-badge">-</div>
+              <div style="text-align: center; border-left: 2px solid rgba(255,255,255,0.3); border-right: 2px solid rgba(255,255,255,0.3);">
+                <div style="font-size: 14px; opacity: 0.95; margin-bottom: 14px; text-transform: uppercase; letter-spacing: 1.2px; font-weight: 700;">Payment Status</div>
+                <div style="font-size: 36px; font-weight: 800; margin-bottom: 8px;" id="selected-status-badge">-</div>
+                <div style="font-size: 12px; opacity: 0.85; font-weight: 600;">Current standing</div>
               </div>
-              <div style="text-align: right;">
-                <div style="font-size: 13px; opacity: 0.9; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px; font-weight: 600;">Account Health</div>
-                <div style="font-size: 28px; font-weight: 700;">✓ Active</div>
+              <div style="text-align: center;">
+                <div style="font-size: 14px; opacity: 0.95; margin-bottom: 14px; text-transform: uppercase; letter-spacing: 1.2px; font-weight: 700;">Account Status</div>
+                <div style="font-size: 36px; font-weight: 800; margin-bottom: 8px;">✓ Active</div>
+                <div style="font-size: 12px; opacity: 0.85; font-weight: 600;">All services active</div>
               </div>
             </div>
           </div>
@@ -309,14 +314,14 @@ input:focus { outline: none; border-color: #667eea; background: white; box-shado
       </div>
 
       <!-- No Tenant Selected -->
-      <div id="no-tenant-selected" style="text-align: center; color: #999; padding: 80px 40px; background: linear-gradient(135deg, rgba(100,100,100,0.05) 0%, rgba(150,150,150,0.05) 100%); border-radius: 14px; border: 2px dashed #ddd;">
-        <div style="font-size: 64px; margin-bottom: 16px;">📋</div>
-        <p style="font-size: 18px; font-weight: 500; margin: 0;">No tenant selected</p>
-        <p style="font-size: 14px; color: #bbb; margin: 10px 0 0 0;">Choose a tenant from the dropdown to view their complete profile and billing details</p>
+      <div id="no-tenant-selected" style="text-align: center; color: #999; padding: 100px 40px; background: linear-gradient(135deg, rgba(100,100,100,0.03) 0%, rgba(150,150,150,0.03) 100%); border-radius: 18px; border: 2px dashed rgba(102, 126, 234, 0.2);">
+        <div style="font-size: 80px; margin-bottom: 24px; opacity: 0.6;">📋</div>
+        <p style="font-size: 22px; font-weight: 600; margin: 0; color: #666;">No Tenant Selected</p>
+        <p style="font-size: 15px; color: #aaa; margin: 16px 0 0 0; line-height: 1.6;">Choose a tenant from the dropdown menu to view their complete profile, billing details, and account information</p>
       </div>
     </div>
 
-    <button onclick="logout()" style="width: 100%; margin-top: 20px; padding: 12px; background: #e53935; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold;" data-en="Logout" data-bn="লগ আউট">Logout</button>
+    <button onclick="logout()" style="width: 100%; margin-top: 40px; padding: 16px; background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%); color: white; border: none; border-radius: 12px; cursor: pointer; font-weight: 800; font-size: 16px; transition: all 0.3s ease; box-shadow: 0 8px 20px rgba(255, 107, 107, 0.3);" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 12px 28px rgba(255, 107, 107, 0.4)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 8px 20px rgba(255, 107, 107, 0.3)'" data-en="🚪 Logout" data-bn="🚪 লগ আউট">🚪 Logout</button>
   </div>
 </div>
 
@@ -556,10 +561,13 @@ function displayTenant(index) {
 
   const tenant = allTenants[index];
 
-  // Personal Information
+  // Header information
   document.getElementById('selected-tenant-name').textContent = tenant.name || '-';
-  document.getElementById('selected-tenant-name-info').textContent = tenant.name || 'N/A';
   document.getElementById('selected-tenant-id').textContent = tenant.id || '-';
+  document.getElementById('selected-flat-header').textContent = tenant.flatNumber || 'N/A';
+
+  // Personal Information
+  document.getElementById('selected-tenant-name-info').textContent = tenant.name || 'N/A';
   document.getElementById('selected-flat').textContent = tenant.flatNumber || 'N/A';
   document.getElementById('selected-email').textContent = tenant.email || 'Not Set';
   document.getElementById('selected-last-updated').textContent = tenant.lastUpdated || '-';
