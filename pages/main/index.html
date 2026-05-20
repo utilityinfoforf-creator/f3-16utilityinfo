@@ -51,30 +51,40 @@ input:focus { outline: none; border-color: #667eea; background: white; box-shado
 
   <div id="screen2" class="hidden">
     <div style="text-align: center; margin-bottom: 30px;">
-      <div style="font-size: 64px; margin-bottom: 15px;">🔑</div>
-      <h1><span data-en="Enter Your ID" data-bn="আপনার আইডি প্রবেশ করুন">Enter Your ID</span></h1>
-      <p data-en="Please enter your customer ID to continue" data-bn="চালিয়ে যেতে আপনার গ্রাহক আইডি প্রবেশ করুন">Please enter your customer ID to continue</p>
+      <div style="font-size: 64px; margin-bottom: 15px;">📱</div>
+      <h1><span data-en="Enter Your Details" data-bn="আপনার বিবরণ প্রবেশ করুন">Enter Your Details</span></h1>
+      <p data-en="We'll send OTP via WhatsApp" data-bn="আমরা হোয়াটসঅ্যাপের মাধ্যমে ওটিপি পাঠাব">We'll send OTP via WhatsApp</p>
     </div>
-    <div style="background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%); padding: 25px; border-radius: 16px; margin-bottom: 25px;">
+    <div style="background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%); padding: 30px; border-radius: 16px; margin-bottom: 25px;">
       <label style="display: block; font-size: 13px; font-weight: 600; color: #667eea; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px;" data-en="Customer ID" data-bn="গ্রাহক আইডি">Customer ID</label>
-      <input id="custid" type="text" placeholder="Enter ID" data-placeholder-en="Enter ID" data-placeholder-bn="আইডি প্রবেশ করুন" style="margin-bottom: 0;">
+      <input id="custid" type="text" placeholder="Enter ID" data-placeholder-en="Enter ID" data-placeholder-bn="আইডি প্রবেশ করুন" style="margin-bottom: 20px;">
+
+      <label style="display: block; font-size: 13px; font-weight: 600; color: #667eea; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px;" data-en="WhatsApp Number" data-bn="হোয়াটসঅ্যাপ নম্বর">WhatsApp Number</label>
+      <input id="whatsapp" type="text" placeholder="+880..." data-placeholder-en="+880..." data-placeholder-bn="+880..." style="margin-bottom: 0;">
     </div>
-    <button onclick="submit()" style="width: 100%; margin-bottom: 12px;" data-en="Continue" data-bn="চালিয়ে যান">Continue</button>
+    <button onclick="submit()" style="width: 100%; margin-bottom: 12px;" data-en="Send OTP" data-bn="ওটিপি পাঠান">Send OTP</button>
     <button onclick="back()" style="width: 100%; background: linear-gradient(135deg, #c3cfe2 0%, #c3cfe2 100%); color: #666; box-shadow: 0 8px 20px rgba(0,0,0,0.1);" data-en="Back" data-bn="ফিরে যান">Back</button>
     <p id="msg1" style="color: #ff6b6b; margin-top: 15px; font-weight: 600; text-align: center; font-size: 14px;"></p>
   </div>
 
   <div id="screen3" class="hidden">
     <div style="text-align: center; margin-bottom: 30px;">
-      <div style="font-size: 64px; margin-bottom: 15px;">✓</div>
-      <h1><span data-en="Verify Code" data-bn="কোড যাচাই করুন">Verify Code</span></h1>
-      <p data-en="Enter the 6-digit code sent to your email" data-bn="আপনার ইমেইলে পাঠানো ৬-সংখ্যার কোড প্রবেশ করুন">Enter the 6-digit code sent to your email</p>
+      <div style="font-size: 64px; margin-bottom: 15px;">💬</div>
+      <h1><span data-en="WhatsApp Verification" data-bn="হোয়াটসঅ্যাপ যাচাইকরণ">WhatsApp Verification</span></h1>
+      <p data-en="Enter the 6-digit code sent via WhatsApp" data-bn="হোয়াটসঅ্যাপের মাধ্যমে পাঠানো ৬-সংখ্যার কোড প্রবেশ করুন">Enter the 6-digit code sent via WhatsApp</p>
     </div>
-    <div style="background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%); padding: 25px; border-radius: 16px; margin-bottom: 25px;">
+    <div style="background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%); padding: 30px; border-radius: 16px; margin-bottom: 25px;">
+      <div style="background: white; padding: 20px; border-radius: 12px; margin-bottom: 20px; border-left: 4px solid #25d366; display: flex; align-items: center; gap: 15px;">
+        <div style="font-size: 32px;">📱</div>
+        <div>
+          <div style="font-size: 13px; color: #666; font-weight: 600;">WhatsApp</div>
+          <div style="font-size: 15px; color: #333; font-weight: 700;" id="whatsapp-display">-</div>
+        </div>
+      </div>
       <label style="display: block; font-size: 13px; font-weight: 600; color: #667eea; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px;" data-en="Verification Code" data-bn="যাচাইকরণ কোড">Verification Code</label>
-      <input id="otp" type="text" placeholder="000000" maxlength="6" style="margin-bottom: 0; font-size: 24px; letter-spacing: 8px; text-align: center; font-weight: 700;">
+      <input id="otp" type="text" placeholder="000000" maxlength="6" style="margin-bottom: 0; font-size: 28px; letter-spacing: 12px; text-align: center; font-weight: 800; letter-spacing: 12px;">
     </div>
-    <button onclick="verify()" style="width: 100%; margin-bottom: 12px;" data-en="Verify" data-bn="যাচাই করুন">Verify</button>
+    <button onclick="verify()" style="width: 100%; margin-bottom: 12px;" data-en="Verify OTP" data-bn="ওটিপি যাচাই করুন">Verify OTP</button>
     <button onclick="back()" style="width: 100%; background: linear-gradient(135deg, #c3cfe2 0%, #c3cfe2 100%); color: #666; box-shadow: 0 8px 20px rgba(0,0,0,0.1);" data-en="Back" data-bn="ফিরে যান">Back</button>
     <p id="msg2" style="color: #ff6b6b; margin-top: 15px; font-weight: 600; text-align: center; font-size: 14px;"></p>
   </div>
@@ -363,64 +373,140 @@ function updateText() {
 }
 
 function pick(r) { role = r; show(2); }
-function back() { show(1); }
+function back() {
+  document.getElementById('msg1').textContent = '';
+  document.getElementById('msg2').textContent = '';
+  show(1);
+}
 function show(n) {
   document.getElementById('screen1').className = n === 1 ? '' : 'hidden';
   document.getElementById('screen2').className = n === 2 ? '' : 'hidden';
   document.getElementById('screen3').className = n === 3 ? '' : 'hidden';
   document.getElementById('screen4').className = n === 4 ? '' : 'hidden';
+
+  if (n === 3) {
+    const whatsapp = localStorage.getItem('whatsappNumber') || '-';
+    document.getElementById('whatsapp-display').textContent = whatsapp;
+  }
 }
 
 async function submit() {
   custid = document.getElementById('custid').value.trim();
+  const whatsapp = document.getElementById('whatsapp').value.trim();
+
   if (!custid) {
-    document.getElementById('msg1').textContent = trans[lang]['Enter ID'];
+    document.getElementById('msg1').textContent = '⚠️ Please enter Customer ID';
+    return;
+  }
+  if (!whatsapp) {
+    document.getElementById('msg1').textContent = '⚠️ Please enter WhatsApp number';
     return;
   }
 
-  // Landlord access restriction - only authorized ID allowed
+  // Landlord access restriction
   if (role === 'landlord' && custid !== 'RAIHAN5F') {
     document.getElementById('msg1').textContent = '⚠️ Invalid credentials. Please check your Customer ID.';
     return;
   }
 
   try {
-    // Fetch data from backend
     const url = 'https://script.google.com/macros/s/AKfycbzUQeJKLBRCjQG928fnIdJ7Tlg-JR0072ENK-K2_07NBOxWsH9zs0qd5CrcoQW_Mbz3lA/exec';
 
+    // Send OTP via WhatsApp
+    const res = await fetch(url, {
+      method: 'POST',
+      body: JSON.stringify({
+        action: 'sendWhatsAppOTP',
+        customerId: custid,
+        whatsapp: whatsapp,
+        role: role
+      })
+    });
+
+    let data;
+    try {
+      data = await res.json();
+    } catch (e) {
+      const text = await res.text();
+      document.getElementById('msg1').textContent = '⚠️ Server error. Please try again.';
+      console.log('API Response:', text);
+      return;
+    }
+
+    if (data.error) {
+      document.getElementById('msg1').textContent = '⚠️ ' + data.error;
+      return;
+    }
+
+    // Store WhatsApp number for verification
+    localStorage.setItem('whatsappNumber', whatsapp);
+    document.getElementById('msg1').textContent = '';
+    show(3);
+  } catch (e) {
+    document.getElementById('msg1').textContent = '⚠️ Error: ' + e.message;
+  }
+}
+
+async function verify() {
+  const otp = document.getElementById('otp').value;
+  if (otp.length !== 6) {
+    document.getElementById('msg2').textContent = '⚠️ Enter 6 digits';
+    return;
+  }
+
+  try {
+    const url = 'https://script.google.com/macros/s/AKfycbzUQeJKLBRCjQG928fnIdJ7Tlg-JR0072ENK-K2_07NBOxWsH9zs0qd5CrcoQW_Mbz3lA/exec';
+    const res = await fetch(url, {
+      method: 'POST',
+      body: JSON.stringify({
+        customerId: custid,
+        otp: otp,
+        action: 'verifyWhatsAppOTP',
+        role: role
+      })
+    });
+
+    let data;
+    try {
+      data = await res.json();
+    } catch (e) {
+      const text = await res.text();
+      document.getElementById('msg2').textContent = '⚠️ Server error. Please try again.';
+      console.log('API Response:', text);
+      return;
+    }
+
+    if (data.error) {
+      document.getElementById('msg2').textContent = '⚠️ ' + data.error;
+      return;
+    }
+
+    localStorage.setItem('customerId', custid);
+
     if (role === 'landlord') {
-      // Landlord: fetch all tenants
-      const res = await fetch(`${url}?action=export`);
-      let data;
+      // Fetch landlord data
+      const exportRes = await fetch(`${url}?action=export`);
+      let exportData;
       try {
-        data = await res.json();
+        exportData = await exportRes.json();
       } catch (e) {
-        const text = await res.text();
-        document.getElementById('msg1').textContent = '⚠️ Server error. Please try again.';
+        const text = await exportRes.text();
+        document.getElementById('msg2').textContent = '⚠️ Server error. Please try again.';
         console.log('API Response:', text);
         return;
       }
 
-      if (data.error) {
-        document.getElementById('msg1').textContent = '⚠️ ' + data.error;
-        return;
-      }
-
-      localStorage.setItem('customerId', custid);
       localStorage.setItem('customerName', 'Landlord - ' + custid);
       document.getElementById('name').textContent = 'Landlord - ' + custid;
-
-      // Show landlord dashboard
       document.getElementById('tenant-dashboard').style.display = 'none';
       document.getElementById('landlord-dashboard').style.display = 'block';
 
-      if (data.customers && data.customers.length > 0) {
-        allTenants = data.customers;
-        document.getElementById('total-tenants-count').textContent = data.customers.length;
+      if (exportData.customers && exportData.customers.length > 0) {
+        allTenants = exportData.customers;
+        document.getElementById('total-tenants-count').textContent = exportData.customers.length;
 
-        // Calculate summary statistics
         let totalBalance = 0, totalWater = 0, totalGas = 0, totalInternet = 0, criticalCount = 0;
-        data.customers.forEach(tenant => {
+        exportData.customers.forEach(tenant => {
           const balance = parseFloat(tenant.electricBalance) || 0;
           const water = parseFloat(tenant.waterBillDue) || 0;
           const gas = parseFloat(tenant.gasBillDue) || 0;
@@ -434,97 +520,56 @@ async function submit() {
           if (total > 1000) criticalCount++;
         });
 
-        // Populate summary stats
-        document.getElementById('stats-total-tenants').textContent = data.customers.length;
+        document.getElementById('stats-total-tenants').textContent = exportData.customers.length;
         document.getElementById('stats-total-balance').textContent = '৳ ' + (totalBalance + totalWater + totalGas + totalInternet).toLocaleString('bn-BD', { maximumFractionDigits: 0 });
-        document.getElementById('stats-avg-balance').textContent = '৳ ' + ((totalBalance + totalWater + totalGas + totalInternet) / data.customers.length).toLocaleString('bn-BD', { maximumFractionDigits: 0 });
+        document.getElementById('stats-avg-balance').textContent = '৳ ' + ((totalBalance + totalWater + totalGas + totalInternet) / exportData.customers.length).toLocaleString('bn-BD', { maximumFractionDigits: 0 });
         document.getElementById('stats-critical-count').textContent = criticalCount;
         document.getElementById('summary-stats').style.display = 'block';
 
-        // Populate tenant selector dropdown
         const selector = document.getElementById('tenant-selector');
         selector.innerHTML = '<option value="">📍 Select a tenant...</option>';
-        data.customers.forEach((tenant, index) => {
+        exportData.customers.forEach((tenant, index) => {
           const option = document.createElement('option');
           option.value = index;
           option.textContent = `${tenant.name} (${tenant.id})`;
           selector.appendChild(option);
         });
-      } else {
-        allTenants = [];
-        document.getElementById('summary-stats').style.display = 'none';
-        document.getElementById('no-tenant-selected').innerHTML = '<div style="text-align: center; color: #999; padding: 60px 20px; background: linear-gradient(135deg, rgba(100,100,100,0.05) 0%, rgba(150,150,150,0.05) 100%); border-radius: 12px; border: 2px dashed #ddd;"><div style="font-size: 48px; margin-bottom: 12px;">📋</div><p style="font-size: 16px; font-weight: 500; margin: 0;">No tenants found</p></div>';
       }
     } else {
-      // Tenant: fetch individual data
-      const res = await fetch(`${url}?id=${encodeURIComponent(custid)}`);
-      let data;
+      // Fetch tenant data
+      const tenantRes = await fetch(`${url}?id=${encodeURIComponent(custid)}`);
+      let tenantData;
       try {
-        data = await res.json();
+        tenantData = await tenantRes.json();
       } catch (e) {
-        const text = await res.text();
-        document.getElementById('msg1').textContent = '⚠️ Server error. Please try again.';
+        const text = await tenantRes.text();
+        document.getElementById('msg2').textContent = '⚠️ Server error. Please try again.';
         console.log('API Response:', text);
         return;
       }
 
-      if (data.error) {
-        document.getElementById('msg1').textContent = '⚠️ ' + data.error;
-        return;
-      }
-
-      localStorage.setItem('customerId', custid);
-      localStorage.setItem('customerName', data.name || 'Customer ' + custid);
-
-      // Show tenant dashboard
+      localStorage.setItem('customerName', tenantData.name || 'Customer ' + custid);
+      document.getElementById('name').textContent = tenantData.name || 'Customer ' + custid;
       document.getElementById('tenant-dashboard').style.display = 'block';
       document.getElementById('landlord-dashboard').style.display = 'none';
 
-      document.getElementById('name').textContent = data.name || 'Customer ' + custid;
-      document.getElementById('electric-balance').textContent = '৳ ' + (data.electricBalance || '0.00');
-      document.getElementById('water-bill').textContent = '৳ ' + (data.waterBillDue || '0.00');
-      document.getElementById('gas-bill').textContent = '৳ ' + (data.gasBillDue || '0.00');
-      document.getElementById('status').textContent = data.internetConnected || 'Active';
+      document.getElementById('electric-balance').textContent = '৳ ' + (tenantData.electricBalance || '0.00');
+      document.getElementById('water-bill').textContent = '৳ ' + (tenantData.waterBillDue || '0.00');
+      document.getElementById('gas-bill').textContent = '৳ ' + (tenantData.gasBillDue || '0.00');
+      document.getElementById('status').textContent = tenantData.internetConnected || 'Active';
     }
 
     show(4);
   } catch (e) {
-    document.getElementById('msg1').textContent = trans[lang]['Error:'] + e.message;
-  }
-}
-
-async function verify() {
-  const otp = document.getElementById('otp').value;
-  if (otp.length !== 6) {
-    document.getElementById('msg2').textContent = trans[lang]['Enter 6 digits'];
-    return;
-  }
-
-  try {
-    const url = 'https://script.google.com/macros/s/AKfycbzUQeJKLBRCjQG928fnIdJ7Tlg-JR0072ENK-K2_07NBOxWsH9zs0qd5CrcoQW_Mbz3lA/exec';
-    const res = await fetch(url, { method: 'POST', body: JSON.stringify({ customerId: custid, otp: otp, action: 'verifyOTP', role: role }) });
-    let data;
-    try {
-      data = await res.json();
-    } catch (e) {
-      const text = await res.text();
-      document.getElementById('msg2').textContent = '⚠️ Server error. Please try again.';
-      console.log('API Response:', text);
-      return;
-    }
-    if (data.error) { document.getElementById('msg2').textContent = '⚠️ ' + data.error; return; }
-    localStorage.setItem('customerId', custid);
-    localStorage.setItem('customerName', data.name || 'User');
-    document.getElementById('name').textContent = data.name || 'User';
-    show(4);
-  } catch (e) {
-    document.getElementById('msg2').textContent = trans[lang]['Error:'] + e.message;
+    document.getElementById('msg2').textContent = '⚠️ Error: ' + e.message;
   }
 }
 
 function logout() {
   localStorage.removeItem('customerId');
+  localStorage.removeItem('whatsappNumber');
   document.getElementById('custid').value = '';
+  document.getElementById('whatsapp').value = '';
   document.getElementById('otp').value = '';
   allTenants = [];
   currentTenantIndex = -1;
