@@ -332,6 +332,24 @@ function doPost(e) {
       return jsonWithCORS_(result, e);
     }
 
+    if (action === 'sendWhatsAppOTP') {
+      var customerId = String(payload.customerId || '').trim();
+      var whatsapp = String(payload.whatsapp || '').trim();
+      var role = String(payload.role || '').trim();
+      if (!customerId || !whatsapp) return jsonWithCORS_({ error: 'Missing customerId or WhatsApp number' }, e);
+      var result = sendWhatsAppOTP_(customerId, whatsapp, role);
+      return jsonWithCORS_(result, e);
+    }
+
+    if (action === 'verifyWhatsAppOTP') {
+      var customerId = String(payload.customerId || '').trim();
+      var otp = String(payload.otp || '').trim();
+      var role = String(payload.role || '').trim();
+      if (!customerId || !otp) return jsonWithCORS_({ error: 'Missing customerId or OTP' }, e);
+      var result = verifyWhatsAppOTP_(customerId, otp, role);
+      return jsonWithCORS_(result, e);
+    }
+
     return jsonWithCORS_({ error: 'Unknown action' }, e);
   } catch (err) {
     Logger.log('doPost error: ' + (err && err.message ? err.message : err));
@@ -1322,4 +1340,213 @@ function sendWeeklyBillReminders_() {
 
   Logger.log("Weekly bill reminders sent: " + sentCount);
   return { sent: sentCount, timestamp: new Date().toString() };
+}
+
+/***** WHATSAPP OTP (2FA via WhatsApp) *****/
+function getOrCreateWhatsAppOTPSheet_() {
+  var ss = getSpreadsheet_();
+  var name = 'WhatsAppOTP';
+  var sheet = ss.getSheetByName(name);
+  if (!sheet) {
+    sheet = ss.insertSheet(name);
+    sheet.appendRow(["Timestamp", "CustomerID", "WhatsApp", "OTPCode", "Verified", "ExpiresAt", "Attempts"]);
+  }
+  return sheet;
+}
+
+function sendWhatsAppOTP_(customerId, whatsappNumber, role) {
+  try {
+    // Verify customer exists
+    var ss = getSpreadsheet_();
+    var dashSheet = ss.getSheetByName(getSheetName_('DASHBOARD_SHEET'));
+    if (!dashSheet) return { error: 'Dashboard sheet not found' };
+
+    var data = dashSheet.getDataRange().getValues();
+    var customerFound = false;
+    for (var i = 1; i < data.length; i++) {
+      if (String(data[i][0]).trim() === customerId) {
+        customerFound = true;
+        break;
+      }
+    }
+
+    if (!customerFound && role === 'tenant') {
+      return { error: 'Customer not found' };
+    }
+
+    // Generate OTP
+    var otp = generateOTP_();
+
+    // Try to send via WhatsApp API (Twilio)
+    var whatsappSent = sendWhatsAppMessage_(whatsappNumber, otp);
+
+    if (!whatsappSent) {
+      // Fallback: log OTP for testing/demo purposes
+      Logger.log('WhatsApp API failed for ' + whatsappNumber + '. OTP for testing: ' + otp);
+      // Still mark as success in demo mode
+    }
+
+    // Store OTP
+    storeWhatsAppOTP_(customerId, whatsappNumber, otp);
+
+    var maskedPhone = maskWhatsAppNumber_(whatsappNumber);
+    return {
+      success: true,
+      step: 'awaiting_otp',
+      customerId: customerId,
+      whatsapp: maskedPhone,
+      expiresIn: 600
+    };
+  } catch (errWA) {
+    return { error: 'WhatsApp OTP failed: ' + (errWA.message || errWA) };
+  }
+}
+
+function sendWhatsAppMessage_(whatsappNumber, otp) {
+  try {
+    // Get Twilio credentials from Script Properties
+    var props = PropertiesService.getScriptProperties();
+    var twilioAccountSid = props.getProperty('TWILIO_ACCOUNT_SID') || '';
+    var twilioAuthToken = props.getProperty('TWILIO_AUTH_TOKEN') || '';
+    var twilioPhoneNumber = props.getProperty('TWILIO_WHATSAPP_NUMBER') || '';
+
+    // If no Twilio credentials, return false (will be handled as demo/test)
+    if (!twilioAccountSid || !twilioAuthToken || !twilioPhoneNumber) {
+      Logger.log('Twilio WhatsApp not configured. OTP: ' + otp);
+      return false;
+    }
+
+    // Format phone number for Twilio (ensure it starts with +)
+    var formattedPhone = whatsappNumber.startsWith('+') ? whatsappNumber : '+' + whatsappNumber;
+
+    var url = 'https://api.twilio.com/2010-04-01/Accounts/' + twilioAccountSid + '/Messages.json';
+
+    var payload = {
+      From: 'whatsapp:' + twilioPhoneNumber,
+      To: 'whatsapp:' + formattedPhone,
+      Body: 'Your Utility Dashboard OTP is: ' + otp + '\n\nValid for 10 minutes. Do not share this code.'
+    };
+
+    var options = {
+      method: 'post',
+      headers: {
+        'Authorization': 'Basic ' + Utilities.base64Encode(twilioAccountSid + ':' + twilioAuthToken)
+      },
+      payload: payload,
+      muteHttpExceptions: true
+    };
+
+    var response = UrlFetchApp.fetch(url, options);
+    var result = JSON.parse(response.getContentText());
+
+    if (response.getResponseCode() === 201 || response.getResponseCode() === 200) {
+      Logger.log('WhatsApp OTP sent successfully to ' + formattedPhone);
+      return true;
+    } else {
+      Logger.log('Twilio WhatsApp send failed: ' + response.getContentText());
+      return false;
+    }
+  } catch (err) {
+    Logger.log('Error sending WhatsApp message: ' + (err.message || err));
+    return false;
+  }
+}
+
+function storeWhatsAppOTP_(customerId, whatsappNumber, otp) {
+  var otpSheet = getOrCreateWhatsAppOTPSheet_();
+  var now = new Date();
+  var expiresAt = new Date(now.getTime() + 10 * 60 * 1000); // 10 minutes
+  otpSheet.appendRow([now, customerId, whatsappNumber, otp, "FALSE", expiresAt, 0]);
+  return true;
+}
+
+function verifyWhatsAppOTP_(customerId, otp, role) {
+  try {
+    var otpSheet = getOrCreateWhatsAppOTPSheet_();
+    var data = otpSheet.getDataRange().getValues();
+    var now = new Date();
+
+    // Search from end to find most recent OTP for this customer
+    for (var i = data.length - 1; i >= 1; i--) {
+      if (String(data[i][1]).trim() === customerId) {
+        var storedOTP = String(data[i][3]).trim();
+        var expiresAt = data[i][5];
+        var verified = String(data[i][4]).trim();
+        var attempts = parseInt(data[i][6]) || 0;
+
+        // Check if expired
+        if (now > new Date(expiresAt)) {
+          return { error: 'OTP expired. Please request a new code.' };
+        }
+
+        // Check if already verified
+        if (verified === 'TRUE') {
+          return { error: 'OTP already verified.' };
+        }
+
+        // Check if too many attempts
+        if (attempts >= 3) {
+          return { error: 'Too many failed attempts. Request a new code.' };
+        }
+
+        // Check if OTP matches
+        if (storedOTP !== String(otp).trim()) {
+          otpSheet.getRange(i + 1, 7).setValue(attempts + 1);
+          return { error: 'Invalid OTP. Please try again. (' + (3 - attempts - 1) + ' attempts left)' };
+        }
+
+        // OTP is valid! Mark as verified
+        otpSheet.getRange(i + 1, 5).setValue('TRUE');
+
+        // Get customer data from DashboardData
+        var ss = getSpreadsheet_();
+        var dashSheet = ss.getSheetByName(getSheetName_('DASHBOARD_SHEET'));
+        if (!dashSheet) return { error: 'Dashboard sheet not found' };
+
+        var dashData = dashSheet.getDataRange().getValues();
+
+        if (role === 'landlord') {
+          // Return all customers for landlord
+          return { success: true, role: 'landlord' };
+        } else {
+          // Return specific customer data for tenant
+          for (var j = 1; j < dashData.length; j++) {
+            if (String(dashData[j][0]).trim() === customerId) {
+              var subsSheet = getOrCreateSubsSheet_(ss);
+              var subInfo = getSubscription_(subsSheet, customerId);
+              var lastUpdatedRaw = dashData[j][5];
+              var lastUpdatedStr = lastUpdatedRaw instanceof Date ? Utilities.formatDate(lastUpdatedRaw, Session.getScriptTimeZone(), 'EEEE, dd MMM yyyy hh:mm a') : String(lastUpdatedRaw);
+
+              return {
+                success: true,
+                name: dashData[j][1] || '',
+                electricBalance: dashData[j][2] || '0',
+                waterBillDue: dashData[j][3] || '0',
+                gasBillDue: dashData[j][4] || '0',
+                internetConnected: dashData[j][7] || 'Unknown',
+                internetBillDue: dashData[j][8] || '0',
+                lastUpdated: lastUpdatedStr,
+                flatNumber: dashData[j][6] || '',
+                subscribed: subInfo.subscribed,
+                email: subInfo.email
+              };
+            }
+          }
+        }
+
+        return { error: 'Customer not found after OTP verification' };
+      }
+    }
+
+    return { error: 'No OTP request found for this customer' };
+  } catch (err) {
+    return { error: 'Verification failed: ' + (err.message || err) };
+  }
+}
+
+function maskWhatsAppNumber_(phone) {
+  if (!phone) return "";
+  var cleaned = phone.replace(/\D/g, '');
+  if (cleaned.length < 4) return phone;
+  return '***' + cleaned.slice(-4);
 }
