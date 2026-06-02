@@ -1,0 +1,890 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>F3-16 Utility Dashboard</title>
+  <style>
+    /* ============================================ */
+    /* PROFESSIONAL DESIGN SYSTEM */
+    /* ============================================ */
+    
+    * { 
+      margin: 0; 
+      padding: 0; 
+      box-sizing: border-box; 
+    }
+    
+    html, body { 
+      height: 100%; 
+      width: 100%; 
+    }
+    
+    body { 
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+      min-height: 100vh; 
+      display: flex; 
+      flex-direction: column; 
+      align-items: center; 
+      justify-content: center; 
+      padding: 20px;
+      color: #2c3e50;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+    
+    /* Language Selector */
+    .lang-selector { 
+      position: fixed; 
+      top: 24px; 
+      right: 28px; 
+      display: flex; 
+      gap: 12px;
+      z-index: 100;
+    }
+    
+    .lang-btn { 
+      padding: 12px 20px; 
+      border: 2px solid transparent;
+      background: rgba(255, 255, 255, 0.15); 
+      color: white; 
+      border-radius: 10px; 
+      cursor: pointer; 
+      font-weight: 700;
+      font-size: 13px;
+      letter-spacing: 0.5px;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      backdrop-filter: blur(10px);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+    }
+    
+    .lang-btn.active { 
+      background: white; 
+      color: #667eea;
+      border-color: white;
+      box-shadow: 0 8px 24px rgba(255, 255, 255, 0.3);
+      transform: scale(1.05);
+    }
+    
+    .lang-btn:hover { 
+      background: rgba(255, 255, 255, 0.25);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(255, 255, 255, 0.2);
+    }
+    
+    /* Main Container */
+    .box { 
+      background: white; 
+      padding: 60px;
+      border-radius: 24px; 
+      width: 100%; 
+      max-width: 1400px; 
+      margin: 0 auto; 
+      box-shadow: 0 30px 80px rgba(0, 0, 0, 0.25);
+      animation: slideUp 0.6s ease-out;
+    }
+    
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    /* Screen Styles */
+    #screen1, #screen2, #screen3 { 
+      max-width: 480px; 
+      margin: 0 auto; 
+      animation: fadeIn 0.5s ease-in;
+    }
+    
+    #screen4 { 
+      max-width: 100%; 
+      margin: 0 auto;
+      animation: fadeIn 0.5s ease-in;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    
+    /* Typography */
+    h1 { 
+      font-size: 42px; 
+      margin-bottom: 16px; 
+      text-align: center; 
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+      -webkit-background-clip: text; 
+      -webkit-text-fill-color: transparent; 
+      background-clip: text; 
+      font-weight: 800;
+      letter-spacing: -0.5px;
+    }
+    
+    h2 {
+      font-size: 28px;
+      font-weight: 800;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      letter-spacing: -0.3px;
+    }
+    
+    h3 {
+      font-size: 20px;
+      font-weight: 700;
+      color: #2c3e50;
+      letter-spacing: -0.2px;
+    }
+    
+    p { 
+      text-align: center; 
+      color: #667788; 
+      margin-bottom: 35px; 
+      font-size: 16px; 
+      line-height: 1.6;
+      font-weight: 500;
+    }
+    
+    /* Buttons */
+    .buttons { 
+      display: grid; 
+      grid-template-columns: 1fr 1fr; 
+      gap: 20px; 
+      margin-bottom: 20px; 
+    }
+    
+    button { 
+      padding: 18px 28px; 
+      border: none; 
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+      color: white; 
+      border-radius: 14px; 
+      cursor: pointer; 
+      font-size: 16px; 
+      font-weight: 700;
+      letter-spacing: 0.3px;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 10px 28px rgba(102, 126, 234, 0.25);
+      position: relative;
+      overflow: hidden;
+    }
+    
+    button::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 0;
+      height: 0;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.2);
+      transform: translate(-50%, -50%);
+      transition: width 0.6s, height 0.6s;
+    }
+    
+    button:active::before {
+      width: 300px;
+      height: 300px;
+    }
+    
+    button:hover { 
+      transform: translateY(-4px);
+      box-shadow: 0 16px 40px rgba(102, 126, 234, 0.35);
+    }
+    
+    button:active {
+      transform: translateY(-1px);
+    }
+    
+    button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+    
+    /* Input Fields */
+    input, select, textarea { 
+      width: 100%; 
+      padding: 16px 18px; 
+      margin-bottom: 20px; 
+      border: 2px solid #e8ecf1; 
+      border-radius: 12px; 
+      font-size: 16px; 
+      background: #f8f9fc;
+      transition: all 0.3s ease;
+      font-family: inherit;
+      color: #2c3e50;
+      font-weight: 500;
+    }
+    
+    input:focus, select:focus, textarea:focus { 
+      outline: none; 
+      border-color: #667eea;
+      background: white;
+      box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.08);
+    }
+    
+    input::placeholder {
+      color: #a0afc1;
+      font-weight: 500;
+    }
+    
+    /* Utility Classes */
+    .hidden { 
+      display: none !important; 
+    }
+    
+    .error-message {
+      color: #ff6b6b;
+      font-weight: 700;
+      font-size: 15px;
+      text-align: center;
+      margin-top: 16px;
+      padding: 12px;
+      background: #fff5f5;
+      border-radius: 10px;
+      border-left: 4px solid #ff6b6b;
+      animation: shake 0.4s ease-in-out;
+    }
+    
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-5px); }
+      75% { transform: translateX(5px); }
+    }
+    
+    .success-message {
+      color: #10b981;
+      font-weight: 700;
+      font-size: 15px;
+      text-align: center;
+      margin-top: 16px;
+      padding: 12px;
+      background: #f0fdf4;
+      border-radius: 10px;
+      border-left: 4px solid #10b981;
+    }
+    
+    /* Card Grid Styles */
+    .card-grid {
+      display: grid;
+      gap: 24px;
+      margin-top: 30px;
+    }
+    
+    .card {
+      background: linear-gradient(135deg, #f5f7fa 0%, #e9ecf1 100%);
+      padding: 28px;
+      border-radius: 16px;
+      border-left: 6px solid #667eea;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+    
+    .card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12);
+    }
+    
+    .card-label {
+      font-size: 12px;
+      color: #667eea;
+      margin-bottom: 12px;
+      text-transform: uppercase;
+      font-weight: 800;
+      letter-spacing: 0.8px;
+    }
+    
+    .card-value {
+      font-size: 32px;
+      font-weight: 900;
+      color: #2c3e50;
+      margin-bottom: 8px;
+    }
+    
+    .card-subtitle {
+      font-size: 12px;
+      color: #a0afc1;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+
+<div class="lang-selector">
+  <button class="lang-btn active" onclick="setLang('en')">EN</button>
+  <button class="lang-btn" onclick="setLang('bn')">বাং</button>
+</div>
+
+<div class="box">
+  <!-- Screen 1: Role Selection -->
+  <div id="screen1">
+    <div style="text-align: center; margin-bottom: 50px; animation: slideDown 0.7s ease-out;">
+      <div style="font-size: 80px; margin-bottom: 24px; animation: bounce 0.8s ease-in-out;">⚡</div>
+      <h1 style="margin-bottom: 16px;"><span data-en="Welcome to Utility" data-bn="ইউটিলিটিতে স্বাগতম">Welcome to Utility</span></h1>
+      <p style="font-size: 17px; color: #667788;" data-en="Manage your utilities with ease and efficiency" data-bn="সহজে এবং দক্ষতার সাথে আপনার ইউটিলিটি পরিচালনা করুন">Manage your utilities with ease and efficiency</p>
+    </div>
+    
+    <div style="background: linear-gradient(135deg, rgba(102, 126, 234, 0.08) 0%, rgba(118, 75, 162, 0.08) 100%); padding: 28px; border-radius: 14px; margin-bottom: 40px; border: 2px solid rgba(102, 126, 234, 0.1);">
+      <p style="font-size: 15px; color: #667788; margin: 0; text-align: center; font-weight: 600;" data-en="Choose your role to continue" data-bn="চালিয়ে যেতে আপনার ভূমিকা চয়ন করুন">Choose your role to continue</p>
+    </div>
+    
+    <div class="buttons">
+      <button onclick="pick('tenant')" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); box-shadow: 0 12px 32px rgba(79, 172, 254, 0.3); font-size: 18px; padding: 20px 24px;" onmouseover="this.style.boxShadow='0 16px 40px rgba(79, 172, 254, 0.4)'" onmouseout="this.style.boxShadow='0 12px 32px rgba(79, 172, 254, 0.3)'">
+        <span data-en="👤 Tenant" data-bn="👤 ভাড়াটিয়া" style="font-size: 20px; letter-spacing: 0.3px;">👤 Tenant</span>
+      </button>
+      <button onclick="pick('landlord')" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); box-shadow: 0 12px 32px rgba(245, 87, 108, 0.3); font-size: 18px; padding: 20px 24px;" onmouseover="this.style.boxShadow='0 16px 40px rgba(245, 87, 108, 0.4)'" onmouseout="this.style.boxShadow='0 12px 32px rgba(245, 87, 108, 0.3)'">
+        <span data-en="🏢 Landlord" data-bn="🏢 মালিক" style="font-size: 20px; letter-spacing: 0.3px;">🏢 Landlord</span>
+      </button>
+    </div>
+    
+    <div style="text-align: center; margin-top: 40px; color: #a0afc1; font-size: 13px; font-weight: 600;">
+      <p style="margin: 0;" data-en="Secure • Fast • Reliable" data-bn="নিরাপদ • দ্রুত • নির্ভরযোগ্য">Secure • Fast • Reliable</p>
+    </div>
+  </div>
+  
+  <!-- Screen 2: Email Input -->
+  <div id="screen2" class="hidden">
+    <div style="text-align: center; margin-bottom: 50px;">
+      <div style="font-size: 80px; margin-bottom: 24px;">✉️</div>
+      <h1><span data-en="Enter Your Details" data-bn="আপনার বিবরণ প্রবেশ করুন">Enter Your Details</span></h1>
+      <p style="font-size: 17px; color: #667788;" data-en="We'll send a verification code via email" data-bn="আমরা আপনার ইমেইলে যাচাইকরণ কোড পাঠাব">We'll send a verification code via email</p>
+    </div>
+    
+    <div style="background: linear-gradient(135deg, rgba(102, 126, 234, 0.08) 0%, rgba(118, 75, 162, 0.08) 100%); padding: 32px; border-radius: 14px; margin-bottom: 30px; border: 2px solid rgba(102, 126, 234, 0.1);">
+      <label style="display: block; font-size: 13px; font-weight: 700; color: #667eea; margin-bottom: 14px; text-transform: uppercase; letter-spacing: 0.8px;" data-en="Customer ID" data-bn="গ্রাহক আইডি">Customer ID</label>
+      <input id="custid" type="text" placeholder="Enter ID" data-placeholder-en="Enter ID" data-placeholder-bn="আইডি প্রবেশ করুন" style="margin-bottom: 24px;">
+
+      <label style="display: block; font-size: 13px; font-weight: 700; color: #667eea; margin-bottom: 14px; text-transform: uppercase; letter-spacing: 0.8px;" data-en="Email Address" data-bn="ইমেইল ঠিকানা">Email Address</label>
+      <input id="email" type="email" placeholder="example@email.com" data-placeholder-en="example@email.com" data-placeholder-bn="example@email.com" style="margin-bottom: 0;">
+    </div>
+    
+    <button onclick="submit()" style="width: 100%; margin-bottom: 14px; font-size: 17px; padding: 18px 24px;" data-en="Send OTP" data-bn="ওটিপি পাঠান">Send OTP</button>
+    <button onclick="back()" style="width: 100%; background: linear-gradient(135deg, #e0e0e0 0%, #d0d0d0 100%); color: #666; box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08); font-size: 17px; padding: 18px 24px;" data-en="Back" data-bn="ফিরে যান">Back</button>
+    <p id="msg1" style="margin-top: 18px;"></p>
+  </div>
+  
+  <!-- Screen 3: OTP Verification -->
+  <div id="screen3" class="hidden">
+    <div style="text-align: center; margin-bottom: 50px;">
+      <div style="font-size: 80px; margin-bottom: 24px;">🔐</div>
+      <h1><span data-en="Email Verification" data-bn="ইমেইল যাচাইকরণ">Email Verification</span></h1>
+      <p style="font-size: 17px; color: #667788;" data-en="Enter the 6-digit code sent to your email" data-bn="আপনার ইমেইলে পাঠানো ৬-সংখ্যার কোড প্রবেশ করুন">Enter the 6-digit code sent to your email</p>
+    </div>
+    
+    <div style="background: linear-gradient(135deg, rgba(102, 126, 234, 0.08) 0%, rgba(118, 75, 162, 0.08) 100%); padding: 32px; border-radius: 14px; margin-bottom: 30px; border: 2px solid rgba(102, 126, 234, 0.1);">
+      <div style="background: white; padding: 22px; border-radius: 12px; margin-bottom: 24px; border-left: 5px solid #667eea; display: flex; align-items: center; gap: 16px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);">
+        <div style="font-size: 36px;">✉️</div>
+        <div>
+          <div style="font-size: 12px; color: #999; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">Email</div>
+          <div style="font-size: 16px; color: #2c3e50; font-weight: 800;" id="email-display">-</div>
+        </div>
+      </div>
+      
+      <label style="display: block; font-size: 13px; font-weight: 700; color: #667eea; margin-bottom: 14px; text-transform: uppercase; letter-spacing: 0.8px;" data-en="Verification Code" data-bn="যাচাইকরণ কোড">Verification Code</label>
+      <input id="otp" type="text" inputmode="numeric" placeholder="000000" maxlength="6" style="margin-bottom: 0; font-size: 32px; letter-spacing: 14px; text-align: center; font-weight: 900; font-family: 'Courier New', monospace;">
+    </div>
+    
+    <button onclick="verify()" style="width: 100%; margin-bottom: 14px; font-size: 17px; padding: 18px 24px;" data-en="Verify OTP" data-bn="ওটিপি যাচাই করুন">Verify OTP</button>
+    <button onclick="back()" style="width: 100%; background: linear-gradient(135deg, #e0e0e0 0%, #d0d0d0 100%); color: #666; box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08); font-size: 17px; padding: 18px 24px;" data-en="Back" data-bn="ফিরে যান">Back</button>
+    <p id="msg2" style="margin-top: 18px;"></p>
+  </div>
+  
+  <!-- Screen 4: Dashboard -->
+  <div id="screen4" class="hidden">
+    <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 50px 45px; border-radius: 24px; margin: -60px -60px 50px -60px; position: relative; overflow: hidden; box-shadow: 0 16px 48px rgba(102, 126, 234, 0.3);">
+      <div style="position: absolute; top: -40px; right: -40px; width: 200px; height: 200px; background: rgba(255, 255, 255, 0.1); border-radius: 50%;"></div>
+      <div style="position: absolute; bottom: -60px; left: -60px; width: 250px; height: 250px; background: rgba(255, 255, 255, 0.05); border-radius: 50%;"></div>
+      <div style="position: relative; z-index: 1;">
+        <h1 style="margin: 0 0 12px 0; font-size: 48px; font-weight: 900; color: white; background: none; -webkit-text-fill-color: unset; -webkit-background-clip: unset;">📊 Dashboard</h1>
+        <p style="margin: 0; font-size: 18px; opacity: 0.95; color: rgba(255, 255, 255, 0.95);">Welcome, <strong id="name" style="font-weight: 800;">User</strong></p>
+        <button onclick="logout()" style="margin-top: 20px; background: rgba(255, 255, 255, 0.2); border: 2px solid rgba(255, 255, 255, 0.4); padding: 12px 24px; font-size: 14px; font-weight: 700;" data-en="Logout" data-bn="লগআউট">Logout</button>
+      </div>
+    </div>
+
+    <!-- Tenant Dashboard -->
+    <div id="tenant-dashboard">
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px;">
+        <div class="card" style="border-left-color: #4c63d2;">
+          <div class="card-label" style="color: #4c63d2;">💡 Electric Balance</div>
+          <div class="card-value" style="color: #4c63d2;" id="electric-balance">৳ 0.00</div>
+          <div class="card-subtitle">Amount Due</div>
+        </div>
+
+        <div class="card" style="border-left-color: #2e7d32;">
+          <div class="card-label" style="color: #2e7d32;">💧 Water Bill</div>
+          <div class="card-value" style="color: #2e7d32;" id="water-bill">৳ 0.00</div>
+          <div class="card-subtitle">Bill Due</div>
+        </div>
+
+        <div class="card" style="border-left-color: #f57c00;">
+          <div class="card-label" style="color: #f57c00;">🔥 Gas Bill</div>
+          <div class="card-value" style="color: #f57c00;" id="gas-bill">৳ 0.00</div>
+          <div class="card-subtitle">Bill Due</div>
+        </div>
+
+        <div class="card" style="border-left-color: #1976d2;">
+          <div class="card-label" style="color: #1976d2;">🌐 Internet Connection</div>
+          <div class="card-value" style="color: #1976d2; font-size: 24px;">✓</div>
+          <div class="card-subtitle" id="status" style="color: #1976d2; font-weight: 700;">Active</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Landlord Dashboard -->
+    <div id="landlord-dashboard" style="display: none;">
+      <!-- Summary Stats -->
+      <div id="summary-stats" style="display: none; margin-bottom: 50px;">
+        <h2 style="margin-bottom: 30px; display: flex; align-items: center; gap: 10px;">
+          <span style="font-size: 32px;">📈</span> Summary Overview
+        </h2>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 24px;">
+          <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 35px; border-radius: 16px; box-shadow: 0 12px 32px rgba(102, 126, 234, 0.3); transition: all 0.3s ease;" onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 16px 40px rgba(102, 126, 234, 0.4)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 12px 32px rgba(102, 126, 234, 0.3)'">
+            <div style="font-size: 13px; opacity: 0.9; margin-bottom: 14px; text-transform: uppercase; letter-spacing: 1px; font-weight: 800;">👥 Total Tenants</div>
+            <div style="font-size: 48px; font-weight: 900; margin-bottom: 10px;" id="stats-total-tenants">0</div>
+            <div style="font-size: 13px; opacity: 0.85;">Active properties</div>
+          </div>
+
+          <div style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; padding: 35px; border-radius: 16px; box-shadow: 0 12px 32px rgba(245, 87, 108, 0.3); transition: all 0.3s ease;" onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 16px 40px rgba(245, 87, 108, 0.4)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 12px 32px rgba(245, 87, 108, 0.3)'">
+            <div style="font-size: 13px; opacity: 0.9; margin-bottom: 14px; text-transform: uppercase; letter-spacing: 1px; font-weight: 800;">💰 Total Outstanding</div>
+            <div style="font-size: 48px; font-weight: 900; margin-bottom: 10px;" id="stats-total-balance">৳ 0</div>
+            <div style="font-size: 13px; opacity: 0.85;">All tenants combined</div>
+          </div>
+
+          <div style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; padding: 35px; border-radius: 16px; box-shadow: 0 12px 32px rgba(79, 172, 254, 0.3); transition: all 0.3s ease;" onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 16px 40px rgba(79, 172, 254, 0.4)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 12px 32px rgba(79, 172, 254, 0.3)'">
+            <div style="font-size: 13px; opacity: 0.9; margin-bottom: 14px; text-transform: uppercase; letter-spacing: 1px; font-weight: 800;">📊 Avg Per Tenant</div>
+            <div style="font-size: 48px; font-weight: 900; margin-bottom: 10px;" id="stats-avg-balance">৳ 0</div>
+            <div style="font-size: 13px; opacity: 0.85;">Per property average</div>
+          </div>
+
+          <div style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); color: white; padding: 35px; border-radius: 16px; box-shadow: 0 12px 32px rgba(250, 112, 154, 0.3); transition: all 0.3s ease;" onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 16px 40px rgba(250, 112, 154, 0.4)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 12px 32px rgba(250, 112, 154, 0.3)'">
+            <div style="font-size: 13px; opacity: 0.9; margin-bottom: 14px; text-transform: uppercase; letter-spacing: 1px; font-weight: 800;">⚠️ Critical Status</div>
+            <div style="font-size: 48px; font-weight: 900; margin-bottom: 10px;" id="stats-critical-count">0</div>
+            <div style="font-size: 13px; opacity: 0.85;">Require attention</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tenant Selector -->
+      <div style="margin-bottom: 50px; padding: 40px; background: linear-gradient(135deg, #f5f7fa 0%, #e9ecf1 100%); border-radius: 18px; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08); border: 2px solid rgba(102, 126, 234, 0.1);">
+        <h2 style="display: flex; align-items: center; gap: 12px; margin-bottom: 30px;">
+          <span style="font-size: 28px;">🔍</span> Browse Tenants
+        </h2>
+        <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 24px;">
+          <button onclick="previousTenant()" style="padding: 16px 26px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); flex: 0 0 auto; font-size: 16px;">← Previous</button>
+          <select id="tenant-selector" onchange="selectTenant(this.value)" style="flex: 1;">
+            <option value="">📍 Select a tenant...</option>
+          </select>
+          <button onclick="nextTenant()" style="padding: 16px 26px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); flex: 0 0 auto; font-size: 16px;">Next →</button>
+        </div>
+        <div style="text-align: center; background: rgba(102, 126, 234, 0.1); padding: 16px; border-radius: 10px;">
+          <span style="font-size: 14px; color: #2c3e50; font-weight: 600;">Viewing Tenant <span id="current-tenant-num" style="font-weight: 900; color: #667eea; font-size: 16px; background: white; padding: 6px 14px; border-radius: 6px; display: inline-block;">-</span> of <span id="total-tenants-count" style="font-weight: 900; color: #667eea; font-size: 16px; background: white; padding: 6px 14px; border-radius: 6px; display: inline-block;">0</span></span>
+        </div>
+      </div>
+
+      <!-- Individual Tenant Details -->
+      <div id="tenant-details" style="display: none;">
+        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 50px 45px; border-radius: 24px; margin-bottom: 50px; box-shadow: 0 16px 40px rgba(102, 126, 234, 0.3); position: relative; overflow: hidden;">
+          <div style="position: absolute; top: -40px; right: -40px; width: 200px; height: 200px; background: rgba(255, 255, 255, 0.1); border-radius: 50%;"></div>
+          <div style="position: absolute; bottom: -60px; left: -60px; width: 250px; height: 250px; background: rgba(255, 255, 255, 0.08); border-radius: 50%;"></div>
+          <div style="position: relative; z-index: 1;">
+            <h2 style="margin: 0 0 12px 0; font-size: 48px; font-weight: 900; color: white; background: none; -webkit-text-fill-color: unset;" id="selected-tenant-name">-</h2>
+            <p style="margin: 8px 0 0 0; font-size: 16px; opacity: 0.95;">ID: <strong id="selected-tenant-id" style="font-weight: 800;">-</strong></p>
+            <div style="margin-top: 24px; display: flex; gap: 12px; flex-wrap: wrap;">
+              <div style="display: inline-block; padding: 12px 22px; background: rgba(255, 255, 255, 0.2); border-radius: 24px; font-size: 14px; font-weight: 800; backdrop-filter: blur(10px);">
+                🏠 Flat: <span id="selected-flat-header">-</span>
+              </div>
+              <div style="display: inline-block; padding: 12px 22px; background: rgba(255, 255, 255, 0.2); border-radius: 24px; font-size: 14px; font-weight: 800; backdrop-filter: blur(10px);" id="tenant-header-status-container">
+                Status: <span id="tenant-header-status">Active</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Personal Information -->
+        <h3 style="margin-bottom: 28px; padding-bottom: 16px; border-bottom: 4px solid #4c63d2; display: flex; align-items: center; gap: 12px;">
+          <span style="font-size: 32px;">👤</span> Personal Information
+        </h3>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; margin-bottom: 50px;">
+          <div class="card" style="border-left-color: #4c63d2;">
+            <div class="card-label" style="color: #4c63d2;">Customer Name</div>
+            <div class="card-value" style="color: #4c63d2; font-size: 24px;" id="selected-tenant-name-info">N/A</div>
+          </div>
+          <div class="card" style="border-left-color: #2e7d32;">
+            <div class="card-label" style="color: #2e7d32;">Flat Number</div>
+            <div class="card-value" style="color: #2e7d32;" id="selected-flat">N/A</div>
+          </div>
+          <div class="card" style="border-left-color: #f57c00;">
+            <div class="card-label" style="color: #f57c00;">Email Address</div>
+            <div class="card-value" style="color: #f57c00; font-size: 14px; word-break: break-all;" id="selected-email">Not Set</div>
+          </div>
+          <div class="card" style="border-left-color: #1976d2;">
+            <div class="card-label" style="color: #1976d2;">Last Updated</div>
+            <div class="card-value" style="color: #1976d2; font-size: 20px;" id="selected-last-updated">-</div>
+          </div>
+        </div>
+
+        <!-- Billing Information -->
+        <h3 style="margin-bottom: 28px; padding-bottom: 16px; border-bottom: 4px solid #f57c00; display: flex; align-items: center; gap: 12px;">
+          <span style="font-size: 32px;">💳</span> Billing Information
+        </h3>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 50px;">
+          <div class="card" style="border-left-color: #4c63d2;">
+            <div class="card-label" style="color: #4c63d2;">💡 Electric</div>
+            <div class="card-value" style="color: #4c63d2; font-size: 28px;" id="selected-electric-balance">৳ 0.00</div>
+            <div class="card-subtitle">Balance Due</div>
+          </div>
+          <div class="card" style="border-left-color: #2e7d32;">
+            <div class="card-label" style="color: #2e7d32;">💧 Water</div>
+            <div class="card-value" style="color: #2e7d32; font-size: 28px;" id="selected-water-bill">৳ 0.00</div>
+            <div class="card-subtitle">Bill Due</div>
+          </div>
+          <div class="card" style="border-left-color: #f57c00;">
+            <div class="card-label" style="color: #f57c00;">🔥 Gas</div>
+            <div class="card-value" style="color: #f57c00; font-size: 28px;" id="selected-gas-bill">৳ 0.00</div>
+            <div class="card-subtitle">Bill Due</div>
+          </div>
+          <div class="card" style="border-left-color: #1976d2;">
+            <div class="card-label" style="color: #1976d2;">🌐 Internet</div>
+            <div class="card-value" style="color: #1976d2; font-size: 28px;" id="selected-internet-bill">৳ 0.00</div>
+            <div class="card-subtitle">Bill Due</div>
+          </div>
+        </div>
+
+        <!-- Total Due -->
+        <div style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; padding: 40px; border-radius: 16px; text-align: center; box-shadow: 0 12px 32px rgba(245, 87, 108, 0.3);">
+          <div style="font-size: 14px; opacity: 0.9; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 1px; font-weight: 800;">Total Amount Due</div>
+          <div style="font-size: 48px; font-weight: 900; margin-bottom: 8px;" id="selected-total-due">৳ 0.00</div>
+          <div style="font-size: 14px; opacity: 0.85; font-weight: 600;">
+            <span id="selected-status-badge" style="display: inline-block; padding: 8px 16px; background: rgba(255, 255, 255, 0.2); border-radius: 20px;">✓ Good Standing</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  @keyframes slideDown {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  
+  @keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-12px); }
+  }
+</style>
+
+<script>
+let lang = localStorage.getItem('lang') || 'en';
+let role = null;
+let custid = null;
+let allTenants = [];
+let currentTenantIndex = -1;
+
+function setLang(l) {
+  lang = l;
+  localStorage.setItem('lang', l);
+  document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+  updateText();
+}
+
+function updateText() {
+  document.querySelectorAll('[data-en]').forEach(el => {
+    el.textContent = el.getAttribute('data-' + lang);
+  });
+  document.querySelectorAll('[data-placeholder-en]').forEach(el => {
+    el.placeholder = el.getAttribute('data-placeholder-' + lang);
+  });
+}
+
+function pick(r) { role = r; show(2); }
+function back() {
+  document.getElementById('msg1').textContent = '';
+  document.getElementById('msg2').textContent = '';
+  show(1);
+}
+
+function show(n) {
+  document.getElementById('screen1').className = n === 1 ? '' : 'hidden';
+  document.getElementById('screen2').className = n === 2 ? '' : 'hidden';
+  document.getElementById('screen3').className = n === 3 ? '' : 'hidden';
+  document.getElementById('screen4').className = n === 4 ? '' : 'hidden';
+
+  if (n === 3) {
+    const email = localStorage.getItem('emailAddress') || '-';
+    document.getElementById('email-display').textContent = email;
+  }
+}
+
+async function submit() {
+  custid = document.getElementById('custid').value.trim();
+  const email = document.getElementById('email').value.trim();
+
+  if (!custid) {
+    document.getElementById('msg1').innerHTML = '<div class="error-message">⚠️ Please enter Customer ID</div>';
+    return;
+  }
+  if (!email) {
+    document.getElementById('msg1').innerHTML = '<div class="error-message">⚠️ Please enter Email address</div>';
+    return;
+  }
+
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    document.getElementById('msg1').innerHTML = '<div class="error-message">⚠️ Please enter a valid email address</div>';
+    return;
+  }
+
+  if (role === 'landlord' && custid !== 'RAIHAN5F') {
+    document.getElementById('msg1').innerHTML = '<div class="error-message">⚠️ Invalid credentials. Please check your Customer ID.</div>';
+    return;
+  }
+
+  try {
+    const url = 'https://script.google.com/macros/s/AKfycbzUQeJKLBRCjQG928fnIdJ7Tlg-JR0072ENK-K2_07NBOxWsH9zs0qd5CrcoQW_Mbz3lA/exec';
+    const res = await fetch(url, {
+      method: 'POST',
+      body: JSON.stringify({
+        action: 'sendEmailOTP',
+        customerId: custid,
+        email: email,
+        role: role
+      })
+    });
+
+    let data;
+    try {
+      data = await res.json();
+    } catch (e) {
+      document.getElementById('msg1').innerHTML = '<div class="error-message">⚠️ Server error. Please try again.</div>';
+      return;
+    }
+
+    if (data.error) {
+      document.getElementById('msg1').innerHTML = '<div class="error-message">⚠️ ' + data.error + '</div>';
+      return;
+    }
+
+    localStorage.setItem('emailAddress', email);
+    document.getElementById('msg1').textContent = '';
+    show(3);
+  } catch (e) {
+    document.getElementById('msg1').innerHTML = '<div class="error-message">⚠️ Error: ' + e.message + '</div>';
+  }
+}
+
+async function verify() {
+  const otp = document.getElementById('otp').value;
+  if (otp.length !== 6) {
+    document.getElementById('msg2').innerHTML = '<div class="error-message">⚠️ Enter 6 digits</div>';
+    return;
+  }
+
+  try {
+    const url = 'https://script.google.com/macros/s/AKfycbzUQeJKLBRCjQG928fnIdJ7Tlg-JR0072ENK-K2_07NBOxWsH9zs0qd5CrcoQW_Mbz3lA/exec';
+    const res = await fetch(url, {
+      method: 'POST',
+      body: JSON.stringify({
+        customerId: custid,
+        otp: otp,
+        action: 'verifyEmailOTP',
+        role: role
+      })
+    });
+
+    let data;
+    try {
+      data = await res.json();
+    } catch (e) {
+      document.getElementById('msg2').innerHTML = '<div class="error-message">⚠️ Server error. Please try again.</div>';
+      return;
+    }
+
+    if (data.error) {
+      document.getElementById('msg2').innerHTML = '<div class="error-message">⚠️ ' + data.error + '</div>';
+      return;
+    }
+
+    localStorage.setItem('customerId', custid);
+
+    if (role === 'landlord') {
+      const exportRes = await fetch(`${url}?action=export`);
+      let exportData;
+      try {
+        exportData = await exportRes.json();
+      } catch (e) {
+        document.getElementById('msg2').innerHTML = '<div class="error-message">⚠️ Server error. Please try again.</div>';
+        return;
+      }
+
+      localStorage.setItem('customerName', 'Landlord - ' + custid);
+      document.getElementById('name').textContent = 'Landlord - ' + custid;
+      document.getElementById('tenant-dashboard').style.display = 'none';
+      document.getElementById('landlord-dashboard').style.display = 'block';
+
+      if (exportData.customers && exportData.customers.length > 0) {
+        allTenants = exportData.customers;
+        document.getElementById('total-tenants-count').textContent = exportData.customers.length;
+
+        let totalBalance = 0, totalWater = 0, totalGas = 0, totalInternet = 0, criticalCount = 0;
+        exportData.customers.forEach(tenant => {
+          const balance = parseFloat(tenant.electricBalance) || 0;
+          const water = parseFloat(tenant.waterBillDue) || 0;
+          const gas = parseFloat(tenant.gasBillDue) || 0;
+          const internet = parseFloat(tenant.internetBillDue) || 0;
+          const total = balance + water + gas + internet;
+
+          totalBalance += balance;
+          totalWater += water;
+          totalGas += gas;
+          totalInternet += internet;
+          if (total > 1000) criticalCount++;
+        });
+
+        document.getElementById('stats-total-tenants').textContent = exportData.customers.length;
+        document.getElementById('stats-total-balance').textContent = '৳ ' + (totalBalance + totalWater + totalGas + totalInternet).toLocaleString('bn-BD', { maximumFractionDigits: 0 });
+        document.getElementById('stats-avg-balance').textContent = '৳ ' + ((totalBalance + totalWater + totalGas + totalInternet) / exportData.customers.length).toLocaleString('bn-BD', { maximumFractionDigits: 0 });
+        document.getElementById('stats-critical-count').textContent = criticalCount;
+        document.getElementById('summary-stats').style.display = 'block';
+
+        const selector = document.getElementById('tenant-selector');
+        selector.innerHTML = '<option value="">📍 Select a tenant...</option>';
+        exportData.customers.forEach((tenant, index) => {
+          const option = document.createElement('option');
+          option.value = index;
+          option.textContent = `${tenant.name} (${tenant.id})`;
+          selector.appendChild(option);
+        });
+      }
+    } else {
+      const tenantRes = await fetch(`${url}?id=${encodeURIComponent(custid)}`);
+      let tenantData;
+      try {
+        tenantData = await tenantRes.json();
+      } catch (e) {
+        document.getElementById('msg2').innerHTML = '<div class="error-message">⚠️ Server error. Please try again.</div>';
+        return;
+      }
+
+      localStorage.setItem('customerName', tenantData.name || 'Customer ' + custid);
+      document.getElementById('name').textContent = tenantData.name || 'Customer ' + custid;
+      document.getElementById('tenant-dashboard').style.display = 'block';
+      document.getElementById('landlord-dashboard').style.display = 'none';
+
+      document.getElementById('electric-balance').textContent = '৳ ' + (tenantData.electricBalance || '0.00');
+      document.getElementById('water-bill').textContent = '৳ ' + (tenantData.waterBillDue || '0.00');
+      document.getElementById('gas-bill').textContent = '৳ ' + (tenantData.gasBillDue || '0.00');
+      document.getElementById('status').textContent = tenantData.internetConnected || 'Active';
+    }
+
+    show(4);
+  } catch (e) {
+    document.getElementById('msg2').innerHTML = '<div class="error-message">⚠️ Error: ' + e.message + '</div>';
+  }
+}
+
+function logout() {
+  localStorage.removeItem('customerId');
+  localStorage.removeItem('emailAddress');
+  document.getElementById('custid').value = '';
+  document.getElementById('email').value = '';
+  document.getElementById('otp').value = '';
+  allTenants = [];
+  currentTenantIndex = -1;
+  show(1);
+}
+
+function selectTenant(index) {
+  if (index === '' || isNaN(index)) {
+    document.getElementById('tenant-details').style.display = 'none';
+    currentTenantIndex = -1;
+    return;
+  }
+  currentTenantIndex = parseInt(index);
+  displayTenant(currentTenantIndex);
+}
+
+function nextTenant() {
+  if (allTenants.length === 0) return;
+  currentTenantIndex = (currentTenantIndex + 1) % allTenants.length;
+  displayTenant(currentTenantIndex);
+  document.getElementById('tenant-selector').value = currentTenantIndex;
+}
+
+function previousTenant() {
+  if (allTenants.length === 0) return;
+  currentTenantIndex = (currentTenantIndex - 1 + allTenants.length) % allTenants.length;
+  displayTenant(currentTenantIndex);
+  document.getElementById('tenant-selector').value = currentTenantIndex;
+}
+
+function displayTenant(index) {
+  if (index < 0 || index >= allTenants.length) return;
+
+  const tenant = allTenants[index];
+
+  document.getElementById('selected-tenant-name').textContent = tenant.name || '-';
+  document.getElementById('selected-tenant-id').textContent = tenant.id || '-';
+  document.getElementById('selected-flat-header').textContent = tenant.flatNumber || 'N/A';
+  document.getElementById('selected-tenant-name-info').textContent = tenant.name || 'N/A';
+  document.getElementById('selected-flat').textContent = tenant.flatNumber || 'N/A';
+  document.getElementById('selected-email').textContent = tenant.email || 'Not Set';
+  document.getElementById('selected-last-updated').textContent = tenant.lastUpdated || '-';
+
+  const electric = parseFloat(tenant.electricBalance) || 0;
+  const water = parseFloat(tenant.waterBillDue) || 0;
+  const gas = parseFloat(tenant.gasBillDue) || 0;
+  const internet = parseFloat(tenant.internetBillDue) || 0;
+  const total = electric + water + gas + internet;
+
+  document.getElementById('selected-electric-balance').textContent = '৳ ' + electric.toLocaleString('bn-BD', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  document.getElementById('selected-water-bill').textContent = '৳ ' + water.toLocaleString('bn-BD', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  document.getElementById('selected-gas-bill').textContent = '৳ ' + gas.toLocaleString('bn-BD', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  document.getElementById('selected-internet-bill').textContent = '৳ ' + internet.toLocaleString('bn-BD', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  document.getElementById('selected-total-due').textContent = '৳ ' + total.toLocaleString('bn-BD', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+  let statusText = '✓ Good Standing';
+  let statusColor = '#10b981';
+  if (total > 1000) {
+    statusText = '⚠️ Critical';
+    statusColor = '#ff6b6b';
+  } else if (total > 500) {
+    statusText = '⚠️ Warning';
+    statusColor = '#ffa500';
+  }
+
+  const badge = document.getElementById('selected-status-badge');
+  badge.textContent = statusText;
+  badge.style.color = statusColor;
+
+  const headerStatus = document.getElementById('tenant-header-status');
+  headerStatus.textContent = statusText;
+  headerStatus.style.color = 'inherit';
+
+  document.getElementById('tenant-details').style.display = 'block';
+  document.getElementById('current-tenant-num').textContent = index + 1;
+}
+
+window.addEventListener('load', () => {
+  updateText();
+  document.querySelector('.lang-btn').classList.add('active');
+  if (lang === 'bn') {
+    document.querySelectorAll('.lang-btn')[1].classList.add('active');
+    document.querySelectorAll('.lang-btn')[0].classList.remove('active');
+  }
+
+  if (localStorage.getItem('customerId')) {
+    document.getElementById('name').textContent = localStorage.getItem('customerName') || 'User';
+    show(4);
+  } else {
+    show(1);
+  }
+});
+</script>
+
+</body>
+</html>
