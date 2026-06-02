@@ -350,6 +350,24 @@ function doPost(e) {
       return jsonWithCORS_(result, e);
     }
 
+    if (action === 'sendEmailOTP') {
+      var customerId = String(payload.customerId || '').trim();
+      var email = String(payload.email || '').trim();
+      var role = String(payload.role || '').trim();
+      if (!customerId || !email) return jsonWithCORS_({ error: 'Missing customerId or email' }, e);
+      var result = sendEmailOTP_(customerId, email, role);
+      return jsonWithCORS_(result, e);
+    }
+
+    if (action === 'verifyEmailOTP') {
+      var customerId = String(payload.customerId || '').trim();
+      var otp = String(payload.otp || '').trim();
+      var role = String(payload.role || '').trim();
+      if (!customerId || !otp) return jsonWithCORS_({ error: 'Missing customerId or OTP' }, e);
+      var result = verifyEmailOTP_(customerId, otp, role);
+      return jsonWithCORS_(result, e);
+    }
+
     return jsonWithCORS_({ error: 'Unknown action' }, e);
   } catch (err) {
     Logger.log('doPost error: ' + (err && err.message ? err.message : err));
@@ -1549,4 +1567,160 @@ function maskWhatsAppNumber_(phone) {
   var cleaned = phone.replace(/\D/g, '');
   if (cleaned.length < 4) return phone;
   return '***' + cleaned.slice(-4);
+}
+
+/***** EMAIL OTP (2FA via Email) *****/
+function getOrCreateEmailOTPSheet_() {
+  var ss = getSpreadsheet_();
+  var name = 'EmailOTP';
+  var sheet = ss.getSheetByName(name);
+  if (!sheet) {
+    sheet = ss.insertSheet(name);
+    sheet.appendRow(["Timestamp", "CustomerID", "Email", "OTPCode", "Verified", "ExpiresAt", "Attempts"]);
+  }
+  return sheet;
+}
+
+function sendEmailOTP_(customerId, emailAddress, role) {
+  try {
+    // Verify customer exists
+    var ss = getSpreadsheet_();
+    var dashSheet = ss.getSheetByName(getSheetName_('DASHBOARD_SHEET'));
+    if (!dashSheet) return { error: 'Dashboard sheet not found' };
+
+    var data = dashSheet.getDataRange().getValues();
+    var customerFound = false;
+    for (var i = 1; i < data.length; i++) {
+      if (String(data[i][0]).trim() === customerId) {
+        customerFound = true;
+        break;
+      }
+    }
+
+    if (!customerFound && role === 'tenant') {
+      return { error: 'Customer not found' };
+    }
+
+    // Validate email format
+    var emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(emailAddress)) {
+      return { error: 'Invalid email address' };
+    }
+
+    // Generate OTP
+    var otp = generateOTP_();
+
+    // Send OTP via Email
+    var emailSent = sendOTPEmail_(emailAddress, otp);
+
+    if (!emailSent) {
+      return { error: 'Failed to send OTP email. Please try again.' };
+    }
+
+    // Store OTP
+    storeEmailOTP_(customerId, emailAddress, otp);
+
+    var maskedEmail = maskEmail_(emailAddress);
+    return {
+      success: true,
+      step: 'awaiting_otp',
+      customerId: customerId,
+      email: maskedEmail,
+      expiresIn: 600
+    };
+  } catch (errEmail) {
+    return { error: 'Email OTP failed: ' + (errEmail.message || errEmail) };
+  }
+}
+
+function storeEmailOTP_(customerId, emailAddress, otp) {
+  var otpSheet = getOrCreateEmailOTPSheet_();
+  var now = new Date();
+  var expiresAt = new Date(now.getTime() + 10 * 60 * 1000); // 10 minutes
+  otpSheet.appendRow([now, customerId, emailAddress, otp, "FALSE", expiresAt, 0]);
+  return true;
+}
+
+function verifyEmailOTP_(customerId, otp, role) {
+  try {
+    var otpSheet = getOrCreateEmailOTPSheet_();
+    var data = otpSheet.getDataRange().getValues();
+    var now = new Date();
+
+    // Search from end to find most recent OTP for this customer
+    for (var i = data.length - 1; i >= 1; i--) {
+      if (String(data[i][1]).trim() === customerId) {
+        var storedOTP = String(data[i][3]).trim();
+        var expiresAt = data[i][5];
+        var verified = String(data[i][4]).trim();
+        var attempts = parseInt(data[i][6]) || 0;
+
+        // Check if expired
+        if (now > new Date(expiresAt)) {
+          return { error: 'OTP expired. Please request a new code.' };
+        }
+
+        // Check if already verified
+        if (verified === 'TRUE') {
+          return { error: 'OTP already verified.' };
+        }
+
+        // Check if too many attempts
+        if (attempts >= 3) {
+          return { error: 'Too many failed attempts. Request a new code.' };
+        }
+
+        // Check if OTP matches
+        if (storedOTP !== String(otp).trim()) {
+          otpSheet.getRange(i + 1, 7).setValue(attempts + 1);
+          return { error: 'Invalid OTP. Please try again. (' + (3 - attempts - 1) + ' attempts left)' };
+        }
+
+        // OTP is valid! Mark as verified
+        otpSheet.getRange(i + 1, 5).setValue('TRUE');
+
+        // Get customer data from DashboardData
+        var ss = getSpreadsheet_();
+        var dashSheet = ss.getSheetByName(getSheetName_('DASHBOARD_SHEET'));
+        if (!dashSheet) return { error: 'Dashboard sheet not found' };
+
+        var dashData = dashSheet.getDataRange().getValues();
+
+        if (role === 'landlord') {
+          // Return all customers for landlord
+          return { success: true, role: 'landlord' };
+        } else {
+          // Return specific customer data for tenant
+          for (var j = 1; j < dashData.length; j++) {
+            if (String(dashData[j][0]).trim() === customerId) {
+              var subsSheet = getOrCreateSubsSheet_(ss);
+              var subInfo = getSubscription_(subsSheet, customerId);
+              var lastUpdatedRaw = dashData[j][5];
+              var lastUpdatedStr = lastUpdatedRaw instanceof Date ? Utilities.formatDate(lastUpdatedRaw, Session.getScriptTimeZone(), 'EEEE, dd MMM yyyy hh:mm a') : String(lastUpdatedRaw);
+
+              return {
+                success: true,
+                name: dashData[j][1] || '',
+                electricBalance: dashData[j][2] || '0',
+                waterBillDue: dashData[j][3] || '0',
+                gasBillDue: dashData[j][4] || '0',
+                internetConnected: dashData[j][7] || 'Unknown',
+                internetBillDue: dashData[j][8] || '0',
+                lastUpdated: lastUpdatedStr,
+                flatNumber: dashData[j][6] || '',
+                subscribed: subInfo.subscribed,
+                email: subInfo.email
+              };
+            }
+          }
+        }
+
+        return { error: 'Customer not found after OTP verification' };
+      }
+    }
+
+    return { error: 'No OTP request found for this customer' };
+  } catch (err) {
+    return { error: 'Email verification failed: ' + (err.message || err) };
+  }
 }

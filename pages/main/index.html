@@ -51,16 +51,16 @@ input:focus { outline: none; border-color: #667eea; background: white; box-shado
 
   <div id="screen2" class="hidden">
     <div style="text-align: center; margin-bottom: 30px;">
-      <div style="font-size: 64px; margin-bottom: 15px;">📱</div>
+      <div style="font-size: 64px; margin-bottom: 15px;">✉️</div>
       <h1><span data-en="Enter Your Details" data-bn="আপনার বিবরণ প্রবেশ করুন">Enter Your Details</span></h1>
-      <p data-en="We'll send OTP via WhatsApp" data-bn="আমরা হোয়াটসঅ্যাপের মাধ্যমে ওটিপি পাঠাব">We'll send OTP via WhatsApp</p>
+      <p data-en="We'll send OTP via Email" data-bn="আমরা ইমেইলের মাধ্যমে ওটিপি পাঠাব">We'll send OTP via Email</p>
     </div>
     <div style="background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%); padding: 30px; border-radius: 16px; margin-bottom: 25px;">
       <label style="display: block; font-size: 13px; font-weight: 600; color: #667eea; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px;" data-en="Customer ID" data-bn="গ্রাহক আইডি">Customer ID</label>
       <input id="custid" type="text" placeholder="Enter ID" data-placeholder-en="Enter ID" data-placeholder-bn="আইডি প্রবেশ করুন" style="margin-bottom: 20px;">
 
-      <label style="display: block; font-size: 13px; font-weight: 600; color: #667eea; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px;" data-en="WhatsApp Number" data-bn="হোয়াটসঅ্যাপ নম্বর">WhatsApp Number</label>
-      <input id="whatsapp" type="text" placeholder="+880..." data-placeholder-en="+880..." data-placeholder-bn="+880..." style="margin-bottom: 0;">
+      <label style="display: block; font-size: 13px; font-weight: 600; color: #667eea; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px;" data-en="Email Address" data-bn="ইমেইল ঠিকানা">Email Address</label>
+      <input id="email" type="email" placeholder="example@email.com" data-placeholder-en="example@email.com" data-placeholder-bn="example@email.com" style="margin-bottom: 0;">
     </div>
     <button onclick="submit()" style="width: 100%; margin-bottom: 12px;" data-en="Send OTP" data-bn="ওটিপি পাঠান">Send OTP</button>
     <button onclick="back()" style="width: 100%; background: linear-gradient(135deg, #c3cfe2 0%, #c3cfe2 100%); color: #666; box-shadow: 0 8px 20px rgba(0,0,0,0.1);" data-en="Back" data-bn="ফিরে যান">Back</button>
@@ -69,16 +69,16 @@ input:focus { outline: none; border-color: #667eea; background: white; box-shado
 
   <div id="screen3" class="hidden">
     <div style="text-align: center; margin-bottom: 30px;">
-      <div style="font-size: 64px; margin-bottom: 15px;">💬</div>
-      <h1><span data-en="WhatsApp Verification" data-bn="হোয়াটসঅ্যাপ যাচাইকরণ">WhatsApp Verification</span></h1>
-      <p data-en="Enter the 6-digit code sent via WhatsApp" data-bn="হোয়াটসঅ্যাপের মাধ্যমে পাঠানো ৬-সংখ্যার কোড প্রবেশ করুন">Enter the 6-digit code sent via WhatsApp</p>
+      <div style="font-size: 64px; margin-bottom: 15px;">✉️</div>
+      <h1><span data-en="Email Verification" data-bn="ইমেইল যাচাইকরণ">Email Verification</span></h1>
+      <p data-en="Enter the 6-digit code sent to your email" data-bn="আপনার ইমেইলে পাঠানো ৬-সংখ্যার কোড প্রবেশ করুন">Enter the 6-digit code sent to your email</p>
     </div>
     <div style="background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%); padding: 30px; border-radius: 16px; margin-bottom: 25px;">
-      <div style="background: white; padding: 20px; border-radius: 12px; margin-bottom: 20px; border-left: 4px solid #25d366; display: flex; align-items: center; gap: 15px;">
-        <div style="font-size: 32px;">📱</div>
+      <div style="background: white; padding: 20px; border-radius: 12px; margin-bottom: 20px; border-left: 4px solid #667eea; display: flex; align-items: center; gap: 15px;">
+        <div style="font-size: 32px;">✉️</div>
         <div>
-          <div style="font-size: 13px; color: #666; font-weight: 600;">WhatsApp</div>
-          <div style="font-size: 15px; color: #333; font-weight: 700;" id="whatsapp-display">-</div>
+          <div style="font-size: 13px; color: #666; font-weight: 600;">Email</div>
+          <div style="font-size: 15px; color: #333; font-weight: 700;" id="email-display">-</div>
         </div>
       </div>
       <label style="display: block; font-size: 13px; font-weight: 600; color: #667eea; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px;" data-en="Verification Code" data-bn="যাচাইকরণ কোড">Verification Code</label>
@@ -385,21 +385,28 @@ function show(n) {
   document.getElementById('screen4').className = n === 4 ? '' : 'hidden';
 
   if (n === 3) {
-    const whatsapp = localStorage.getItem('whatsappNumber') || '-';
-    document.getElementById('whatsapp-display').textContent = whatsapp;
+    const email = localStorage.getItem('emailAddress') || '-';
+    document.getElementById('email-display').textContent = email;
   }
 }
 
 async function submit() {
   custid = document.getElementById('custid').value.trim();
-  const whatsapp = document.getElementById('whatsapp').value.trim();
+  const email = document.getElementById('email').value.trim();
 
   if (!custid) {
     document.getElementById('msg1').textContent = '⚠️ Please enter Customer ID';
     return;
   }
-  if (!whatsapp) {
-    document.getElementById('msg1').textContent = '⚠️ Please enter WhatsApp number';
+  if (!email) {
+    document.getElementById('msg1').textContent = '⚠️ Please enter Email address';
+    return;
+  }
+
+  // Basic email validation
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    document.getElementById('msg1').textContent = '⚠️ Please enter a valid email address';
     return;
   }
 
@@ -412,13 +419,13 @@ async function submit() {
   try {
     const url = 'https://script.google.com/macros/s/AKfycbzUQeJKLBRCjQG928fnIdJ7Tlg-JR0072ENK-K2_07NBOxWsH9zs0qd5CrcoQW_Mbz3lA/exec';
 
-    // Send OTP via WhatsApp
+    // Send OTP via Email
     const res = await fetch(url, {
       method: 'POST',
       body: JSON.stringify({
-        action: 'sendWhatsAppOTP',
+        action: 'sendEmailOTP',
         customerId: custid,
-        whatsapp: whatsapp,
+        email: email,
         role: role
       })
     });
@@ -438,8 +445,8 @@ async function submit() {
       return;
     }
 
-    // Store WhatsApp number for verification
-    localStorage.setItem('whatsappNumber', whatsapp);
+    // Store Email for verification
+    localStorage.setItem('emailAddress', email);
     document.getElementById('msg1').textContent = '';
     show(3);
   } catch (e) {
@@ -461,7 +468,7 @@ async function verify() {
       body: JSON.stringify({
         customerId: custid,
         otp: otp,
-        action: 'verifyWhatsAppOTP',
+        action: 'verifyEmailOTP',
         role: role
       })
     });
