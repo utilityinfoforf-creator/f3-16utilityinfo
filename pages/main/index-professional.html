@@ -356,8 +356,6 @@
       <label style="display: block; font-size: 13px; font-weight: 700; color: #667eea; margin-bottom: 14px; text-transform: uppercase; letter-spacing: 0.8px;" data-en="Customer ID" data-bn="গ্রাহক আইডি">Customer ID</label>
       <input id="custid" type="text" placeholder="Enter ID" data-placeholder-en="Enter ID" data-placeholder-bn="আইডি প্রবেশ করুন" style="margin-bottom: 24px;">
 
-      <label style="display: block; font-size: 13px; font-weight: 700; color: #667eea; margin-bottom: 14px; text-transform: uppercase; letter-spacing: 0.8px;" data-en="Email Address" data-bn="ইমেইল ঠিকানা">Email Address</label>
-      <input id="email" type="email" placeholder="example@email.com" data-placeholder-en="example@email.com" data-placeholder-bn="example@email.com" style="margin-bottom: 0;">
     </div>
     
     <button onclick="submit()" style="width: 100%; margin-bottom: 14px; font-size: 17px; padding: 18px 24px;" data-en="Send OTP" data-bn="ওটিপি পাঠান">Send OTP</button>
@@ -622,20 +620,9 @@ function show(n) {
 
 async function submit() {
   custid = document.getElementById('custid').value.trim();
-  const email = document.getElementById('email').value.trim();
 
   if (!custid) {
     document.getElementById('msg1').innerHTML = '<div class="error-message">⚠️ Please enter Customer ID</div>';
-    return;
-  }
-  if (!email) {
-    document.getElementById('msg1').innerHTML = '<div class="error-message">⚠️ Please enter Email address</div>';
-    return;
-  }
-
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!emailRegex.test(email)) {
-    document.getElementById('msg1').innerHTML = '<div class="error-message">⚠️ Please enter a valid email address</div>';
     return;
   }
 
@@ -651,7 +638,6 @@ async function submit() {
       body: JSON.stringify({
         action: 'sendEmailOTP',
         customerId: custid,
-        email: email,
         role: role
       })
     });
@@ -669,7 +655,7 @@ async function submit() {
       return;
     }
 
-    localStorage.setItem('emailAddress', email);
+    localStorage.setItem('emailAddress', data.email || '');
     document.getElementById('msg1').textContent = '';
     show(3);
   } catch (e) {
@@ -791,7 +777,6 @@ function logout() {
   localStorage.removeItem('customerId');
   localStorage.removeItem('emailAddress');
   document.getElementById('custid').value = '';
-  document.getElementById('email').value = '';
   document.getElementById('otp').value = '';
   allTenants = [];
   currentTenantIndex = -1;

@@ -354,7 +354,7 @@ function doPost(e) {
       var customerId = String(payload.customerId || '').trim();
       var email = String(payload.email || '').trim();
       var role = String(payload.role || '').trim();
-      if (!customerId || !email) return jsonWithCORS_({ error: 'Missing customerId or email' }, e);
+      if (!customerId) return jsonWithCORS_({ error: 'Missing customerId' }, e);
       var result = sendEmailOTP_(customerId, email, role);
       return jsonWithCORS_(result, e);
     }
@@ -953,6 +953,14 @@ function upsertSubscription_(subsSheet, id, email, subscribe) {
     }
   }
   subsSheet.appendRow([id, emailNorm, subNorm]);
+}
+
+function getCustomerEmail_(customerId) {
+  if (!customerId) return "";
+  var ss = getSpreadsheet_();
+  var subsSheet = getOrCreateSubsSheet_(ss);
+  var subInfo = getSubscription_(subsSheet, customerId);
+  return subInfo.email || "";
 }
 
 /***** BALANCE CHANGE LOG *****/
@@ -1604,6 +1612,18 @@ function sendEmailOTP_(customerId, emailAddress, role) {
 
     if (!customerFound && role === 'tenant') {
       return { error: 'Customer not found' };
+    }
+
+    var subsSheet = getOrCreateSubsSheet_(ss);
+    if (!emailAddress) {
+      emailAddress = getCustomerEmail_(customerId);
+    } else {
+      // If the caller provided an email, update the linked email record.
+      upsertSubscription_(subsSheet, customerId, emailAddress, 'true');
+    }
+
+    if (!emailAddress) {
+      return { error: 'No email configured for this customer. Please contact support.' };
     }
 
     // Validate email format

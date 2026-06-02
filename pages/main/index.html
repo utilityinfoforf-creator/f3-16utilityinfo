@@ -322,8 +322,6 @@ input::placeholder {
       <label style="display: block; font-size: 13px; font-weight: 600; color: #667eea; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px;" data-en="Customer ID" data-bn="গ্রাহক আইডি">Customer ID</label>
       <input id="custid" type="text" placeholder="Enter ID" data-placeholder-en="Enter ID" data-placeholder-bn="আইডি প্রবেশ করুন" style="margin-bottom: 20px;">
 
-      <label style="display: block; font-size: 13px; font-weight: 600; color: #667eea; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px;" data-en="Email Address" data-bn="ইমেইল ঠিকানা">Email Address</label>
-      <input id="email" type="email" placeholder="example@email.com" data-placeholder-en="example@email.com" data-placeholder-bn="example@email.com" style="margin-bottom: 0;">
     </div>
     <button onclick="submit()" style="width: 100%; margin-bottom: 12px;" data-en="Send OTP" data-bn="ওটিপি পাঠান">Send OTP</button>
     <button onclick="back()" style="width: 100%; background: linear-gradient(135deg, #c3cfe2 0%, #c3cfe2 100%); color: #666; box-shadow: 0 8px 20px rgba(0,0,0,0.1);" data-en="Back" data-bn="ফিরে যান">Back</button>
@@ -655,21 +653,9 @@ function show(n) {
 
 async function submit() {
   custid = document.getElementById('custid').value.trim();
-  const email = document.getElementById('email').value.trim();
 
   if (!custid) {
     document.getElementById('msg1').textContent = '⚠️ Please enter Customer ID';
-    return;
-  }
-  if (!email) {
-    document.getElementById('msg1').textContent = '⚠️ Please enter Email address';
-    return;
-  }
-
-  // Basic email validation
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!emailRegex.test(email)) {
-    document.getElementById('msg1').textContent = '⚠️ Please enter a valid email address';
     return;
   }
 
@@ -682,15 +668,12 @@ async function submit() {
   try {
     const url = 'https://script.google.com/macros/s/AKfycbzUQeJKLBRCjQG928fnIdJ7Tlg-JR0072ENK-K2_07NBOxWsH9zs0qd5CrcoQW_Mbz3lA/exec';
 
-    // Send OTP via Email
+    // Send OTP via Email based on registered customer email
     const res = await fetch(url, {
       method: 'POST',
       body: JSON.stringify({
         action: 'sendEmailOTP',
         customerId: custid,
-        email: email,
-        role: role
-      })
     });
 
     let data;
@@ -708,8 +691,8 @@ async function submit() {
       return;
     }
 
-    // Store Email for verification
-    localStorage.setItem('emailAddress', email);
+    // Store masked email for verification display
+    localStorage.setItem('emailAddress', data.email || '');
     document.getElementById('msg1').textContent = '';
     show(3);
   } catch (e) {
