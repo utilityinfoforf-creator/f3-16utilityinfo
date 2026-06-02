@@ -351,7 +351,7 @@ function doPost(e) {
     }
 
     if (action === 'sendEmailOTP') {
-      var customerId = String(payload.customerId || '').trim();
+      var customerId = String(payload.customerId || payload.id || '').trim();
       var email = String(payload.email || '').trim();
       var role = String(payload.role || '').trim();
       if (!customerId) return jsonWithCORS_({ error: 'Missing customerId' }, e);

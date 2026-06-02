@@ -407,9 +407,14 @@ async function submit() {
     // Send OTP via Email based on registered customer email
     const res = await fetch(url, {
       method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
       body: JSON.stringify({
         action: 'sendEmailOTP',
-        customerId: custid
+        customerId: custid,
+        role: role,
+        email: ''
       })
     });
 
