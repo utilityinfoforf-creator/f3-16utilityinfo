@@ -409,7 +409,8 @@ async function submit() {
       method: 'POST',
       body: JSON.stringify({
         action: 'sendEmailOTP',
-        customerId: custid,
+        customerId: custid
+      })
     });
 
     let data;
