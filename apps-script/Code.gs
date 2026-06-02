@@ -1130,7 +1130,12 @@ function sendOTPEmail_(email, otp) {
   var subject = "Your Utility Dashboard Login Code";
   var body = "Your login code is: " + otp + "\n\nValid for 10 minutes.\n\nDo not share this code with anyone.\n\nF3-16 Utility Corporations";
   try {
-    GmailApp.sendEmail(email, subject, body);
+    MailApp.sendEmail({
+      to: email,
+      subject: subject,
+      body: body,
+      name: "F3-16 UTILITY CORPORATIONS"
+    });
     return true;
   } catch (err) {
     Logger.log("OTP email failed: " + err.message);
