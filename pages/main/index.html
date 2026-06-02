@@ -47,7 +47,9 @@ input:focus { outline: none; border-color: #667eea; background: white; box-shado
       <button onclick="pick('tenant')" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); box-shadow: 0 8px 20px rgba(79, 172, 254, 0.3);"><span data-en="👤 Tenant" data-bn="👤 ভাড়াটিয়া">👤 Tenant</span></button>
       <button onclick="pick('landlord')" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); box-shadow: 0 8px 20px rgba(245, 87, 108, 0.3);"><span data-en="🏢 Landlord" data-bn="🏢 মালিক">🏢 Landlord</span></button>
     </div>
-    <div id="screen2" class="hidden">
+  </div>
+
+  <div id="screen2" class="hidden">
     <div style="text-align: center; margin-bottom: 30px;">
       <div style="font-size: 64px; margin-bottom: 15px;">✉️</div>
       <h1><span data-en="Enter Your Details" data-bn="আপনার বিবরণ প্রবেশ করুন">Enter Your Details</span></h1>
@@ -56,7 +58,6 @@ input:focus { outline: none; border-color: #667eea; background: white; box-shado
     <div style="background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%); padding: 30px; border-radius: 16px; margin-bottom: 25px;">
       <label style="display: block; font-size: 13px; font-weight: 600; color: #667eea; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px;" data-en="Customer ID" data-bn="গ্রাহক আইডি">Customer ID</label>
       <input id="custid" type="text" placeholder="Enter ID" data-placeholder-en="Enter ID" data-placeholder-bn="আইডি প্রবেশ করুন" style="margin-bottom: 20px;">
-
     </div>
     <button onclick="submit()" style="width: 100%; margin-bottom: 12px;" data-en="Send OTP" data-bn="ওটিপি পাঠান">Send OTP</button>
     <button onclick="back()" style="width: 100%; background: linear-gradient(135deg, #c3cfe2 0%, #c3cfe2 100%); color: #666; box-shadow: 0 8px 20px rgba(0,0,0,0.1);" data-en="Back" data-bn="ফিরে যান">Back</button>
