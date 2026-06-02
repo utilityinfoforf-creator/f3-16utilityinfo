@@ -881,8 +881,13 @@ function requestEmailVerification_(customerId, email) {
   try {
     MailApp.sendEmail({
       to: email,
-      subject: "Email Verification Code — F3-16 Utility",
-      body: "Hello,\n\nYour email verification code is: " + verificationCode + "\nThis code will expire in 24 hours.\n\nRegards,\nF3-16 Utility Corporations"
+      subject: "F3-16 Utility — Email Verification Code",
+      body: "Hello,\n\nYour verification code for F3-16 Utility is: " + verificationCode + "\n\n" +
+            "This code expires in 24 hours.\n\n" +
+            "If you did not request this, please contact support immediately.\n\n" +
+            "Regards,\n" +
+            "F3-16 Utility Support Team",
+      name: "F3-16 Utility Support"
     });
     return { status: "Verification code sent to " + email };
   } catch (err) {
@@ -1029,7 +1034,7 @@ function sendBalanceUpdateEmail_(toEmail, info) {
       subject: subject,
       body: plainBody,
       htmlBody: htmlBody,
-      name: "F3-16 UTILITY CORPORATIONS"
+      name: "F3-16 Utility Support"
     });
   } catch (mailErr) {
     Logger.log("Balance email send failed to " + toEmail + ": " + mailErr);
@@ -1135,14 +1140,30 @@ function maskEmail_(email) {
 
 function sendOTPEmail_(email, otp) {
   if (!email) return false;
-  var subject = "Your Utility Dashboard Login Code";
-  var body = "Your login code is: " + otp + "\n\nValid for 10 minutes.\n\nDo not share this code with anyone.\n\nF3-16 Utility Corporations";
+  var subject = "F3-16 Utility — Secure Login Code";
+  var plainBody =
+    "Hello,\n\n" +
+    "Your secure login code for the F3-16 Utility dashboard is: " + otp + "\n\n" +
+    "This code is valid for 10 minutes. Do not share it with anyone.\n\n" +
+    "If you did not request this code, please contact support immediately.\n\n" +
+    "Regards,\n" +
+    "F3-16 Utility Support Team";
+  var htmlBody =
+    '<div style="font-family: Arial, sans-serif; color: #111; line-height: 1.5;">' +
+      '<h2 style="margin:0 0 16px 0; color:#1a237e;">F3-16 Utility Login Code</h2>' +
+      '<p style="margin:0 0 16px 0;">Use the code below to sign in to your account:</p>' +
+      '<div style="display:inline-block; padding:18px 24px; background:#eef3ff; color:#0d47a1; font-size:24px; font-weight:700; letter-spacing:2px; border-radius:12px;">' + otp + '</div>' +
+      '<p style="margin:24px 0 0 0; color:#555;">This code expires in 10 minutes.</p>' +
+      '<p style="margin:24px 0 0 0; color:#555;">If you did not request this login code, please contact our support team.</p>' +
+      '<p style="margin:32px 0 0 0; font-weight:700;">F3-16 Utility Support Team</p>' +
+    '</div>';
   try {
     MailApp.sendEmail({
       to: email,
       subject: subject,
-      body: body,
-      name: "F3-16 UTILITY CORPORATIONS"
+      body: plainBody,
+      htmlBody: htmlBody,
+      name: "F3-16 Utility Support"
     });
     return true;
   } catch (err) {

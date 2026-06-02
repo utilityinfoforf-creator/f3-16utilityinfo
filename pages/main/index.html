@@ -603,9 +603,12 @@ async function verify() {
 
 function logout() {
   localStorage.removeItem('customerId');
+  localStorage.removeItem('customerName');
+  localStorage.removeItem('emailAddress');
   localStorage.removeItem('whatsappNumber');
   document.getElementById('custid').value = '';
-  document.getElementById('whatsapp').value = '';
+  const whatsappInput = document.getElementById('whatsapp');
+  if (whatsappInput) whatsappInput.value = '';
   document.getElementById('otp').value = '';
   allTenants = [];
   currentTenantIndex = -1;
