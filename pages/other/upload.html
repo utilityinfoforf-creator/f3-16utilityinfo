@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Upload Bill Image</title>
+  <style>body{font-family:Arial,Helvetica,sans-serif;padding:24px;background:#f6f8fb} .card{background:white;padding:18px;border-radius:10px;max-width:760px;margin:0 auto;box-shadow:0 8px 30px rgba(30,50,80,0.06)} input,button{font-size:15px;padding:10px;border-radius:8px;border:1px solid #dfe6f0} label{display:block;margin-top:12px;font-weight:700;color:#333}</style>
+</head>
+<body>
+  <div class="card">
+    <h2>Import billing from image</h2>
+    <p>Choose an image of the statement and enter the Customer ID. The page will attempt to extract amounts — adjust before submitting.</p>
+
+    <label>Customer ID</label>
+    <input id="custid" placeholder="e.g. CUST12345">
+
+    <label style="margin-top:14px">Select image</label>
+    <input id="file" type="file" accept="image/*">
+
+    <div style="margin-top:12px; display:flex; gap:10px;">
+      <button id="extract">Extract text</button>
+      <button id="clear" type="button">Clear</button>
+    </div>
+
+    <div id="result" style="margin-top:14px; display:none">
+      <label>Extracted text</label>
+      <textarea id="extracted" rows="6" style="width:100%; font-family:monospace; font-size:13px"></textarea>
+
+      <label>Electric amount</label>
+      <input id="electric" placeholder="0.00">
+      <label>Water amount</label>
+      <input id="water" placeholder="0.00">
+      <label>Gas amount</label>
+      <input id="gas" placeholder="0.00">
+      <label>Date (optional)</label>
+      <input id="billdate" placeholder="YYYY-MM-DD">
+
+      <div style="margin-top:12px; display:flex; gap:10px;">
+        <button id="submit">Submit to Spreadsheet</button>
+      </div>
+
+      <p id="status" style="color:#b00020; margin-top:10px"></p>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/tesseract.js@4.0.2/dist/tesseract.min.js"></script>
+  <script>
+    const fileEl = document.getElementById('file');
+    const extractBtn = document.getElementById('extract');
+    const resultEl = document.getElementById('result');
+    const extracted = document.getElementById('extracted');
+    const electricEl = document.getElementById('electric');
+    const waterEl = document.getElementById('water');
+    const gasEl = document.getElementById('gas');
+    const billdate = document.getElementById('billdate');
+    const submitBtn = document.getElementById('submit');
+    const statusEl = document.getElementById('status');
+
+    function normalizeNumber(n){
+      if(!n) return 0;
+      return parseFloat(String(n).replace(/[^0-9.\-]/g,'') || 0) || 0;
+    }
+
+    async function recognizeImage(dataUrl){
+      const worker = Tesseract.createWorker({ logger: m => {} });
+      await worker.load();
+      await worker.loadLanguage('eng');
+      await worker.initialize('eng');
+      const { data: { text } } = await worker.recognize(dataUrl);
+      await worker.terminate();
+      return text;
+    }
+
+    extractBtn.addEventListener('click', async () => {
+      statusEl.textContent = '';
+      if (!fileEl.files || fileEl.files.length === 0) { statusEl.textContent = 'Please choose an image file.'; return; }
+      const f = fileEl.files[0];
+      const reader = new FileReader();
+      reader.onload = async (ev) => {
+        resultEl.style.display = 'block';
+        extracted.value = 'Recognizing...';
+        try {
+          const text = await recognizeImage(ev.target.result);
+          extracted.value = text;
+
+          // Find amount-like tokens (simple heuristic)
+          const amounts = [];
+          const regex = /[\d,]+(?:\.\d{1,2})?/g;
+          let m;
+          while ((m = regex.exec(text)) !== null) {
+            // remove very short numbers
+            const num = m[0].replace(/,/g,'');
+            if (num.length >= 2) amounts.push(num);
+          }
+          // heuristics: pick largest for electric, next two for water/gas
+          const unique = Array.from(new Set(amounts.map(a=>a))).map(a=>parseFloat(a)).filter(n=>!isNaN(n)).sort((a,b)=>b-a);
+          if(unique.length>0) electricEl.value = unique[0].toFixed(2);
+          if(unique.length>1) waterEl.value = unique[1].toFixed(2);
+          if(unique.length>2) gasEl.value = unique[2].toFixed(2);
+          statusEl.textContent = 'Extraction complete — adjust values before submit.';
+        } catch (err) {
+          extracted.value = '';
+          statusEl.textContent = 'Recognition failed: ' + err.message;
+        }
+      };
+      reader.readAsDataURL(f);
+    });
+
+    document.getElementById('clear').addEventListener('click', ()=>{
+      fileEl.value = '';
+      resultEl.style.display = 'none';
+      extracted.value = '';
+      electricEl.value = '';
+      waterEl.value = '';
+      gasEl.value = '';
+      billdate.value = '';
+      statusEl.textContent = '';
+    });
+
+    submitBtn.addEventListener('click', async () => {
+      statusEl.style.color = '#333';
+      statusEl.textContent = 'Submitting...';
+      const custid = document.getElementById('custid').value.trim();
+      if(!custid){ statusEl.style.color='#b00020'; statusEl.textContent='Customer ID required'; return; }
+
+      const payload = {
+        action: 'importBillFromImage',
+        customerId: custid,
+        electric: normalizeNumber(electricEl.value),
+        water: normalizeNumber(waterEl.value),
+        gas: normalizeNumber(gasEl.value),
+        date: billdate.value || ''
+      };
+
+      // Use existing web app URL in the project
+      const url = 'https://script.google.com/macros/s/AKfycbzUQeJKLBRCjQG928fnIdJ7Tlg-JR0072ENK-K2_07NBOxWsH9zs0qd5CrcoQW_Mbz3lA/exec';
+
+      try {
+        const res = await fetch(url, { method: 'POST', body: JSON.stringify(payload) });
+        const data = await res.json();
+        if (data && data.error) { statusEl.style.color='#b00020'; statusEl.textContent = 'Server: ' + data.error; return; }
+        statusEl.style.color = '#0b7a3f';
+        statusEl.textContent = 'Import successful.';
+      } catch (err) {
+        statusEl.style.color = '#b00020';
+        statusEl.textContent = 'Network or server error: ' + err.message;
+      }
+    });
+  </script>
+</body>
+</html>

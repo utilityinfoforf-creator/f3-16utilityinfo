@@ -368,6 +368,18 @@ function doPost(e) {
       return jsonWithCORS_(result, e);
     }
 
+    if (action === 'importBillFromImage') {
+      var customerId = String(payload.customerId || payload.id || '').trim();
+      var electric = parseFloat(payload.electric || 0);
+      var water = parseFloat(payload.water || 0);
+      var gas = parseFloat(payload.gas || 0);
+      var internet = parseFloat(payload.internet || 0);
+      var billDate = String(payload.date || '').trim();
+      if (!customerId) return jsonWithCORS_({ error: 'Missing customerId' }, e);
+      var result = importBillFromImage_(ss, customerId, { electric: electric, water: water, gas: gas, internet: internet, date: billDate });
+      return jsonWithCORS_(result, e);
+    }
+
     return jsonWithCORS_({ error: 'Unknown action' }, e);
   } catch (err) {
     Logger.log('doPost error: ' + (err && err.message ? err.message : err));
@@ -689,6 +701,59 @@ function getOrCreateUsageSheet_(ss) {
     sheet.appendRow(["CustomerID", "YearMonth", "Electric", "Water", "Gas"]);
   }
   return sheet;
+}
+
+/**
+ * Import parsed billing values for a customer (called from web UI).
+ * Writes a row to UsageData and BalanceHistory and updates DashboardData balances.
+ */
+function importBillFromImage_(ss, customerId, data) {
+  try {
+    var usageSheet = getOrCreateUsageSheet_(ss);
+    var historySheet = getOrCreateHistorySheet_(ss);
+    var dashSheet = ss.getSheetByName(getSheetName_('DASHBOARD_SHEET'));
+
+    var dateObj = data.date ? new Date(data.date) : new Date();
+    if (isNaN(dateObj.getTime())) dateObj = new Date();
+    var yearMonth = dateObj.getFullYear() + '-' + String(dateObj.getMonth() + 1).padStart(2, '0');
+
+    var electric = Number(data.electric || 0);
+    var water = Number(data.water || 0);
+    var gas = Number(data.gas || 0);
+    var internet = Number(data.internet || 0);
+
+    // Append to usage sheet
+    usageSheet.appendRow([customerId, yearMonth, electric, water, gas]);
+
+    // Append to history (total balance as sum of these values)
+    var total = electric + water + gas + internet;
+    var description = 'Imported from image';
+    historySheet.appendRow([dateObj, customerId, total, description]);
+
+    // Update DashboardData if customer exists; otherwise append a minimal record
+    if (dashSheet) {
+      var dataRange = dashSheet.getDataRange().getValues();
+      var found = false;
+      for (var i = 1; i < dataRange.length; i++) {
+        if (String(dataRange[i][0]).trim() === customerId) {
+          // columns: 1 CustomerID, 2 Name, 3 ElectricBalance, 4 WaterBillDue, 5 GasBillDue, 6 LastUpdated, ...
+          dashSheet.getRange(i + 1, 3).setValue(electric);
+          dashSheet.getRange(i + 1, 4).setValue(water);
+          dashSheet.getRange(i + 1, 5).setValue(gas);
+          dashSheet.getRange(i + 1, 6).setValue(dateObj);
+          found = true;
+          break;
+        }
+      }
+      if (!found) {
+        dashSheet.appendRow([customerId, '', electric, water, gas, dateObj, '', 'Unknown', 0]);
+      }
+    }
+
+    return { status: 'ok', inserted: { customerId: customerId, yearMonth: yearMonth, electric: electric, water: water, gas: gas, total: total } };
+  } catch (err) {
+    return { error: 'Import failed: ' + (err && err.message ? err.message : err) };
+  }
 }
 
 function getOrCreateSubsSheet_(ss) {
