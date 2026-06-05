@@ -380,6 +380,25 @@ function doPost(e) {
       return jsonWithCORS_(result, e);
     }
 
+    if (action === 'importCSVBulk' || action === 'importCSV') {
+      var rows = payload.rows || [];
+      if (!rows || !Array.isArray(rows) || rows.length === 0) return jsonWithCORS_({ error: 'No rows provided' }, e);
+      var inserted = 0;
+      var errors = 0;
+      for (var ri = 0; ri < rows.length; ri++) {
+        var r = rows[ri];
+        var customerId = String(r.customerId || r.CustomerID || '').trim();
+        if (!customerId) { errors++; continue; }
+        var yearMonth = String(r.yearMonth || r.YearMonth || r.date || '').trim();
+        var electric = Number(r.electric || r.Electric || 0);
+        var water = Number(r.water || r.Water || 0);
+        var gas = Number(r.gas || r.Gas || 0);
+        importBillFromImage_(ss, customerId, { electric: electric, water: water, gas: gas, date: yearMonth });
+        inserted++;
+      }
+      return jsonWithCORS_({ status: 'ok', inserted: inserted, errors: errors }, e);
+    }
+
     return jsonWithCORS_({ error: 'Unknown action' }, e);
   } catch (err) {
     Logger.log('doPost error: ' + (err && err.message ? err.message : err));
