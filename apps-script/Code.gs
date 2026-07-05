@@ -202,6 +202,10 @@ function doGet(e) {
       }
     }
 
+    if (action === 'usageForm' || action === 'usageImportForm') {
+      return getUsageImportFormHtml_(e);
+    }
+
     // Public action: get current deployed web-app version (no id required)
     if (action === 'getVersion') {
       return jsonWithCORS_({ version: WEB_APP_VERSION, timestamp: Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "yyyy-MM-dd'T'HH:mm:ss'Z'") }, e);
@@ -380,9 +384,9 @@ function doPost(e) {
       return jsonWithCORS_(result, e);
     }
 
-    if (action === 'importUsageText') {
+    if (action === 'importUsageText' || action === 'importUsage' || action === 'importUsageData') {
       var customerId = String(payload.customerId || payload.id || '').trim();
-      var usageText = String(payload.usageText || payload.text || payload.data || '').trim();
+      var usageText = String(payload.usageText || payload.text || payload.data || payload.usageData || '').trim();
       if (!customerId || !usageText) return jsonWithCORS_({ error: 'Missing customerId or usage text' }, e);
       var textResult = importUsageDataText_(ss, customerId, usageText);
       return jsonWithCORS_(textResult, e);
@@ -717,6 +721,37 @@ function doGet_Export(e) {
     return jsonWithCORS_({ error: "Failed to export data" }, e);
   }
   return jsonWithCORS_(exportData, e);
+}
+
+function getUsageImportFormHtml_(e) {
+  var customerId = String((e && e.parameter && e.parameter.customerId) || 'TALHA5B').trim();
+  var html = [];
+  html.push('<!DOCTYPE html>');
+  html.push('<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Usage Import</title>');
+  html.push('<style>body{font-family:Arial,sans-serif;max-width:900px;margin:24px auto;padding:20px;background:#f6f8fb;} textarea{width:100%;min-height:260px;padding:12px;border:1px solid #cbd5e1;border-radius:8px;font-family:monospace;} input[type=text]{width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:8px;} button{padding:10px 16px;border:none;border-radius:8px;background:#2563eb;color:white;cursor:pointer;} .msg{margin-top:12px;padding:10px;border-radius:8px;background:#eff6ff;} .error{background:#fef2f2;color:#991b1b;} </style></head><body>');
+  html.push('<h2>Paste usage data and import it</h2>');
+  html.push('<p>Paste the usage text block below, enter the customer ID, and click Import.</p>');
+  html.push('<label><strong>Customer ID</strong></label><br><input id="customerId" type="text" value="' + customerId + '"><br><br>');
+  html.push('<label><strong>Usage Data</strong></label><br><textarea id="usageText" placeholder="Paste your usage rows here"></textarea><br><br>');
+  html.push('<button onclick="submitImport()">Import Usage Data</button>');
+  html.push('<div id="message" class="msg">Ready.</div>');
+  html.push('<script>');
+  html.push('function submitImport(){');
+  html.push('  const customerId = document.getElementById("customerId").value.trim();');
+  html.push('  const usageText = document.getElementById("usageText").value.trim();');
+  html.push('  const msg = document.getElementById("message");');
+  html.push('  if(!customerId || !usageText){ msg.className="msg error"; msg.textContent="Please enter both a customer ID and usage data."; return; }');
+  html.push('  msg.className="msg"; msg.textContent="Importing...";');
+  html.push('  fetch(window.location.href, {');
+  html.push('    method: "POST",');
+  html.push('    headers: {"Content-Type": "application/json"},');
+  html.push('    body: JSON.stringify({ action: "importUsageText", customerId: customerId, usageText: usageText })');
+  html.push('  }).then(function(r){ return r.json(); }).then(function(data){');
+  html.push('    if(data && data.error){ msg.className="msg error"; msg.textContent = data.error; } else { msg.className="msg"; msg.textContent = "Imported successfully: " + (data && data.inserted ? data.inserted : 0) + " rows"; }');
+  html.push('  }).catch(function(err){ msg.className="msg error"; msg.textContent = "Import failed: " + err; });');
+  html.push('}');
+  html.push('</script></body></html>');
+  return HtmlService.createHtmlOutput(html.join('')).setTitle('Usage Import').setWidth(900).setHeight(700);
 }
 
 /***** USAGE DATA SHEET *****/

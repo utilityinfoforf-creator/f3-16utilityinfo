@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Usage Import</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; background: #f5f7fb; color: #111827; }
+    .container { max-width: 900px; margin: 40px auto; background: white; padding: 24px; border-radius: 14px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); }
+    label { display: block; font-weight: 700; margin-bottom: 8px; }
+    input, textarea { width: 100%; box-sizing: border-box; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; margin-bottom: 16px; font: 14px/1.5 monospace; }
+    textarea { min-height: 320px; resize: vertical; }
+    button { background: #2563eb; color: white; border: none; border-radius: 8px; padding: 12px 16px; cursor: pointer; font-weight: 700; }
+    .msg { margin-top: 14px; padding: 12px; border-radius: 8px; background: #eff6ff; }
+    .error { background: #fef2f2; color: #991b1b; }
+    .success { background: #ecfdf3; color: #166534; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Usage Import Tool</h2>
+    <p>Paste your usage text, enter the customer ID, and click import.</p>
+
+    <label for="customerId">Customer ID</label>
+    <input id="customerId" type="text" value="TALHA5B" />
+
+    <label for="usageText">Usage Data</label>
+    <textarea id="usageText" placeholder="Paste the usage rows here"></textarea>
+
+    <button onclick="submitImport()">Import Usage Data</button>
+    <div id="message" class="msg">Ready.</div>
+  </div>
+
+  <script>
+    const appUrl = 'https://script.google.com/macros/s/AKfycbzUQeJKLBRCjQG928fnIdJ7Tlg-JR0072ENK-K2_07NBOxWsH9zs0qd5CrcoQW_Mbz3lA/exec';
+
+    async function submitImport() {
+      const customerId = document.getElementById('customerId').value.trim();
+      const usageText = document.getElementById('usageText').value.trim();
+      const message = document.getElementById('message');
+
+      if (!customerId || !usageText) {
+        message.className = 'msg error';
+        message.textContent = 'Please enter both a customer ID and usage data.';
+        return;
+      }
+
+      message.className = 'msg';
+      message.textContent = 'Importing...';
+
+      try {
+        const response = await fetch(appUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'importUsageText', customerId, usageText })
+        });
+        const data = await response.json();
+
+        if (data && data.error) {
+          message.className = 'msg error';
+          message.textContent = data.error;
+        } else {
+          message.className = 'msg success';
+          message.textContent = `Imported successfully: ${data && data.inserted ? data.inserted : 0} rows`;
+        }
+      } catch (err) {
+        message.className = 'msg error';
+        message.textContent = 'Import failed: ' + err.message;
+      }
+    }
+  </script>
+</body>
+</html>
