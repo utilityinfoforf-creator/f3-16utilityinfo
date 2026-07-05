@@ -97,22 +97,38 @@
       location.reload();
     }
 
-    function loadDemoData() {
-      const data = [];
+    async function loadMonthlyComparison() {
+      if (!customerId) {
+        document.getElementById('comparisonBody').innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 32px;">Customer ID not found.</td></tr>';
+        return;
+      }
 
-      displayCharts(data);
-      displayTable(data);
+      try {
+        const scriptUrl = 'https://script.google.com/macros/s/AKfycbzUQeJKLBRCjQG928fnIdJ7Tlg-JR0072ENK-K2_07NBOxWsH9zs0qd5CrcoQW_Mbz3lA/exec';
+        const res = await fetch(`${scriptUrl}?id=${encodeURIComponent(customerId)}&action=getMonthlyComparison`, { cache: 'no-store' });
+        const data = await res.json();
+        if (data.error) throw new Error(data.error);
+
+        const months = Array.isArray(data.months) ? data.months : [];
+        displayCharts(months);
+        displayTable(months);
+      } catch (err) {
+        document.getElementById('comparisonBody').innerHTML = `<tr><td colspan="5" style="text-align: center; padding: 32px;">Unable to load comparison data: ${err.message}</td></tr>`;
+      }
     }
 
     function displayCharts(data) {
+      const usageValues = data.map(d => parseFloat(d.electric || 0) + parseFloat(d.water || 0) + parseFloat(d.gas || 0));
+      const totalValues = data.map(d => parseFloat(d.total || 0));
+
       const ctxComp = document.getElementById('comparisonChart').getContext('2d');
       compChart = new Chart(ctxComp, {
         type: 'bar',
         data: {
           labels: data.map(d => d.month),
           datasets: [{
-            label: 'Usage (kWh)',
-            data: data.map(d => d.usage),
+            label: 'Total Usage',
+            data: usageValues,
             backgroundColor: '#0066FF',
             borderRadius: 6
           }]
@@ -130,8 +146,8 @@
         data: {
           labels: data.map(d => d.month),
           datasets: [{
-            label: 'Bill Amount (৳)',
-            data: data.map(d => d.bill),
+            label: 'Usage Total (units)',
+            data: totalValues,
             borderColor: '#10B981',
             backgroundColor: 'rgba(16, 185, 129, 0.05)',
             borderWidth: 3,
@@ -152,15 +168,16 @@
     function displayTable(data) {
       const tbody = document.getElementById('comparisonBody');
       tbody.innerHTML = data.map((d, i) => {
-        const prevUsage = i > 0 ? data[i-1].usage : d.usage;
-        const diff = d.usage - prevUsage;
+        const usageValue = parseFloat(d.electric || 0) + parseFloat(d.water || 0) + parseFloat(d.gas || 0);
+        const prevUsage = i > 0 ? (parseFloat(data[i-1].electric || 0) + parseFloat(data[i-1].water || 0) + parseFloat(data[i-1].gas || 0)) : usageValue;
+        const diff = usageValue - prevUsage;
         const status = diff > 0 ? '📈 Increase' : diff < 0 ? '📉 Decrease' : '➡️ Same';
         return `
           <tr>
             <td style="font-weight: 600;">${d.month}</td>
-            <td>${d.usage} kWh</td>
-            <td style="color: var(--color-primary); font-weight: 600;">৳ ${d.bill}</td>
-            <td style="color: ${diff > 0 ? '#EF4444' : '#10B981'}; font-weight: 600;">${diff > 0 ? '+' : ''}${diff} kWh</td>
+            <td>${usageValue.toFixed(2)} units</td>
+            <td style="color: var(--color-primary); font-weight: 600;">৳ ${usageValue.toFixed(2)}</td>
+            <td style="color: ${diff > 0 ? '#EF4444' : '#10B981'}; font-weight: 600;">${diff > 0 ? '+' : ''}${diff.toFixed(2)} units</td>
             <td>${status}</td>
           </tr>
         `;
@@ -168,7 +185,7 @@
     }
 
     initTheme();
-    loadDemoData();
+    loadMonthlyComparison();
   </script>
 </body>
 </html>

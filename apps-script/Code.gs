@@ -869,11 +869,11 @@ function getUsageTrends_(ss, customerId) {
 
 /***** USAGE REPORT *****/
 function getUsageReport_(ss, customerId) {
-  var historySheet = getOrCreateHistorySheet_(ss);
+  var usageSheet = getOrCreateUsageSheet_(ss);
   var dashSheet = ss.getSheetByName(getSheetName_('DASHBOARD_SHEET'));
 
-  var historyData = historySheet.getDataRange().getValues();
-  var dashData = dashSheet.getDataRange().getValues();
+  var usageData = usageSheet.getDataRange().getValues();
+  var dashData = dashSheet ? dashSheet.getDataRange().getValues() : [];
 
   var customerName = "";
   for (var j = 1; j < dashData.length; j++) {
@@ -884,15 +884,28 @@ function getUsageReport_(ss, customerId) {
   }
 
   var usage = [];
-  for (var i = 1; i < historyData.length; i++) {
-    if (String(historyData[i][1]).trim() === customerId) {
+  for (var i = 1; i < usageData.length; i++) {
+    if (String(usageData[i][0]).trim() === customerId) {
+      var yearMonth = String(usageData[i][1] || '').trim();
+      var electric = parseFloat(usageData[i][2]) || 0;
+      var water = parseFloat(usageData[i][3]) || 0;
+      var gas = parseFloat(usageData[i][4]) || 0;
+      var total = electric + water + gas;
       usage.push({
-        date: String(historyData[i][0]),
-        balance: String(historyData[i][2]),
-        description: String(historyData[i][3])
+        date: yearMonth,
+        balance: total.toFixed(2),
+        description: 'Usage data from UsageData sheet',
+        electric: electric,
+        water: water,
+        gas: gas,
+        total: total
       });
     }
   }
+
+  usage.sort(function(a, b) {
+    return String(a.date).localeCompare(String(b.date));
+  });
 
   return {
     usage: usage.reverse(),

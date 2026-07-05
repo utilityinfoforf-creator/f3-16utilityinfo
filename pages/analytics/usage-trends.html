@@ -107,23 +107,37 @@
       location.reload();
     }
 
-    function loadDemoUsageTrends() {
-      const demoData = [];
+    async function loadUsageTrends() {
+      if (!customerId) {
+        document.getElementById('usageBody').innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 32px;">Customer ID not found.</td></tr>';
+        return;
+      }
 
-      displayChart(demoData);
-      displayTable(demoData);
-      displayStats(demoData);
+      try {
+        const scriptUrl = 'https://script.google.com/macros/s/AKfycbzUQeJKLBRCjQG928fnIdJ7Tlg-JR0072ENK-K2_07NBOxWsH9zs0qd5CrcoQW_Mbz3lA/exec';
+        const res = await fetch(`${scriptUrl}?id=${encodeURIComponent(customerId)}&action=getUsageTrends`, { cache: 'no-store' });
+        const data = await res.json();
+        if (data.error) throw new Error(data.error);
+
+        const rows = Array.isArray(data.data) ? data.data : [];
+        displayChart(rows);
+        displayTable(rows);
+        displayStats(rows);
+      } catch (err) {
+        document.getElementById('usageBody').innerHTML = `<tr><td colspan="4" style="text-align: center; padding: 32px;">Unable to load usage data: ${err.message}</td></tr>`;
+      }
     }
 
     function displayChart(data) {
       const ctx = document.getElementById('usageChart').getContext('2d');
+      const usageValues = data.map(d => (parseFloat(d.electric || 0) + parseFloat(d.water || 0) + parseFloat(d.gas || 0)).toFixed(2));
       chart = new Chart(ctx, {
         type: 'line',
         data: {
           labels: data.map(d => d.month),
           datasets: [{
-            label: 'Consumption (kWh)',
-            data: data.map(d => d.usage),
+            label: 'Total Usage',
+            data: usageValues,
             borderColor: '#0066FF',
             backgroundColor: 'rgba(0, 102, 255, 0.05)',
             borderWidth: 3,
@@ -152,31 +166,34 @@
 
     function displayTable(data) {
       const tbody = document.getElementById('usageBody');
-      tbody.innerHTML = data.map(d => `
-        <tr>
-          <td style="font-weight: 600;">${d.month}</td>
-          <td>${d.usage} kWh</td>
-          <td style="color: var(--color-primary); font-weight: 600;">৳ ${d.bill}</td>
-          <td>৳ ${(parseFloat(d.bill) / d.usage).toFixed(2)}</td>
-        </tr>
-      `).join('');
+      tbody.innerHTML = data.map(d => {
+        const totalUsage = parseFloat(d.electric || 0) + parseFloat(d.water || 0) + parseFloat(d.gas || 0);
+        return `
+          <tr>
+            <td style="font-weight: 600;">${d.month}</td>
+            <td>${totalUsage.toFixed(2)} units</td>
+            <td style="color: var(--color-primary); font-weight: 600;">৳ ${totalUsage.toFixed(2)}</td>
+            <td>Electric ${parseFloat(d.electric || 0).toFixed(2)} · Water ${parseFloat(d.water || 0).toFixed(2)} · Gas ${parseFloat(d.gas || 0).toFixed(2)}</td>
+          </tr>
+        `;
+      }).join('');
     }
 
     function displayStats(data) {
-      const usages = data.map(d => d.usage);
-      const current = usages[usages.length - 1];
-      const average = (usages.reduce((a, b) => a + b) / usages.length).toFixed(0);
+      const usages = data.map(d => parseFloat(d.electric || 0) + parseFloat(d.water || 0) + parseFloat(d.gas || 0));
+      const current = usages[usages.length - 1] || 0;
+      const average = (usages.reduce((a, b) => a + b, 0) / (usages.length || 1)).toFixed(2);
       const peak = Math.max(...usages);
       const low = Math.min(...usages);
 
-      document.getElementById('stat-current').textContent = `${current} kWh`;
-      document.getElementById('stat-average').textContent = `${average} kWh`;
-      document.getElementById('stat-peak').textContent = `${peak} kWh`;
-      document.getElementById('stat-low').textContent = `${low} kWh`;
+      document.getElementById('stat-current').textContent = `${current.toFixed(2)} units`;
+      document.getElementById('stat-average').textContent = `${average} units`;
+      document.getElementById('stat-peak').textContent = `${peak.toFixed(2)} units`;
+      document.getElementById('stat-low').textContent = `${low.toFixed(2)} units`;
     }
 
     initTheme();
-    loadDemoUsageTrends();
+    loadUsageTrends();
   </script>
 </body>
 </html>
