@@ -380,6 +380,14 @@ function doPost(e) {
       return jsonWithCORS_(result, e);
     }
 
+    if (action === 'importUsageText') {
+      var customerId = String(payload.customerId || payload.id || '').trim();
+      var usageText = String(payload.usageText || payload.text || payload.data || '').trim();
+      if (!customerId || !usageText) return jsonWithCORS_({ error: 'Missing customerId or usage text' }, e);
+      var textResult = importUsageDataText_(ss, customerId, usageText);
+      return jsonWithCORS_(textResult, e);
+    }
+
     if (action === 'importCSVBulk' || action === 'importCSV') {
       var rows = payload.rows || [];
       if (!rows || !Array.isArray(rows) || rows.length === 0) return jsonWithCORS_({ error: 'No rows provided' }, e);
@@ -717,10 +725,10 @@ function getOrCreateUsageSheet_(ss) {
   var sheet = ss.getSheetByName(name);
   if (!sheet) {
     sheet = ss.insertSheet(name);
-    sheet.appendRow(["CustomerID", "Date", "ElectricUsage", "WaterUsage", "GasUsage"]);
+    sheet.appendRow(["CustomerID", "Date (From - To)", "ElectricUsage", "WaterUsage", "GasUsage"]);
   } else {
     var headers = sheet.getRange(1, 1, 1, 5).getValues()[0];
-    var expectedHeaders = ["CustomerID", "Date", "ElectricUsage", "WaterUsage", "GasUsage"];
+    var expectedHeaders = ["CustomerID", "Date (From - To)", "ElectricUsage", "WaterUsage", "GasUsage"];
     var needsHeaders = false;
     for (var h = 0; h < expectedHeaders.length; h++) {
       if (String(headers[h] || '').trim() !== expectedHeaders[h]) {
@@ -733,6 +741,60 @@ function getOrCreateUsageSheet_(ss) {
     }
   }
   return sheet;
+}
+
+function importUsageDataText_(ss, customerId, text) {
+  try {
+    var usageSheet = getOrCreateUsageSheet_(ss);
+    var lines = String(text || '').split(/\r?\n/);
+    var inserted = 0;
+
+    for (var i = 0; i < lines.length; i++) {
+      var line = String(lines[i] || '').trim();
+      if (!line) continue;
+
+      var parsed = parseUsageDataLine_(line);
+      if (!parsed) continue;
+
+      usageSheet.appendRow([
+        customerId,
+        parsed.dateRange || '',
+        parsed.electric || 0,
+        parsed.water || 0,
+        parsed.gas || 0
+      ]);
+      inserted++;
+    }
+
+    return { status: 'ok', inserted: inserted, customerId: customerId };
+  } catch (err) {
+    return { error: 'Usage import failed: ' + (err && err.message ? err.message : err) };
+  }
+}
+
+function parseUsageDataLine_(line) {
+  var cleaned = String(line || '').replace(/\s+/g, ' ').trim();
+  if (!cleaned) return null;
+
+  var dateMatch = cleaned.match(/(\d{4}-\d{2}-\d{2})\s*-\s*(\d{4}-\d{2}-\d{2})/);
+  var dateRange = dateMatch ? dateMatch[1] + ' - ' + dateMatch[2] : cleaned.match(/(\d{4}-\d{2}-\d{2})/) ? cleaned.match(/(\d{4}-\d{2}-\d{2})/)[1] : '';
+
+  var numericMatches = cleaned.match(/-?\d+(?:\.\d+)?/g) || [];
+  var numbers = [];
+  for (var i = 0; i < numericMatches.length; i++) {
+    if (numericMatches[i] && numericMatches[i] !== '-') {
+      numbers.push(parseFloat(numericMatches[i]));
+    }
+  }
+
+  if (numbers.length < 1) return null;
+
+  return {
+    dateRange: dateRange,
+    electric: numbers[0] || 0,
+    water: numbers[1] || 0,
+    gas: numbers[2] || 0
+  };
 }
 
 /**
