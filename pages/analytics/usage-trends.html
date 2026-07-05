@@ -40,20 +40,20 @@
       <div class="grid grid-cols-4" style="margin-bottom: 32px;">
         <div class="stat-card">
           <div class="stat-label">Current Month</div>
-          <div class="stat-value" id="stat-current">0 kWh</div>
+          <div class="stat-value" id="stat-current">Pending</div>
         </div>
         <div class="stat-card">
           <div class="stat-label">Average</div>
-          <div class="stat-value" id="stat-average">0 kWh</div>
+          <div class="stat-value" id="stat-average">Pending</div>
         </div>
         <div class="stat-card">
           <div class="stat-label">Peak Usage</div>
-          <div class="stat-value" id="stat-peak">0 kWh</div>
+          <div class="stat-value" id="stat-peak">Pending</div>
         </div>
         <div class="stat-card">
           <div class="stat-label">Lowest Usage</div>
-          <div class="stat-value" id="stat-low">0 kWh</div>
-        </div>
+          <div class="stat-value" id="stat-low">Pending</div>
+        </tr>
       </div>
 
       <!-- CHART CARD -->
@@ -108,14 +108,7 @@
     }
 
     function loadDemoUsageTrends() {
-      const demoData = [
-        { month: 'Jan', usage: 450, bill: '2250' },
-        { month: 'Feb', usage: 420, bill: '2100' },
-        { month: 'Mar', usage: 380, bill: '1900' },
-        { month: 'Apr', usage: 350, bill: '1750' },
-        { month: 'May', usage: 500, bill: '2500' },
-        { month: 'Jun', usage: 580, bill: '2900' }
-      ];
+      const demoData = [];
 
       displayChart(demoData);
       displayTable(demoData);

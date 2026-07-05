@@ -39,15 +39,15 @@
       <div class="grid grid-cols-3" style="margin-bottom: 32px;">
         <div class="stat-card">
           <div class="stat-label">Total Paid</div>
-          <div class="stat-value" id="stat-total">৳ 0.00</div>
+          <div class="stat-value" id="stat-total">Pending</div>
         </div>
         <div class="stat-card">
           <div class="stat-label">Last Payment</div>
-          <div class="stat-value" id="stat-recent">৳ 0.00</div>
+          <div class="stat-value" id="stat-recent">Pending</div>
         </div>
         <div class="stat-card">
           <div class="stat-label">Transactions</div>
-          <div class="stat-value" id="stat-count">0</div>
+          <div class="stat-value" id="stat-count">Pending</div>
         </div>
       </div>
 
@@ -95,11 +95,11 @@
           displayPayments(data.payments);
           displayStats(data.payments);
         } else {
-          document.getElementById('paymentList').innerHTML = '<div style="text-align: center; padding: 32px; color: var(--text-secondary);">No payments found</div>';
+          document.getElementById('paymentList').innerHTML = '<div style="text-align: center; padding: 32px; color: var(--text-secondary);">No payment history available yet.</div>';
         }
       } catch (error) {
         console.error('Error:', error);
-        loadDemoData();
+        document.getElementById('paymentList').innerHTML = '<div style="text-align: center; padding: 32px; color: var(--text-secondary);">Unable to load payment history right now.</div>';
       }
     }
 
@@ -136,16 +136,6 @@
       document.getElementById('stat-total').textContent = `৳ ${total.toFixed(2)}`;
       document.getElementById('stat-recent').textContent = `৳ ${recent.toFixed(2)}`;
       document.getElementById('stat-count').textContent = payments.length;
-    }
-
-    function loadDemoData() {
-      const demoPayments = [
-        { date: '2024-01-15', amount: '5000', method: 'bKash', id: 'TXN001' },
-        { date: '2024-12-10', amount: '3500', method: 'Nagad', id: 'TXN002' },
-        { date:  '2024-11-05', amount: '4200', method: 'Bank Transfer', id: 'TXN003' }
-      ];
-      displayPayments(demoPayments);
-      displayStats(demoPayments);
     }
 
     initTheme();
