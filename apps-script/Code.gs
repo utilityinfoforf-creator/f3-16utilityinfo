@@ -717,7 +717,20 @@ function getOrCreateUsageSheet_(ss) {
   var sheet = ss.getSheetByName(name);
   if (!sheet) {
     sheet = ss.insertSheet(name);
-    sheet.appendRow(["CustomerID", "YearMonth", "Electric", "Water", "Gas"]);
+    sheet.appendRow(["CustomerID", "Date", "ElectricUsage", "WaterUsage", "GasUsage"]);
+  } else {
+    var headers = sheet.getRange(1, 1, 1, 5).getValues()[0];
+    var expectedHeaders = ["CustomerID", "Date", "ElectricUsage", "WaterUsage", "GasUsage"];
+    var needsHeaders = false;
+    for (var h = 0; h < expectedHeaders.length; h++) {
+      if (String(headers[h] || '').trim() !== expectedHeaders[h]) {
+        needsHeaders = true;
+        break;
+      }
+    }
+    if (needsHeaders) {
+      sheet.getRange(1, 1, 1, 5).setValues([expectedHeaders]);
+    }
   }
   return sheet;
 }
@@ -741,7 +754,7 @@ function importBillFromImage_(ss, customerId, data) {
     var gas = Number(data.gas || 0);
     var internet = Number(data.internet || 0);
 
-    // Append to usage sheet
+    // Append to usage sheet using explicit usage columns
     usageSheet.appendRow([customerId, yearMonth, electric, water, gas]);
 
     // Append to history (total balance as sum of these values)
