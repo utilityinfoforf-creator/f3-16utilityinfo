@@ -428,6 +428,12 @@
           <div class="card-subtitle" id="status" style="color: #1976d2; font-weight: 700;">Active</div>
         </div>
       </div>
+
+      <div style="display: flex; flex-wrap: wrap; gap: 12px; margin-top: 24px;">
+        <button onclick="openStatementRequest()" style="padding: 12px 18px; border: none; border-radius: 10px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; font-weight: 700; cursor: pointer;">📄 Request a Statement</button>
+        <button onclick="openAnalyticsPage('../analytics/billing-history.html')" style="padding: 12px 18px; border: none; border-radius: 10px; background: linear-gradient(135deg, #16a085 0%, #1abc9c 100%); color: white; font-weight: 700; cursor: pointer;">🧾 Billing History</button>
+        <button onclick="openAnalyticsPage('../analytics/usage-report.html')" style="padding: 12px 18px; border: none; border-radius: 10px; background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%); color: white; font-weight: 700; cursor: pointer;">📊 Usage Report</button>
+      </div>
     </div>
 
     <!-- Landlord Dashboard -->
@@ -797,6 +803,20 @@ function logout() {
   allTenants = [];
   currentTenantIndex = -1;
   show(1);
+}
+
+function openAnalyticsPage(page) {
+  const customerId = localStorage.getItem('customerId');
+  const target = customerId ? `${page}?customerId=${encodeURIComponent(customerId)}` : page;
+  window.location.href = target;
+}
+
+function openStatementRequest() {
+  const customerId = localStorage.getItem('customerId') || 'Unknown';
+  const email = localStorage.getItem('emailAddress') || '';
+  const subject = encodeURIComponent(`Statement Request - Customer ${customerId}`);
+  const body = encodeURIComponent(`Hello,\n\nPlease send my latest utility statement for customer ID ${customerId}.\nEmail: ${email}\n\nThank you.`);
+  window.location.href = `mailto:support@utilityinfo.com?subject=${subject}&body=${body}`;
 }
 
 function selectTenant(index) {
