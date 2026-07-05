@@ -527,7 +527,7 @@
         <h3 style="margin-bottom: 28px; padding-bottom: 16px; border-bottom: 4px solid #f57c00; display: flex; align-items: center; gap: 12px;">
           <span style="font-size: 32px;">💳</span> Billing Information
         </h3>
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 50px;">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; margin-bottom: 30px;">
           <div class="card" style="border-left-color: #4c63d2;">
             <div class="card-label" style="color: #4c63d2;">💡 Electric</div>
             <div class="card-value" style="color: #4c63d2; font-size: 28px;" id="selected-electric-balance">৳ 0.00</div>
@@ -547,6 +547,21 @@
             <div class="card-label" style="color: #1976d2;">🌐 Internet</div>
             <div class="card-value" style="color: #1976d2; font-size: 28px;" id="selected-internet-bill">৳ 0.00</div>
             <div class="card-subtitle">Bill Due</div>
+          </div>
+          <div class="card" style="border-left-color: #8e24aa;">
+            <div class="card-label" style="color: #8e24aa;">🧾 Avg Monthly Total</div>
+            <div class="card-value" style="color: #8e24aa; font-size: 28px;" id="avg-total">৳ 0.00</div>
+            <div class="card-subtitle">Estimated average</div>
+          </div>
+          <div class="card" style="border-left-color: #ff8f00;">
+            <div class="card-label" style="color: #ff8f00;">📌 Activity Count</div>
+            <div class="card-value" style="color: #ff8f00; font-size: 28px;" id="activity-count">0 entries</div>
+            <div class="card-subtitle">Recent records</div>
+          </div>
+          <div class="card" style="border-left-color: #00897b;">
+            <div class="card-label" style="color: #00897b;">📈 Trend</div>
+            <div class="card-value" style="color: #00897b; font-size: 28px;" id="trend-summary">Loading...</div>
+            <div class="card-subtitle">12-month direction</div>
           </div>
         </div>
 
@@ -832,6 +847,11 @@ function displayTenant(index) {
   document.getElementById('selected-gas-bill').textContent = '৳ ' + gas.toLocaleString('bn-BD', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   document.getElementById('selected-internet-bill').textContent = '৳ ' + internet.toLocaleString('bn-BD', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   document.getElementById('selected-total-due').textContent = '৳ ' + total.toLocaleString('bn-BD', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  document.getElementById('avg-total').textContent = '৳ ' + total.toLocaleString('bn-BD', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+  const historyCount = Array.isArray(tenant.history) ? tenant.history.length : 0;
+  document.getElementById('activity-count').textContent = historyCount + ' entries';
+  document.getElementById('trend-summary').textContent = (tenant.usageTrends && tenant.usageTrends.trend) ? tenant.usageTrends.trend : 'No trend data';
 
   let statusText = '✓ Good Standing';
   let statusColor = '#10b981';
