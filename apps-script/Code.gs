@@ -781,22 +781,19 @@ function getOrCreateUsageSheet_(ss) {
 function importUsageDataText_(ss, customerId, text) {
   try {
     var usageSheet = getOrCreateUsageSheet_(ss);
-    var lines = String(text || '').split(/\r?\n/);
+    var rows = parseUsageTextRows_(text);
     var inserted = 0;
 
-    for (var i = 0; i < lines.length; i++) {
-      var line = String(lines[i] || '').trim();
-      if (!line) continue;
-
-      var parsed = parseUsageDataLine_(line);
-      if (!parsed) continue;
+    for (var i = 0; i < rows.length; i++) {
+      var row = rows[i];
+      if (!row || !row.dateRange) continue;
 
       usageSheet.appendRow([
         customerId,
-        parsed.dateRange || '',
-        parsed.electric || 0,
-        parsed.water || 0,
-        parsed.gas || 0
+        row.dateRange || '',
+        row.electric || 0,
+        row.water || 0,
+        row.gas || 0
       ]);
       inserted++;
     }
@@ -807,6 +804,54 @@ function importUsageDataText_(ss, customerId, text) {
   }
 }
 
+function parseUsageTextRows_(text) {
+  var normalized = String(text || '').replace(/\r/g, '').replace(/\t/g, ' ').replace(/\u00a0/g, ' ').trim();
+  if (!normalized) return [];
+
+  var rows = [];
+  var regex = /(\d{4}-\d{2}-\d{2})\s*-\s*(\d{4}-\d{2}-\d{2})/g;
+  var matches = [];
+  var match;
+
+  while ((match = regex.exec(normalized)) !== null) {
+    matches.push({
+      start: match.index,
+      end: regex.lastIndex,
+      dateRange: match[1] + ' - ' + match[2]
+    });
+  }
+
+  if (matches.length === 0) {
+    var single = parseUsageDataLine_(normalized);
+    return single ? [single] : [];
+  }
+
+  for (var i = 0; i < matches.length; i++) {
+    var start = matches[i].start;
+    var end = (i + 1 < matches.length) ? matches[i + 1].start : normalized.length;
+    var segment = normalized.substring(start, end).replace(/\s+/g, ' ').trim();
+    var cleaned = segment.replace(/(\d{4}-\d{2}-\d{2})\s*-\s*(\d{4}-\d{2}-\d{2})/g, '').replace(/\s+/g, ' ').trim();
+    var numbers = [];
+    var numberMatches = cleaned.match(/-?\d+(?:\.\d+)?/g) || [];
+    for (var j = 0; j < numberMatches.length; j++) {
+      if (numberMatches[j] && numberMatches[j] !== '-') {
+        numbers.push(parseFloat(numberMatches[j]));
+      }
+    }
+
+    if (numbers.length >= 3) {
+      rows.push({
+        dateRange: matches[i].dateRange,
+        electric: numbers[0] || 0,
+        water: numbers[1] || 0,
+        gas: numbers[2] || 0
+      });
+    }
+  }
+
+  return rows;
+}
+
 function parseUsageDataLine_(line) {
   var cleaned = String(line || '').replace(/\s+/g, ' ').trim();
   if (!cleaned) return null;
@@ -814,15 +859,15 @@ function parseUsageDataLine_(line) {
   var dateMatch = cleaned.match(/(\d{4}-\d{2}-\d{2})\s*-\s*(\d{4}-\d{2}-\d{2})/);
   var dateRange = dateMatch ? dateMatch[1] + ' - ' + dateMatch[2] : cleaned.match(/(\d{4}-\d{2}-\d{2})/) ? cleaned.match(/(\d{4}-\d{2}-\d{2})/)[1] : '';
 
-  var numericMatches = cleaned.match(/-?\d+(?:\.\d+)?/g) || [];
   var numbers = [];
+  var numericMatches = cleaned.replace(dateMatch ? dateMatch[0] : '', '').match(/-?\d+(?:\.\d+)?/g) || [];
   for (var i = 0; i < numericMatches.length; i++) {
     if (numericMatches[i] && numericMatches[i] !== '-') {
       numbers.push(parseFloat(numericMatches[i]));
     }
   }
 
-  if (numbers.length < 1) return null;
+  if (numbers.length < 3) return null;
 
   return {
     dateRange: dateRange,
