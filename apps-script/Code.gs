@@ -1221,16 +1221,85 @@ function logBalanceChange_(ss, customerId, electricBalance) {
     var subsSheet = getOrCreateSubsSheet_(ss);
     var subInfo = getSubscription_(subsSheet, customerId);
     if (subInfo && subInfo.subscribed === "true" && subInfo.email) {
-      sendBalanceUpdateEmail_(subInfo.email, {
+      var emailInfo = {
         customerId: customerId,
         balance: electricBalance,
         timestamp: formattedTime,
         name: getCustomerName_(ss, customerId),
         flatNumber: getCustomerFlat_(ss, customerId)
-      });
+      };
+      sendBalanceUpdateEmail_(subInfo.email, emailInfo);
+      maybeSendBalanceWarningEmail_(subInfo.email, emailInfo);
     }
   } catch (e) {
     Logger.log("Error sending balance update email: " + e);
+  }
+}
+
+function maybeSendBalanceWarningEmail_(toEmail, info) {
+  if (!toEmail) return;
+  var balanceValue = parseFloat(info.balance);
+  if (isNaN(balanceValue)) return;
+  if (balanceValue >= 200) return;
+
+  sendBalanceWarningEmail_(toEmail, info, balanceValue);
+}
+
+function sendBalanceWarningEmail_(toEmail, info, balanceValue) {
+  var tenantName = info.name || info.customerId;
+  var flat = info.flatNumber || "N/A";
+  var customerId = info.customerId || "N/A";
+  var time = info.timestamp || Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "EEEE, dd MMM yyyy hh:mm a");
+  var subject = "⚠️ Low Balance Warning — " + flat;
+  var severity = balanceValue < 0 ? "negative" : "below the alert threshold";
+
+  var plainBody =
+    "Hello " + tenantName + ",\n\n" +
+    "This is an automated low-balance warning for your utility account.\n\n" +
+    "Your current balance is " + severity + ".\n\n" +
+    "Flat: " + flat + "\n" +
+    "Customer ID: " + customerId + "\n" +
+    "Current Balance: ৳ " + (info.balance || "0") + "\n" +
+    "Updated At: " + time + "\n\n" +
+    "Please top up or contact the property manager as soon as possible.\n\n" +
+    "Regards,\n" +
+    "F3-16 Utility Corporations\n";
+
+  var htmlBody =
+    '<div style="font-family: Arial, Helvetica, sans-serif; color: #0f172a; line-height: 1.6; background: #fff7ed; padding: 24px;">' +
+      '<div style="max-width: 640px; margin: 0 auto; border-radius: 14px; overflow: hidden; box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08); background: #ffffff; border: 1px solid #fdba74;">' +
+        '<div style="background: linear-gradient(135deg, #dc2626 0%, #f97316 100%); padding: 22px 24px; color: #ffffff;">' +
+          '<h2 style="margin: 0 0 6px 0; font-size: 22px;">Low Balance Warning</h2>' +
+          '<p style="margin: 0; font-size: 13px; opacity: 0.95;">Your utility balance has fallen below the alert threshold.</p>' +
+        '</div>' +
+        '<div style="padding: 24px;">' +
+          '<p style="margin: 0 0 10px 0;">Hello ' + tenantName + ',</p>' +
+          '<p style="margin: 0 0 16px 0;">Your current balance is ' + severity + ' and requires attention.</p>' +
+          '<div style="background: #fff7ed; border: 1px solid #fed7aa; border-radius: 10px; padding: 14px 16px; margin: 0 0 16px 0;">' +
+            '<p style="margin: 0 0 6px 0; font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em; color: #9a2c00;">Current balance</p>' +
+            '<p style="margin: 0; font-size: 28px; font-weight: 700; color: #b45309;">৳ ' + (info.balance || "0") + '</p>' +
+          '</div>' +
+          '<table style="width: 100%; border-collapse: collapse; margin-bottom: 16px;">' +
+            '<tr><td style="padding: 8px 0; font-weight: 700; color: #334155; width: 38%;">Flat</td><td style="padding: 8px 0; color: #0f172a;">' + flat + '</td></tr>' +
+            '<tr><td style="padding: 8px 0; font-weight: 700; color: #334155;">Customer ID</td><td style="padding: 8px 0; color: #0f172a;">' + customerId + '</td></tr>' +
+            '<tr><td style="padding: 8px 0; font-weight: 700; color: #334155;">Updated at</td><td style="padding: 8px 0; color: #0f172a;">' + time + '</td></tr>' +
+          '</table>' +
+          '<p style="margin: 0 0 10px 0; color: #475569;">Please top up or contact the property manager as soon as possible.</p>' +
+          '<p style="margin: 0; font-weight: 700; color: #dc2626;">F3-16 Utility Corporations</p>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+
+  try {
+    MailApp.sendEmail({
+      to: toEmail,
+      subject: subject,
+      body: plainBody,
+      htmlBody: htmlBody,
+      name: "F3-16 Utility Support"
+    });
+  } catch (mailErr) {
+    Logger.log("Balance warning email send failed to " + toEmail + ": " + mailErr);
   }
 }
 
