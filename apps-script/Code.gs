@@ -127,6 +127,16 @@ function onFormSubmit(e) {
   }
 }
 
+/***** WEB APP: OPTIONS (for CORS preflight) *****/
+function doOptions(e) {
+  var out = ContentService.createTextOutput('');
+  out.setMimeType(ContentService.MimeType.TEXT);
+  out.setHeader('Access-Control-Allow-Origin', '*');
+  out.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  out.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  return out;
+}
+
 /***** WEB APP: GET *****/
 function doGet(e) {
   try {
@@ -567,10 +577,16 @@ function jsonWithCORS_(obj, e) {
     var cb = e.parameter.callback;
     var out = ContentService.createTextOutput(cb + '(' + json + ');');
     out.setMimeType(ContentService.MimeType.JAVASCRIPT);
+    out.setHeader('Access-Control-Allow-Origin', '*');
+    out.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    out.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
     return out;
   } else {
     var out = ContentService.createTextOutput(json);
     out.setMimeType(ContentService.MimeType.JSON);
+    out.setHeader('Access-Control-Allow-Origin', '*');
+    out.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    out.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
     return out;
   }
 }
@@ -724,34 +740,7 @@ function doGet_Export(e) {
 }
 
 function getUsageImportFormHtml_(e) {
-  var customerId = String((e && e.parameter && e.parameter.customerId) || 'TALHA5B').trim();
-  var html = [];
-  html.push('<!DOCTYPE html>');
-  html.push('<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Usage Import</title>');
-  html.push('<style>body{font-family:Arial,sans-serif;max-width:900px;margin:24px auto;padding:20px;background:#f6f8fb;} textarea{width:100%;min-height:260px;padding:12px;border:1px solid #cbd5e1;border-radius:8px;font-family:monospace;} input[type=text]{width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:8px;} button{padding:10px 16px;border:none;border-radius:8px;background:#2563eb;color:white;cursor:pointer;} .msg{margin-top:12px;padding:10px;border-radius:8px;background:#eff6ff;} .error{background:#fef2f2;color:#991b1b;} </style></head><body>');
-  html.push('<h2>Paste usage data and import it</h2>');
-  html.push('<p>Paste the usage text block below, enter the customer ID, and click Import.</p>');
-  html.push('<label><strong>Customer ID</strong></label><br><input id="customerId" type="text" value="' + customerId + '"><br><br>');
-  html.push('<label><strong>Usage Data</strong></label><br><textarea id="usageText" placeholder="Paste your usage rows here"></textarea><br><br>');
-  html.push('<button onclick="submitImport()">Import Usage Data</button>');
-  html.push('<div id="message" class="msg">Ready.</div>');
-  html.push('<script>');
-  html.push('function submitImport(){');
-  html.push('  const customerId = document.getElementById("customerId").value.trim();');
-  html.push('  const usageText = document.getElementById("usageText").value.trim();');
-  html.push('  const msg = document.getElementById("message");');
-  html.push('  if(!customerId || !usageText){ msg.className="msg error"; msg.textContent="Please enter both a customer ID and usage data."; return; }');
-  html.push('  msg.className="msg"; msg.textContent="Importing...";');
-  html.push('  fetch(window.location.href, {');
-  html.push('    method: "POST",');
-  html.push('    headers: {"Content-Type": "application/json"},');
-  html.push('    body: JSON.stringify({ action: "importUsageText", customerId: customerId, usageText: usageText })');
-  html.push('  }).then(function(r){ return r.json(); }).then(function(data){');
-  html.push('    if(data && data.error){ msg.className="msg error"; msg.textContent = data.error; } else { msg.className="msg"; msg.textContent = "Imported successfully: " + (data && data.inserted ? data.inserted : 0) + " rows"; }');
-  html.push('  }).catch(function(err){ msg.className="msg error"; msg.textContent = "Import failed: " + err; });');
-  html.push('}');
-  html.push('</script></body></html>');
-  return HtmlService.createHtmlOutput(html.join('')).setTitle('Usage Import').setWidth(900).setHeight(700);
+  return HtmlService.createHtmlOutput('<!DOCTYPE html><html><body><p>Import UI is not currently used.</p></body></html>').setTitle('Import').setWidth(900).setHeight(700);
 }
 
 /***** USAGE DATA SHEET *****/
@@ -1251,33 +1240,45 @@ function sendBalanceUpdateEmail_(toEmail, info) {
   var balance = info.balance || "0";
   var time = info.timestamp || Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "EEEE, dd MMM yyyy hh:mm a");
   var flat = info.flatNumber || "N/A";
+  var customerId = info.customerId || "N/A";
 
-  var subject = "Account Balance Update — " + flat + " (" + tenantName + ")";
+  var subject = "Your utility balance has been updated — " + flat;
 
   var plainBody =
     "Hello " + tenantName + ",\n\n" +
-    "This is an automated notification to inform you of a recent update to your utility account balance.\n\n" +
+    "This is a courtesy notification to let you know that your utility account balance has been updated.\n\n" +
+    "Account Details\n" +
     "Flat: " + flat + "\n" +
-    "Customer ID: " + (info.customerId || "") + "\n" +
-    "Electric balance: ৳ " + balance + "\n" +
-    "Updated at: " + time + "\n\n" +
-    "If this update is unexpected or you have questions, please reply to this email or contact the property manager.\n\n" +
+    "Customer ID: " + customerId + "\n" +
+    "Current Balance: ৳ " + balance + "\n" +
+    "Updated At: " + time + "\n\n" +
+    "If this change appears unexpected, please reply to this email or contact the property manager for assistance.\n\n" +
     "Regards,\n" +
     "F3-16 Utility Corporations\n";
 
   var htmlBody =
-    '<div style="font-family: Arial, Helvetica, sans-serif; color: #111;">' +
-      '<h2 style="margin:0 0 8px 0;">Account Balance Update</h2>' +
-      '<p>Hello ' + tenantName + ',</p>' +
-      '<p>This is an automated notification to inform you of a recent update to your utility account balance.</p>' +
-      '<table style="border-collapse:collapse; width:100%; max-width:600px;">' +
-        '<tr><td style="padding:8px; border:1px solid #e6e6e6; font-weight:700;">Flat</td><td style="padding:8px; border:1px solid #e6e6e6;">' + flat + '</td></tr>' +
-        '<tr><td style="padding:8px; border:1px solid #e6e6e6; font-weight:700;">Customer ID</td><td style="padding:8px; border:1px solid #e6e6e6;">' + (info.customerId || "") + '</td></tr>' +
-        '<tr><td style="padding:8px; border:1px solid #e6e6e6; font-weight:700;">Electric balance</td><td style="padding:8px; border:1px solid #e6e6e6;">৳ ' + balance + '</td></tr>' +
-        '<tr><td style="padding:8px; border:1px solid #e6e6e6; font-weight:700;">Updated at</td><td style="padding:8px; border:1px solid #e6e6e6;">' + time + '</td></tr>' +
-      '</table>' +
-      '<p>If you have any questions, reply to this email or contact the property manager.</p>' +
-      '<p style="margin:12px 0 0 0; font-weight:700;">F3-16 Utility Corporations</p>' +
+    '<div style="font-family: Arial, Helvetica, sans-serif; color: #0f172a; line-height: 1.65; background: #f8fafc; padding: 24px;">' +
+      '<div style="max-width: 680px; margin: 0 auto; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08); background: #ffffff;">' +
+        '<div style="background: linear-gradient(135deg, #0f172a 0%, #2563eb 100%); padding: 28px 32px; color: #ffffff;">' +
+          '<h2 style="margin: 0 0 6px 0; font-size: 24px;">Utility Balance Update</h2>' +
+          '<p style="margin: 0; font-size: 14px; opacity: 0.95;">Your account activity has been recorded successfully.</p>' +
+        '</div>' +
+        '<div style="padding: 28px 32px;">' +
+          '<p style="margin: 0 0 10px 0; font-size: 16px;">Hello ' + tenantName + ',</p>' +
+          '<p style="margin: 0 0 20px 0; color: #475569;">This is a courtesy notification to let you know that your utility account balance has been updated.</p>' +
+          '<div style="background: linear-gradient(135deg, #eff6ff 0%, #f8fafc 100%); border: 1px solid #dbeafe; border-radius: 12px; padding: 18px 20px; margin: 0 0 20px 0;">' +
+            '<p style="margin: 0 0 6px 0; font-size: 13px; text-transform: uppercase; letter-spacing: 0.04em; color: #64748b;">Current balance</p>' +
+            '<p style="margin: 0; font-size: 32px; font-weight: 700; color: #1d4ed8;">৳ ' + balance + '</p>' +
+          '</div>' +
+          '<table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">' +
+            '<tr><td style="padding: 10px 0; font-weight: 700; color: #334155; width: 38%;">Flat</td><td style="padding: 10px 0; color: #0f172a;">' + flat + '</td></tr>' +
+            '<tr><td style="padding: 10px 0; font-weight: 700; color: #334155;">Customer ID</td><td style="padding: 10px 0; color: #0f172a;">' + customerId + '</td></tr>' +
+            '<tr><td style="padding: 10px 0; font-weight: 700; color: #334155;">Updated at</td><td style="padding: 10px 0; color: #0f172a;">' + time + '</td></tr>' +
+          '</table>' +
+          '<p style="margin: 0 0 14px 0; color: #475569;">If this change appears unexpected, please reply to this email or contact the property manager for assistance.</p>' +
+          '<p style="margin: 0; font-weight: 700; color: #2563eb;">F3-16 Utility Corporations</p>' +
+        '</div>' +
+      '</div>' +
     '</div>';
 
   try {
