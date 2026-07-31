@@ -924,7 +924,18 @@ function getOrCreateSubsSheet_(ss) {
   var sheet = ss.getSheetByName(name);
   if (!sheet) {
     sheet = ss.insertSheet(name);
-    sheet.appendRow(["CustomerID", "Email", "Subscribed"]);
+    sheet.appendRow(["CustomerID", "Email", "WhatsApp", "Subscribed"]);
+  } else {
+    // Migration: if sheet exists but doesn't have WhatsApp column, add it
+    var headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+    var hasWhatsApp = false;
+    for (var h = 0; h < headers.length; h++) {
+      if (String(headers[h]).trim() === "WhatsApp") { hasWhatsApp = true; break; }
+    }
+    if (!hasWhatsApp) {
+      sheet.insertColumns(3, 1);
+      sheet.getRange(1, 3).setValue("WhatsApp");
+    }
   }
   return sheet;
 }
@@ -1178,27 +1189,30 @@ function getSubscription_(subsSheet, id) {
   for (var i = 1; i < data.length; i++) {
     if (String(data[i][0]).trim() === id) {
       var email = String(data[i][1] || "").trim();
-      var subscribedRaw = String(data[i][2] || "false").trim().toLowerCase();
+      var whatsapp = String(data[i][2] || "").trim();
+      var subscribedRaw = String(data[i][3] || "false").trim().toLowerCase();
       var subscribed = (subscribedRaw === "true") ? "true" : "false";
-      return { email: email, subscribed: subscribed };
+      return { email: email, whatsapp: whatsapp, subscribed: subscribed };
     }
   }
-  return { email: "", subscribed: "false" };
+  return { email: "", whatsapp: "", subscribed: "false" };
 }
 
-function upsertSubscription_(subsSheet, id, email, subscribe) {
+function upsertSubscription_(subsSheet, id, email, subscribe, whatsapp) {
   var data = subsSheet.getDataRange().getValues();
   var subNorm = (String(subscribe || "false").trim().toLowerCase() === "true") ? "true" : "false";
   var emailNorm = String(email || "").trim();
+  var whatsappNorm = String(whatsapp || "").trim();
 
   for (var i = 1; i < data.length; i++) {
     if (String(data[i][0]).trim() === id) {
       if (emailNorm) subsSheet.getRange(i + 1, 2).setValue(emailNorm);
-      subsSheet.getRange(i + 1, 3).setValue(subNorm);
+      if (whatsappNorm) subsSheet.getRange(i + 1, 3).setValue(whatsappNorm);
+      subsSheet.getRange(i + 1, 4).setValue(subNorm);
       return;
     }
   }
-  subsSheet.appendRow([id, emailNorm, subNorm]);
+  subsSheet.appendRow([id, emailNorm, whatsappNorm, subNorm]);
 }
 
 function getCustomerEmail_(customerId) {
@@ -1220,7 +1234,7 @@ function logBalanceChange_(ss, customerId, electricBalance) {
   try {
     var subsSheet = getOrCreateSubsSheet_(ss);
     var subInfo = getSubscription_(subsSheet, customerId);
-    if (subInfo && subInfo.subscribed === "true" && subInfo.email) {
+    if (subInfo && subInfo.subscribed === "true") {
       var emailInfo = {
         customerId: customerId,
         balance: electricBalance,
@@ -1228,11 +1242,108 @@ function logBalanceChange_(ss, customerId, electricBalance) {
         name: getCustomerName_(ss, customerId),
         flatNumber: getCustomerFlat_(ss, customerId)
       };
-      sendBalanceUpdateEmail_(subInfo.email, emailInfo);
-      maybeSendBalanceWarningEmail_(subInfo.email, emailInfo);
+      if (subInfo.email) {
+        sendBalanceUpdateEmail_(subInfo.email, emailInfo);
+        maybeSendBalanceWarningEmail_(subInfo.email, emailInfo);
+      }
+      if (subInfo.whatsapp) {
+        sendBalanceUpdateWhatsApp_(subInfo.whatsapp, emailInfo);
+        maybeSendBalanceWarningWhatsApp_(subInfo.whatsapp, emailInfo);
+      }
     }
   } catch (e) {
-    Logger.log("Error sending balance update email: " + e);
+    Logger.log("Error sending balance notifications: " + e);
+  }
+}
+
+function sendBalanceUpdateWhatsApp_(phoneNumber, info) {
+  if (!phoneNumber) return;
+  var tenantName = info.name || info.customerId;
+  var balance = info.balance || "0";
+  var flat = info.flatNumber || "N/A";
+  var formattedPhone = phoneNumber.startsWith('+') ? phoneNumber : '+' + phoneNumber;
+  
+  var message = "Hi " + tenantName + ",\n\n" +
+    "Your utility balance has been updated.\n\n" +
+    "Flat: " + flat + "\n" +
+    "Current Balance: ৳ " + balance + "\n\n" +
+    "F3-16 Utility Corporations";
+  
+  sendMetaWhatsAppMessage_(formattedPhone, message);
+}
+
+function maybeSendBalanceWarningWhatsApp_(phoneNumber, info) {
+  if (!phoneNumber) return;
+  var balanceValue = parseFloat(info.balance);
+  if (isNaN(balanceValue)) return;
+  if (balanceValue >= 200) return;
+  
+  sendBalanceWarningWhatsApp_(phoneNumber, info, balanceValue);
+}
+
+function sendBalanceWarningWhatsApp_(phoneNumber, info, balanceValue) {
+  if (!phoneNumber) return;
+  var tenantName = info.name || info.customerId;
+  var flat = info.flatNumber || "N/A";
+  var balance = info.balance || "0";
+  var formattedPhone = phoneNumber.startsWith('+') ? phoneNumber : '+' + phoneNumber;
+  
+  var severity = balanceValue < 0 ? "NEGATIVE" : "LOW (below ৳200)";
+  var message = "⚠️ LOW BALANCE WARNING\n\n" +
+    "Hello " + tenantName + ",\n\n" +
+    "Your utility balance is " + severity + ".\n\n" +
+    "Flat: " + flat + "\n" +
+    "Current Balance: ৳ " + balance + "\n\n" +
+    "Please top up immediately or contact management.\n\n" +
+    "F3-16 Utility Corporations";
+  
+  sendMetaWhatsAppMessage_(formattedPhone, message);
+}
+
+function sendMetaWhatsAppMessage_(phoneNumber, messageText) {
+  try {
+    var props = PropertiesService.getScriptProperties();
+    var accessToken = props.getProperty('META_WHATSAPP_TOKEN') || '';
+    var phoneNumberId = props.getProperty('META_WHATSAPP_PHONE_ID') || '';
+    
+    if (!accessToken || !phoneNumberId) {
+      Logger.log('Meta WhatsApp not configured. Message for ' + phoneNumber + ': ' + messageText);
+      return false;
+    }
+    
+    var url = 'https://graph.instagram.com/v18.0/' + phoneNumberId + '/messages';
+    var payload = {
+      messaging_product: 'whatsapp',
+      to: phoneNumber,
+      type: 'text',
+      text: {
+        body: messageText
+      }
+    };
+    
+    var options = {
+      method: 'post',
+      headers: {
+        'Authorization': 'Bearer ' + accessToken,
+        'Content-Type': 'application/json'
+      },
+      payload: JSON.stringify(payload),
+      muteHttpExceptions: true
+    };
+    
+    var response = UrlFetchApp.fetch(url, options);
+    var statusCode = response.getResponseCode();
+    
+    if (statusCode === 200) {
+      Logger.log('WhatsApp message sent successfully to ' + phoneNumber);
+      return true;
+    } else {
+      Logger.log('WhatsApp send failed with code ' + statusCode + ': ' + response.getContentText());
+      return false;
+    }
+  } catch (err) {
+    Logger.log('Error sending WhatsApp message: ' + (err.message || err));
+    return false;
   }
 }
 
