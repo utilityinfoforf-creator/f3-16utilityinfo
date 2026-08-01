@@ -129,12 +129,7 @@ function onFormSubmit(e) {
 
 /***** WEB APP: OPTIONS (for CORS preflight) *****/
 function doOptions(e) {
-  var out = ContentService.createTextOutput('');
-  out.setMimeType(ContentService.MimeType.TEXT);
-  out.setHeader('Access-Control-Allow-Origin', '*');
-  out.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  out.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  return out;
+  return ContentService.createTextOutput('').setMimeType(ContentService.MimeType.TEXT);
 }
 
 /***** WEB APP: GET *****/
@@ -575,19 +570,11 @@ function jsonWithCORS_(obj, e) {
   var json = JSON.stringify(obj || {});
   if (e && e.parameter && e.parameter.callback) {
     var cb = e.parameter.callback;
-    var out = ContentService.createTextOutput(cb + '(' + json + ');');
-    out.setMimeType(ContentService.MimeType.JAVASCRIPT);
-    out.setHeader('Access-Control-Allow-Origin', '*');
-    out.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-    out.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-    return out;
+    return ContentService.createTextOutput(cb + '(' + json + ');')
+      .setMimeType(ContentService.MimeType.JAVASCRIPT);
   } else {
-    var out = ContentService.createTextOutput(json);
-    out.setMimeType(ContentService.MimeType.JSON);
-    out.setHeader('Access-Control-Allow-Origin', '*');
-    out.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-    out.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-    return out;
+    return ContentService.createTextOutput(json)
+      .setMimeType(ContentService.MimeType.JSON);
   }
 }
 
