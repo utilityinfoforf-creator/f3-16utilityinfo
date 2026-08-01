@@ -222,12 +222,22 @@ function doGet(e) {
     }
 
     // Admin/dev helper: seed sample data (no id required)
-    if (action === 'seedSample' || action === 'populateSample') {
+      if (action === 'seedSample' || action === 'populateSample') {
       try {
         var result = populateSampleData_();
         return jsonWithCORS_({ status: 'ok', result: result }, e);
       } catch (errSeed) {
         return jsonWithCORS_({ error: 'seed_failed', message: (errSeed && errSeed.message) ? errSeed.message : String(errSeed) }, e);
+      }
+    }
+
+    // Populate UsageData with sample 6-month usage rows for each customer
+    if (action === 'seedUsage' || action === 'populateUsage') {
+      try {
+        var result = populateUsageSampleData_();
+        return jsonWithCORS_({ status: 'ok', result: result }, e);
+      } catch (errSeed) {
+        return jsonWithCORS_({ error: 'seed_usage_failed', message: (errSeed && errSeed.message) ? errSeed.message : String(errSeed) }, e);
       }
     }
 
@@ -1495,6 +1505,46 @@ function populateSampleData_() {
   dashSheet.appendRow(["C003", "Muhammad Ali", "1200", "500", "400", new Date(), "4A", "Yes", "900"]);
 
   return "Sample data populated";
+}
+
+/**
+ * Populate UsageData with 6 months of realistic sample rows per customer.
+ * Returns an object with counts and months included so it can be called via
+ * the public web app for testing (action=seedUsage).
+ */
+function populateUsageSampleData_() {
+  var ss = getSpreadsheet_();
+  var dashSheet = ss.getSheetByName(getSheetName_('DASHBOARD_SHEET'));
+  if (!dashSheet) return "Dashboard sheet not found";
+  var usageSheet = getOrCreateUsageSheet_(ss);
+
+  var dashData = dashSheet.getDataRange().getValues();
+  if (!dashData || dashData.length <= 1) return { status: 'no_customers' };
+
+  var now = new Date();
+  var months = [];
+  for (var m = 5; m >= 0; m--) {
+    var d = new Date(now.getFullYear(), now.getMonth() - m, 1);
+    months.push(d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0'));
+  }
+
+  var inserted = 0;
+  for (var i = 1; i < dashData.length; i++) {
+    var customerId = String(dashData[i][0] || '').trim();
+    if (!customerId) continue;
+
+    for (var j = 0; j < months.length; j++) {
+      // Generate plausible usage numbers
+      var electric = Math.floor(250 + Math.random() * 750); // 250-1000
+      var water = Math.floor(30 + Math.random() * 170);     // 30-200
+      var gas = Math.floor(20 + Math.random() * 80);        // 20-100
+
+      usageSheet.appendRow([customerId, months[j], electric, water, gas]);
+      inserted++;
+    }
+  }
+
+  return { status: 'ok', inserted: inserted, months: months };
 }
 
 /***** PAYMENT HISTORY *****/
