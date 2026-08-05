@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Request Statement</title>
+  <style>
+    body { font-family: Arial, Helvetica, sans-serif; margin: 20px; }
+    label { display:block; margin-top:10px; }
+    input[type=date], textarea { width: 100%; padding:8px; box-sizing: border-box; }
+    .btn { margin-top:12px; padding:10px 14px; }
+    .notice { margin-top:12px; color: green; }
+    .error { margin-top:12px; color: red; }
+  </style>
+</head>
+<body>
+  <h1>Request Statement</h1>
+  <div id="meta"></div>
+  <form id="stmtForm">
+    <label>From date
+      <input type="date" id="fromDate" required />
+    </label>
+    <label>To date
+      <input type="date" id="toDate" required />
+    </label>
+    <label>Message (optional)
+      <textarea id="message" rows="4" placeholder="Any additional details or notes"></textarea>
+    </label>
+    <button type="submit" class="btn">Request Statement</button>
+  </form>
+  <div id="result"></div>
+
+  <script>
+    // Use the same endpoint base as other pages; update if needed.
+    const API_BASE = window.location.origin + '/';
+
+    function getQueryParams() {
+      const params = {};
+      location.search.replace(/^\?/, '').split('&').forEach(function (p) {
+        if (!p) return;
+        var parts = p.split('=');
+        params[decodeURIComponent(parts[0])] = decodeURIComponent(parts[1] || '');
+      });
+      return params;
+    }
+
+    const params = getQueryParams();
+    const meta = document.getElementById('meta');
+    const storedCustomer = localStorage.getItem('customerId') || params.customerId || '';
+    const storedEmail = localStorage.getItem('emailAddress') || '';
+
+    if (storedCustomer) {
+      meta.innerHTML = `<p>Requesting for customer: <strong>${storedCustomer}</strong>${storedEmail ? ' &lt;' + storedEmail + '&gt;' : ''}</p>`;
+    } else {
+      meta.innerHTML = `<p><em>No customer selected. You must be logged in to request a statement.</em></p>`;
+    }
+
+    document.getElementById('stmtForm').addEventListener('submit', function (ev) {
+      ev.preventDefault();
+      const resultEl = document.getElementById('result');
+      resultEl.className = '';
+      resultEl.textContent = '';
+
+      if (!storedCustomer) {
+        resultEl.className = 'error';
+        resultEl.textContent = 'You must be logged in to request a statement.';
+        return;
+      }
+
+      const fromDate = document.getElementById('fromDate').value;
+      const toDate = document.getElementById('toDate').value;
+      const message = document.getElementById('message').value || '';
+
+      if (!fromDate || !toDate) {
+        resultEl.className = 'error';
+        resultEl.textContent = 'Please provide both From and To dates.';
+        return;
+      }
+
+      if (fromDate > toDate) {
+        resultEl.className = 'error';
+        resultEl.textContent = 'From date must be before or equal to To date.';
+        return;
+      }
+
+      // Optional: enforce max span of 12 months
+      const from = new Date(fromDate + 'T00:00:00');
+      const to = new Date(toDate + 'T23:59:59');
+      const monthsSpan = (to.getFullYear() - from.getFullYear()) * 12 + (to.getMonth() - from.getMonth());
+      if (monthsSpan > 12) {
+        resultEl.className = 'error';
+        resultEl.textContent = 'Maximum allowed range is 12 months. Please narrow the range.';
+        return;
+      }
+
+      // Build payload expected by Apps Script
+      const payload = {
+        action: 'requestStatement',
+        customerId: storedCustomer,
+        email: storedEmail,
+        fromDate: fromDate,
+        toDate: toDate,
+        message: message
+      };
+
+      // The web app endpoint is likely hosted on script.google.com; find the configured endpoint URL in existing code.
+      // Try to read a global API_URL if present, otherwise fallback to the root used by other pages (window.API_URL)
+      const endpoint = (window.API_URL || window.__API_URL__ || '') || '';
+
+      // If API_URL isn't configured, attempt to read the current document's base script url used by other pages
+      // There is no single reliable method here; the app usually defines a global 'API_URL' or the frontend uses the deployed URL directly.
+      // As a fallback, post to a relative path that the deployed site may proxy. Update API_URL in your app if needed.
+
+      const postUrl = endpoint || './';
+
+      resultEl.textContent = 'Submitting request...';
+
+      fetch(postUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      }).then(function (resp) {
+        return resp.json();
+      }).then(function (json) {
+        if (json && json.success) {
+          resultEl.className = 'notice';
+          resultEl.textContent = 'Statement request submitted. We have logged your request and will email you when it is ready.';
+        } else {
+          resultEl.className = 'error';
+          resultEl.textContent = 'Failed to submit request: ' + (json && json.error ? json.error : JSON.stringify(json));
+        }
+      }).catch(function (err) {
+        resultEl.className = 'error';
+        resultEl.textContent = 'Request failed: ' + (err && err.message ? err.message : String(err)) + '.\nIf this persists, check your deployment URL and redeploy the Apps Script web app.';
+      });
+    });
+  </script>
+</body>
+</html>

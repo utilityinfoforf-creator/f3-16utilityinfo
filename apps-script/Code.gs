@@ -426,6 +426,24 @@ function doPost(e) {
       return jsonWithCORS_({ status: 'ok', inserted: inserted, errors: errors }, e);
     }
 
+    // Accept a statement request from the frontend and log it to a sheet (no email sending)
+    if (action === 'requestStatement') {
+      var customerId = String(payload.customerId || '').trim();
+      var email = String(payload.email || '').trim();
+      var fromDate = String(payload.fromDate || '').trim();
+      var toDate = String(payload.toDate || '').trim();
+      var message = String(payload.message || '').trim();
+
+      if (!customerId) return jsonWithCORS_({ error: 'Missing customerId' }, e);
+
+      try {
+        var stmtResult = requestStatement_(ss, customerId, email, fromDate, toDate, message);
+        return jsonWithCORS_(stmtResult, e);
+      } catch (errReq) {
+        return jsonWithCORS_({ error: 'request_failed', message: (errReq && errReq.message) ? errReq.message : String(errReq) }, e);
+      }
+    }
+
     return jsonWithCORS_({ error: 'Unknown action' }, e);
   } catch (err) {
     Logger.log('doPost error: ' + (err && err.message ? err.message : err));
@@ -484,6 +502,32 @@ function getOrCreateHistorySheet_(ss) {
     sheet.appendRow(["Timestamp", "CustomerID", "ElectricBalance", "Description"]);
   }
   return sheet;
+}
+
+function getOrCreateStatementRequestsSheet_(ss) {
+  var name = 'StatementRequests';
+  var sheet = ss.getSheetByName(name);
+  if (!sheet) {
+    sheet = ss.insertSheet(name);
+    sheet.appendRow(["Timestamp", "CustomerID", "Email", "FromDate", "ToDate", "Message", "Status"]);
+  }
+  return sheet;
+}
+
+/**
+ * Log a statement request (no outbound email). Returns a simple result object.
+ */
+function requestStatement_(ss, customerId, email, fromDate, toDate, message) {
+  var stmtSheet = getOrCreateStatementRequestsSheet_(ss);
+  var now = new Date();
+  var formatted = Utilities.formatDate(now, Session.getScriptTimeZone(), "yyyy-MM-dd'T'HH:mm:ss'Z'");
+
+  try {
+    stmtSheet.appendRow([formatted, customerId || '', email || '', fromDate || '', toDate || '', message || '', 'pending']);
+    return { success: true, status: 'logged', timestamp: formatted };
+  } catch (err) {
+    return { success: false, error: (err && err.message) ? err.message : String(err) };
+  }
 }
 
 /**
