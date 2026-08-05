@@ -31,9 +31,6 @@
   <div id="result"></div>
 
   <script>
-    // Use the same endpoint base as other pages; update if needed.
-    const API_BASE = window.location.origin + '/';
-
     function getQueryParams() {
       const params = {};
       location.search.replace(/^\?/, '').split('&').forEach(function (p) {
@@ -103,15 +100,10 @@
         message: message
       };
 
-      // The web app endpoint is likely hosted on script.google.com; find the configured endpoint URL in existing code.
-      // Try to read a global API_URL if present, otherwise fallback to the root used by other pages (window.API_URL)
-      const endpoint = (window.API_URL || window.__API_URL__ || '') || '';
-
-      // If API_URL isn't configured, attempt to read the current document's base script url used by other pages
-      // There is no single reliable method here; the app usually defines a global 'API_URL' or the frontend uses the deployed URL directly.
-      // As a fallback, post to a relative path that the deployed site may proxy. Update API_URL in your app if needed.
-
-      const postUrl = endpoint || './';
+      // Use the same deployed Apps Script endpoint used by the other pages in this app.
+      const endpoint = window.API_URL || window.API_BASE || window.__API_URL__ || window.__API_BASE__ ||
+        'https://script.google.com/macros/s/AKfycbzUQeJKLBRCjQG928fnIdJ7Tlg-JR0072ENK-K2_07NBOxWsH9zs0qd5CrcoQW_Mbz3lA/exec';
+      const postUrl = endpoint;
 
       resultEl.textContent = 'Submitting request...';
 

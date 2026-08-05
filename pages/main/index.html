@@ -677,8 +677,8 @@ function openAnalyticsPage(page) {
 }
 
 function openStatementRequest() {
-  // Navigate to the dedicated statement request page where users can choose dates
-  const page = 'pages/other/request-statement.html';
+  // Navigate from the dashboard folder to the dedicated statement request page.
+  const page = '../other/request-statement.html';
   const customerId = localStorage.getItem('customerId');
   if (customerId) {
     window.location.href = page + '?customerId=' + encodeURIComponent(customerId);

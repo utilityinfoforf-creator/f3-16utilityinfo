@@ -812,11 +812,13 @@ function openAnalyticsPage(page) {
 }
 
 function openStatementRequest() {
-  const customerId = localStorage.getItem('customerId') || 'Unknown';
-  const email = localStorage.getItem('emailAddress') || '';
-  const subject = encodeURIComponent(`Statement Request - Customer ${customerId}`);
-  const body = encodeURIComponent(`Hello,\n\nPlease send my latest utility statement for customer ID ${customerId}.\nEmail: ${email}\n\nThank you.`);
-  window.location.href = `mailto:support@utilityinfo.com?subject=${subject}&body=${body}`;
+  const page = '../other/request-statement.html';
+  const customerId = localStorage.getItem('customerId');
+  if (customerId) {
+    window.location.href = page + '?customerId=' + encodeURIComponent(customerId);
+  } else {
+    window.location.href = page;
+  }
 }
 
 function selectTenant(index) {
