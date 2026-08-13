@@ -624,21 +624,14 @@ function listAvailableSheets_() {
 
 function jsonWithCORS_(obj, e) {
   var json = JSON.stringify(obj || {});
-  var output;
   if (e && e.parameter && e.parameter.callback) {
     var cb = e.parameter.callback;
-    output = ContentService.createTextOutput(cb + '(' + json + ');')
+    return ContentService.createTextOutput(cb + '(' + json + ');')
       .setMimeType(ContentService.MimeType.JAVASCRIPT);
   } else {
-    output = ContentService.createTextOutput(json)
+    return ContentService.createTextOutput(json)
       .setMimeType(ContentService.MimeType.JSON);
   }
-  // Add CORS headers for browser-based requests
-  output.addHeader('Access-Control-Allow-Origin', '*');
-  output.addHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  output.addHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  output.addHeader('Access-Control-Max-Age', '3600');
-  return output;
 }
 
 /***** EXPORT FOR STATIC DASHBOARD *****/
