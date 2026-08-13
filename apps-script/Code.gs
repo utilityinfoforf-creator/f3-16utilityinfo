@@ -217,12 +217,12 @@ function doGet(e) {
     }
 
     // Export all data as JSON for static dashboard (no id required)
-    if (action === 'export
+    if (action === 'export') {
       return doGet_Export(e);
     }
 
     // Admin/dev helper: seed sample data (no id required)
-      if (action === 'seedSample' || action === 'populateSample') {
+    if (action === 'seedSample' || action === 'populateSample') {
       try {
         var result = populateSampleData_();
         return jsonWithCORS_({ status: 'ok', result: result }, e);

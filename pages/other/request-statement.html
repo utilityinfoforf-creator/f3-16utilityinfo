@@ -5,30 +5,176 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Request Statement</title>
   <style>
-    body { font-family: Arial, Helvetica, sans-serif; margin: 20px; }
-    label { display:block; margin-top:10px; }
-    input[type=date], textarea { width: 100%; padding:8px; box-sizing: border-box; }
-    .btn { margin-top:12px; padding:10px 14px; }
-    .notice { margin-top:12px; color: green; }
-    .error { margin-top:12px; color: red; }
+    :root {
+      --bg: #f4f2ee;
+      --panel: #ffffff;
+      --card-border: #e7ddcf;
+      --primary: #5b3c1a;
+      --primary-strong: #3f2914;
+      --accent: #c88b4f;
+      --text: #2d241d;
+      --muted: #6a584d;
+      --success: #1e7c46;
+      --success-bg: #ebf8f0;
+      --error: #b42318;
+      --error-bg: #fdf1f1;
+      --shadow: 0 12px 30px rgba(58, 40, 25, 0.09);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Segoe UI", Arial, sans-serif;
+      background: linear-gradient(180deg, #f9f5f1 0%, var(--bg) 100%);
+      color: var(--text);
+      display: grid;
+      place-items: center;
+      padding: 24px;
+    }
+
+    .card {
+      width: min(100%, 660px);
+      background: var(--panel);
+      border: 1px solid var(--card-border);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+      padding: 28px 24px;
+    }
+
+    .eyebrow {
+      display: inline-block;
+      margin-bottom: 8px;
+      font-size: 12px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--accent);
+      font-weight: 700;
+    }
+
+    h1 {
+      margin: 0 0 10px;
+      font-size: clamp(1.9rem, 2vw, 2.4rem);
+      color: var(--primary-strong);
+    }
+
+    #meta {
+      margin-bottom: 18px;
+      color: var(--muted);
+      font-size: 0.98rem;
+    }
+
+    #meta p {
+      margin: 0;
+      line-height: 1.6;
+    }
+
+    form {
+      display: grid;
+      gap: 16px;
+    }
+
+    label {
+      display: block;
+      font-weight: 600;
+      color: var(--primary-strong);
+    }
+
+    .field-hint {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 0.84rem;
+      font-weight: 600;
+      color: var(--muted);
+    }
+
+    input[type="date"], textarea {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1px solid #d5c5b5;
+      border-radius: 10px;
+      background: #fffdfb;
+      font-size: 1rem;
+      color: var(--text);
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    input[type="date"]:focus, textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 4px rgba(200, 139, 79, 0.14);
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 110px;
+    }
+
+    .btn {
+      margin-top: 6px;
+      padding: 14px 18px;
+      border: none;
+      border-radius: 10px;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+      color: #fff;
+      cursor: pointer;
+      font-size: 1rem;
+      font-weight: 700;
+      transition: transform 0.15s ease, box-shadow 0.2s ease;
+      box-shadow: 0 10px 18px rgba(91, 60, 26, 0.18);
+    }
+
+    .btn:hover {
+      transform: translateY(-1px);
+    }
+
+    .result {
+      margin-top: 18px;
+      padding: 12px 14px;
+      border-radius: 10px;
+      font-weight: 600;
+      line-height: 1.5;
+      display: none;
+    }
+
+    .notice {
+      display: block;
+      color: var(--success);
+      background: var(--success-bg);
+      border: 1px solid rgba(30, 124, 70, 0.18);
+    }
+
+    .error {
+      display: block;
+      color: var(--error);
+      background: var(--error-bg);
+      border: 1px solid rgba(180, 35, 24, 0.16);
+    }
   </style>
 </head>
 <body>
-  <h1>Request Statement</h1>
-  <div id="meta"></div>
-  <form id="stmtForm">
-    <label>From date
-      <input type="date" id="fromDate" required />
-    </label>
-    <label>To date
-      <input type="date" id="toDate" required />
-    </label>
-    <label>Message (optional)
-      <textarea id="message" rows="4" placeholder="Any additional details or notes"></textarea>
-    </label>
-    <button type="submit" class="btn">Request Statement</button>
-  </form>
-  <div id="result"></div>
+  <div class="card">
+    <div class="eyebrow">Billing</div>
+    <h1>Request Statement</h1>
+    <div id="meta"></div>
+    <form id="stmtForm">
+      <label>
+        <span class="field-hint">From date</span>
+        <input type="date" id="fromDate" required />
+      </label>
+      <label>
+        <span class="field-hint">To date</span>
+        <input type="date" id="toDate" required />
+      </label>
+      <label>
+        <span class="field-hint">Message (optional)</span>
+        <textarea id="message" rows="4" placeholder="Add any extra details or notes for the billing team"></textarea>
+      </label>
+      <button type="submit" class="btn">Request Statement</button>
+    </form>
+    <div id="result" class="result"></div>
+  </div>
 
   <script>
     function getQueryParams() {
@@ -55,11 +201,11 @@
     document.getElementById('stmtForm').addEventListener('submit', function (ev) {
       ev.preventDefault();
       const resultEl = document.getElementById('result');
-      resultEl.className = '';
+      resultEl.className = 'result';
       resultEl.textContent = '';
 
       if (!storedCustomer) {
-        resultEl.className = 'error';
+        resultEl.className = 'result error';
         resultEl.textContent = 'You must be logged in to request a statement.';
         return;
       }
@@ -69,13 +215,13 @@
       const message = document.getElementById('message').value || '';
 
       if (!fromDate || !toDate) {
-        resultEl.className = 'error';
+        resultEl.className = 'result error';
         resultEl.textContent = 'Please provide both From and To dates.';
         return;
       }
 
       if (fromDate > toDate) {
-        resultEl.className = 'error';
+        resultEl.className = 'result error';
         resultEl.textContent = 'From date must be before or equal to To date.';
         return;
       }
@@ -85,7 +231,7 @@
       const to = new Date(toDate + 'T23:59:59');
       const monthsSpan = (to.getFullYear() - from.getFullYear()) * 12 + (to.getMonth() - from.getMonth());
       if (monthsSpan > 12) {
-        resultEl.className = 'error';
+        resultEl.className = 'result error';
         resultEl.textContent = 'Maximum allowed range is 12 months. Please narrow the range.';
         return;
       }
@@ -115,15 +261,15 @@
         return resp.json();
       }).then(function (json) {
         if (json && json.success) {
-          resultEl.className = 'notice';
+          resultEl.className = 'result notice';
           resultEl.textContent = 'Statement request submitted. We have logged your request and will email you when it is ready.';
         } else {
-          resultEl.className = 'error';
+          resultEl.className = 'result error';
           resultEl.textContent = 'Failed to submit request: ' + (json && json.error ? json.error : JSON.stringify(json));
         }
       }).catch(function (err) {
-        resultEl.className = 'error';
-        resultEl.textContent = 'Request failed: ' + (err && err.message ? err.message : String(err)) + '.\nIf this persists, check your deployment URL and redeploy the Apps Script web app.';
+        resultEl.className = 'result error';
+        resultEl.textContent = 'Request failed: ' + (err && err.message ? err.message : String(err)) + '. If this persists, check your deployment URL and redeploy the Apps Script web app.';
       });
     });
   </script>
