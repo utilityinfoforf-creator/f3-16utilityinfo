@@ -129,7 +129,9 @@ function onFormSubmit(e) {
 
 /***** WEB APP: OPTIONS (for CORS preflight) *****/
 function doOptions(e) {
-  return ContentService.createTextOutput('').setMimeType(ContentService.MimeType.TEXT);
+  var output = ContentService.createTextOutput('');
+  output.setMimeType(ContentService.MimeType.TEXT);
+  return output;
 }
 
 /***** WEB APP: GET *****/
@@ -622,14 +624,21 @@ function listAvailableSheets_() {
 
 function jsonWithCORS_(obj, e) {
   var json = JSON.stringify(obj || {});
+  var output;
   if (e && e.parameter && e.parameter.callback) {
     var cb = e.parameter.callback;
-    return ContentService.createTextOutput(cb + '(' + json + ');')
+    output = ContentService.createTextOutput(cb + '(' + json + ');')
       .setMimeType(ContentService.MimeType.JAVASCRIPT);
   } else {
-    return ContentService.createTextOutput(json)
+    output = ContentService.createTextOutput(json)
       .setMimeType(ContentService.MimeType.JSON);
   }
+  // Add CORS headers for browser-based requests
+  output.addHeader('Access-Control-Allow-Origin', '*');
+  output.addHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  output.addHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  output.addHeader('Access-Control-Max-Age', '3600');
+  return output;
 }
 
 /***** EXPORT FOR STATIC DASHBOARD *****/
