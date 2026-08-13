@@ -517,7 +517,7 @@ function getOrCreateStatementRequestsSheet_(ss) {
 }
 
 /**
- * Log a statement request (no outbound email). Returns a simple result object.
+ * Log a statement request and send an email notification. Returns a simple result object.
  */
 function requestStatement_(ss, customerId, email, fromDate, toDate, message) {
   var stmtSheet = getOrCreateStatementRequestsSheet_(ss);
@@ -526,6 +526,24 @@ function requestStatement_(ss, customerId, email, fromDate, toDate, message) {
 
   try {
     stmtSheet.appendRow([formatted, customerId || '', email || '', fromDate || '', toDate || '', message || '', 'pending']);
+    
+    // Send email notification
+    var recipient = PropertiesService.getScriptProperties().getProperty('PAYMENT_NOTIFICATION_EMAIL') || 'utilityinfoforf@gmail.com';
+    var subject = 'Statement Request from Customer ' + (customerId || 'Unknown');
+    var emailBody = 'A customer has requested a statement.\n\n' +
+      'Customer ID: ' + (customerId || 'N/A') + '\n' +
+      'Customer Email: ' + (email || 'N/A') + '\n' +
+      'Date Range: ' + (fromDate || 'N/A') + ' to ' + (toDate || 'N/A') + '\n' +
+      'Request Time: ' + formatted + '\n' +
+      'Additional Message: ' + (message || 'None') + '\n\n' +
+      'Please prepare the statement and send it to the customer.';
+    
+    try {
+      MailApp.sendEmail(recipient, subject, emailBody, { name: 'F3-16 Utility Corporations' });
+    } catch (mailErr) {
+      Logger.log('Warning: Failed to send email notification: ' + (mailErr && mailErr.message ? mailErr.message : mailErr));
+    }
+    
     return { success: true, status: 'logged', timestamp: formatted };
   } catch (err) {
     return { success: false, error: (err && err.message) ? err.message : String(err) };
