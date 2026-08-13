@@ -256,9 +256,25 @@
       fetch(postUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
+        body: JSON.stringify(payload),
+        mode: 'cors',
+        credentials: 'omit'
       }).then(function (resp) {
-        return resp.json();
+        return resp.text().then(function (text) {
+          if (!resp.ok) {
+            var details = text ? text.trim() : '';
+            var reason = details || 'HTTP ' + resp.status;
+            throw new Error(reason);
+          }
+          if (!text) {
+            throw new Error('Empty response from Apps Script. The deployment URL may be invalid or not published.');
+          }
+          try {
+            return JSON.parse(text);
+          } catch (err) {
+            throw new Error('Apps Script returned a non-JSON response. The deployment URL may be invalid, expired, or unpublished.');
+          }
+        });
       }).then(function (json) {
         if (json && json.success) {
           resultEl.className = 'result notice';
@@ -268,8 +284,10 @@
           resultEl.textContent = 'Failed to submit request: ' + (json && json.error ? json.error : JSON.stringify(json));
         }
       }).catch(function (err) {
+        var message = err && err.message ? err.message : String(err);
+        var deploymentHint = 'The Apps Script web app URL in this page is invalid, expired, or not published yet. Open Apps Script > Deploy > Web App and update the deployment URL.';
         resultEl.className = 'result error';
-        resultEl.textContent = 'Request failed: ' + (err && err.message ? err.message : String(err)) + '. If this persists, check your deployment URL and redeploy the Apps Script web app.';
+        resultEl.textContent = 'Request failed: ' + message + '. ' + deploymentHint;
       });
     });
   </script>
