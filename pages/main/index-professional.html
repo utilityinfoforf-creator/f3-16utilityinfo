@@ -705,7 +705,7 @@ async function submit() {
   }
 
   try {
-    const url = window.APP_SCRIPT_URL || window.API_URL || window.API_BASE || window.__API_URL__ || window.__API_BASE__ || localStorage.getItem('APP_SCRIPT_URL') || '';
+    const url = window.APP_SCRIPT_URL || window.API_URL || window.API_BASE || window.__API_URL__ || window.__API_BASE__ || localStorage.getItem('APP_SCRIPT_URL') || 'https://script.google.com/macros/s/AKfycbzUQeJKLBRCjQG928fnIdJ7Tlg-JR0072ENK-K2_07NBOxWsH9zs0qd5CrcoQW_Mbz3lA/exec';
     if (!url) {
       document.getElementById('msg1').innerHTML = '<div class="error-message">⚠️ Apps Script web app URL is not configured. Publish the web app and set APP_SCRIPT_URL or localStorage.APP_SCRIPT_URL.</div>';
       return;
@@ -749,7 +749,7 @@ async function verify() {
   }
 
   try {
-    const url = window.APP_SCRIPT_URL || window.API_URL || window.API_BASE || window.__API_URL__ || window.__API_BASE__ || localStorage.getItem('APP_SCRIPT_URL') || '';
+    const url = window.APP_SCRIPT_URL || window.API_URL || window.API_BASE || window.__API_URL__ || window.__API_BASE__ || localStorage.getItem('APP_SCRIPT_URL') || 'https://script.google.com/macros/s/AKfycbzUQeJKLBRCjQG928fnIdJ7Tlg-JR0072ENK-K2_07NBOxWsH9zs0qd5CrcoQW_Mbz3lA/exec';
     if (!url) {
       document.getElementById('msg2').innerHTML = '<div class="error-message">⚠️ Apps Script web app URL is not configured. Publish the web app and set APP_SCRIPT_URL or localStorage.APP_SCRIPT_URL.</div>';
       return;
