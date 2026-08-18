@@ -4,109 +4,223 @@
   <meta charset="UTF-8">
   <title>Usage Report - Utility Dashboard</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="stylesheet" href="../../../assets/styles.css">
+  <meta name="theme-color" content="#667eea">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <meta name="theme-color" content="#0066FF">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; padding: 20px; }
+    
+    .container { max-width: 1200px; margin: 0 auto; }
+    
+    .header-section {
+      background: white;
+      border-radius: 20px;
+      padding: 40px;
+      margin-bottom: 30px;
+      box-shadow: 0 12px 30px rgba(102, 126, 234, 0.15);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .header-section h1 {
+      font-size: 36px;
+      margin-bottom: 8px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      font-weight: 800;
+    }
+
+    .header-section p {
+      color: #7f8fa3;
+      font-size: 15px;
+    }
+
+    .back-btn {
+      padding: 12px 24px;
+      border: none;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border-radius: 12px;
+      cursor: pointer;
+      font-weight: 700;
+      transition: all 0.3s;
+      box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+    }
+
+    .back-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 28px rgba(102, 126, 234, 0.4);
+    }
+
+    .card {
+      background: white;
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 24px;
+      box-shadow: 0 8px 20px rgba(102, 126, 234, 0.1);
+      border: 1px solid rgba(102, 126, 234, 0.1);
+    }
+
+    .card h3 {
+      font-size: 20px;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      font-weight: 700;
+    }
+
+    .charts-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+      gap: 24px;
+      margin-bottom: 24px;
+    }
+
+    .chart-container { position: relative; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    thead tr {
+      background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
+    }
+
+    th {
+      padding: 16px 12px;
+      text-align: left;
+      font-weight: 700;
+      color: #667eea;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border: none;
+    }
+
+    td {
+      padding: 14px 12px;
+      color: #2c3e50;
+      border-bottom: 1px solid #f0f4ff;
+    }
+
+    tbody tr:hover {
+      background: rgba(102, 126, 234, 0.03);
+    }
+
+    tbody tr:last-child td {
+      border-bottom: none;
+    }
+
+    .load-more-btn {
+      display: block;
+      margin: 24px auto;
+      padding: 14px 32px;
+      border: none;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border-radius: 12px;
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 16px;
+      transition: all 0.3s;
+      box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+    }
+
+    .load-more-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 28px rgba(102, 126, 234, 0.4);
+    }
+
+    .load-more-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .status-badge {
+      display: inline-block;
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .status-up { background: #dbeafe; color: #0284c7; }
+    .status-down { background: #dbeafe; color: #0284c7; }
+    .status-same { background: #f0fdf4; color: #16a34a; }
+  </style>
 </head>
 <body>
-  <!-- GLOBAL HEADER -->
-  <header class="header">
-    <a href="../main/index.html" class="header-brand">
-      <span class="header-brand-icon">⚡</span>
-      <span>Utility</span>
-    </a>
-    <div class="header-user">
-      <div class="user-greeting">
-        <div class="user-greeting-name">Monthly Comparison</div>
-        <div class="user-greeting-sub">6-Month Analysis</div>
+  <div class="container">
+    <!-- HEADER -->
+    <div class="header-section">
+      <div>
+        <h1>📊 Usage Report</h1>
+        <p>Track your monthly utility consumption and trends</p>
+      </div>
+      <a href="../main/index.html" class="back-btn">← Back to Dashboard</a>
+    </div>
+
+    <!-- CHARTS -->
+    <div class="charts-grid">
+      <div class="card chart-container">
+        <h3>Consumption Comparison</h3>
+        <canvas id="comparisonChart" height="80"></canvas>
+      </div>
+
+      <div class="card chart-container">
+        <h3>Cost Analysis</h3>
+        <canvas id="costChart" height="80"></canvas>
       </div>
     </div>
-    <div class="header-actions">
-      <button class="theme-toggle" onclick="toggleTheme()">🌙</button>
-      <a href="../main/index.html" class="btn btn-text">← Back</a>
+
+    <!-- TABLE -->
+    <div class="card">
+      <h3>Detailed Comparison</h3>
+      <div style="overflow-x: auto;">
+        <table id="comparisonTable">
+          <thead>
+            <tr>
+              <th>Month</th>
+              <th>Date Range</th>
+              <th>Usage (units)</th>
+              <th>Bill Amount</th>
+              <th>vs Previous</th>
+              <th>Trend</th>
+            </tr>
+          </thead>
+          <tbody id="comparisonBody">
+            <tr><td colspan="6" style="text-align: center; padding: 32px;">Loading...</td></tr>
+          </tbody>
+        </table>
+      </div>
     </div>
-  </header>
 
-  <!-- PAGE CONTENT -->
-  <div style="padding: var(--space-lg) var(--space-md) var(--space-2xl);">
-    <div class="container">
-
-      <div class="mb-lg">
-        <h2>📊 Monthly Comparison Report</h2>
-        <p class="text-muted">Compare your utility usage across multiple months</p>
-      </div>
-
-      <!-- CHARTS GRID -->
-      <div class="grid grid-cols-2" style="margin-bottom: 32px;">
-        <div class="card">
-          <div class="section-header mb-lg">
-            <h4 class="section-title">Consumption Comparison</h4>
-          </div>
-          <canvas id="comparisonChart" height="80"></canvas>
-        </div>
-
-        <div class="card">
-          <div class="section-header mb-lg">
-            <h4 class="section-title">Cost Analysis</h4>
-          </div>
-          <canvas id="costChart" height="80"></canvas>
-        </div>
-      </div>
-
-      <!-- TABLE CARD -->
-      <div class="card">
-        <div class="section-header mb-lg">
-          <h3 class="section-title">Detailed Comparison</h3>
-        </div>
-        <div class="table-wrapper">
-          <table id="comparisonTable">
-            <thead>
-              <tr>
-                <th>Month</th>
-                <th>Usage (kWh)</th>
-                <th>Bill Amount</th>
-                <th>vs Previous</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody id="comparisonBody">
-              <tr><td colspan="5" style="text-align: center; padding: 32px;">Loading...</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-    </div>
+    <!-- LOAD MORE BUTTON -->
+    <button id="loadMoreBtn" class="load-more-btn" onclick="loadMoreData()" style="display: none;">
+      📥 Load More Data
+    </button>
   </div>
 
   <script>
     let compChart, costChart;
+    let allMonths = [];
+    let currentDisplayCount = 6;
     const customerId = localStorage.getItem("customerId");
-
-    function initTheme() {
-      const savedTheme = localStorage.getItem('theme') || 'light';
-      if (savedTheme === 'dark') {
-        document.documentElement.classList.add('dark-mode');
-      }
-    }
-
-    function toggleTheme() {
-      document.documentElement.classList.toggle('dark-mode');
-      const isDark = document.documentElement.classList.contains('dark-mode');
-      localStorage.setItem('theme', isDark ? 'dark' : 'light');
-      location.reload();
-    }
 
     async function loadMonthlyComparison() {
       if (!customerId) {
-        document.getElementById('comparisonBody').innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 32px;">Customer ID not found.</td></tr>';
+        document.getElementById('comparisonBody').innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 32px;">Customer ID not found.</td></tr>';
         return;
       }
 
       try {
         const scriptUrl = window.APP_SCRIPT_URL || window.API_URL || window.API_BASE || window.__API_URL__ || window.__API_BASE__ || localStorage.getItem('APP_SCRIPT_URL') || 'https://script.google.com/macros/s/AKfycbzUQeJKLBRCjQG928fnIdJ7Tlg-JR0072ENK-K2_07NBOxWsH9zs0qd5CrcoQW_Mbz3lA/exec';
         if (!scriptUrl) {
-          document.getElementById('comparisonBody').innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 32px;">Apps Script web app URL is not configured. Publish the web app and set APP_SCRIPT_URL or localStorage.APP_SCRIPT_URL.</td></tr>';
+          document.getElementById('comparisonBody').innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 32px;">Apps Script web app URL is not configured.</td></tr>';
           return;
         }
         const res = await fetch(`${scriptUrl}?id=${encodeURIComponent(customerId)}&action=getMonthlyComparison`, { cache: 'no-store' });
@@ -116,22 +230,26 @@
         const data = await res.json();
         if (data && data.error) throw new Error(data.error);
 
-        const months = Array.isArray(data && data.months) ? data.months : [];
-        if (!months.length) {
-          document.getElementById('comparisonBody').innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 32px;">No usage data available for this customer.</td></tr>';
+        allMonths = Array.isArray(data && data.months) ? data.months : [];
+        if (!allMonths.length) {
+          document.getElementById('comparisonBody').innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 32px;">No usage data available for this customer.</td></tr>';
           return;
         }
 
-        displayCharts(months);
-        displayTable(months);
+        displayCharts(allMonths.slice(0, 6));
+        displayTable(allMonths.slice(0, currentDisplayCount));
+        updateLoadMoreButton();
       } catch (err) {
-        document.getElementById('comparisonBody').innerHTML = `<tr><td colspan="5" style="text-align: center; padding: 32px;">Unable to load comparison data: ${err.message}</td></tr>`;
+        document.getElementById('comparisonBody').innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 32px;">Unable to load data: ${err.message}</td></tr>`;
       }
     }
 
     function displayCharts(data) {
       const usageValues = data.map(d => parseFloat(d.electric || 0) + parseFloat(d.water || 0) + parseFloat(d.gas || 0));
       const totalValues = data.map(d => parseFloat(d.total || 0));
+
+      if (compChart) compChart.destroy();
+      if (costChart) costChart.destroy();
 
       const ctxComp = document.getElementById('comparisonChart').getContext('2d');
       compChart = new Chart(ctxComp, {
@@ -141,14 +259,15 @@
           datasets: [{
             label: 'Total Usage',
             data: usageValues,
-            backgroundColor: '#0066FF',
-            borderRadius: 6
+            backgroundColor: '#667eea',
+            borderRadius: 6,
+            borderSkipped: false
           }]
         },
         options: {
           responsive: true,
           plugins: { legend: { display: false } },
-          scales: { y: { beginAtZero: true } }
+          scales: { y: { beginAtZero: true, ticks: { color: '#7f8fa3' }, grid: { color: 'rgba(102, 126, 234, 0.05)' } }, x: { ticks: { color: '#7f8fa3' }, grid: { display: false } } }
         }
       });
 
@@ -160,21 +279,30 @@
           datasets: [{
             label: 'Usage Total (units)',
             data: totalValues,
-            borderColor: '#10B981',
-            backgroundColor: 'rgba(16, 185, 129, 0.05)',
+            borderColor: '#764ba2',
+            backgroundColor: 'rgba(118, 75, 162, 0.05)',
             borderWidth: 3,
             fill: true,
             tension: 0.4,
             pointRadius: 5,
-            pointBackgroundColor: '#10B981'
+            pointBackgroundColor: '#764ba2',
+            pointBorderColor: '#fff',
+            pointBorderWidth: 2
           }]
         },
         options: {
           responsive: true,
           plugins: { legend: { display: false } },
-          scales: { y: { beginAtZero: true } }
+          scales: { y: { beginAtZero: true, ticks: { color: '#7f8fa3' }, grid: { color: 'rgba(102, 126, 234, 0.05)' } }, x: { ticks: { color: '#7f8fa3' }, grid: { display: false } } }
         }
       });
+    }
+
+    function getDateRange(monthStr) {
+      const [year, month] = monthStr.split('-');
+      const startDate = new Date(year, parseInt(month) - 1, 1);
+      const endDate = new Date(year, parseInt(month), 0);
+      return `${startDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${endDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`;
     }
 
     function displayTable(data) {
@@ -183,20 +311,42 @@
         const usageValue = parseFloat(d.electric || 0) + parseFloat(d.water || 0) + parseFloat(d.gas || 0);
         const prevUsage = i > 0 ? (parseFloat(data[i-1].electric || 0) + parseFloat(data[i-1].water || 0) + parseFloat(data[i-1].gas || 0)) : usageValue;
         const diff = usageValue - prevUsage;
-        const status = diff > 0 ? '📈 Increase' : diff < 0 ? '📉 Decrease' : '➡️ Same';
+        const trend = diff > 0 ? '📈' : diff < 0 ? '📉' : '➡️';
+        const status = diff > 0 ? 'Increase' : diff < 0 ? 'Decrease' : 'Same';
+        const dateRange = getDateRange(d.month_key || d.month);
         return `
           <tr>
-            <td style="font-weight: 600;">${d.month}</td>
-            <td>${usageValue.toFixed(2)} units</td>
-            <td style="color: var(--color-primary); font-weight: 600;">৳ ${usageValue.toFixed(2)}</td>
-            <td style="color: ${diff > 0 ? '#EF4444' : '#10B981'}; font-weight: 600;">${diff > 0 ? '+' : ''}${diff.toFixed(2)} units</td>
-            <td>${status}</td>
+            <td style="font-weight: 700; color: #667eea;">${d.month}</td>
+            <td style="font-size: 13px; color: #7f8fa3;">${dateRange}</td>
+            <td style="font-weight: 600;">${usageValue.toFixed(2)} units</td>
+            <td style="color: #667eea; font-weight: 700;">৳ ${usageValue.toFixed(2)}</td>
+            <td style="color: ${diff > 0 ? '#ef4444' : '#10b981'}; font-weight: 600;">${diff > 0 ? '+' : ''}${diff.toFixed(2)}</td>
+            <td><span class="status-badge" style="background: ${diff > 0 ? '#fee2e2' : '#dcfce7'}; color: ${diff > 0 ? '#dc2626' : '#16a34a'};">${trend} ${status}</span></td>
           </tr>
         `;
       }).join('');
     }
 
-    initTheme();
+    function updateLoadMoreButton() {
+      const btn = document.getElementById('loadMoreBtn');
+      if (allMonths.length > currentDisplayCount) {
+        btn.style.display = 'block';
+      } else {
+        btn.style.display = 'none';
+      }
+    }
+
+    function loadMoreData() {
+      currentDisplayCount += 6;
+      displayTable(allMonths.slice(0, currentDisplayCount));
+      
+      if (allMonths.length > 6) {
+        displayCharts(allMonths.slice(0, Math.min(6, allMonths.length)));
+      }
+      
+      updateLoadMoreButton();
+    }
+
     loadMonthlyComparison();
   </script>
 </body>
