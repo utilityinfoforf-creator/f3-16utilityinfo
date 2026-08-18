@@ -439,6 +439,56 @@ let role = null;
 let custid = null;
 let allTenants = [];
 let currentTenantIndex = -1;
+const SESSION_DURATION_MS = 5 * 60 * 1000;
+let sessionTimer = null;
+
+function setSession(customerId, displayName, roleName) {
+  const expiresAt = Date.now() + SESSION_DURATION_MS;
+  localStorage.setItem('customerId', customerId);
+  localStorage.setItem('customerName', displayName || 'User');
+  localStorage.setItem('userRole', roleName || 'tenant');
+  localStorage.setItem('sessionExpiresAt', String(expiresAt));
+  startSessionTimer();
+}
+
+function clearSession() {
+  localStorage.removeItem('customerId');
+  localStorage.removeItem('customerName');
+  localStorage.removeItem('emailAddress');
+  localStorage.removeItem('whatsappNumber');
+  localStorage.removeItem('userRole');
+  localStorage.removeItem('sessionExpiresAt');
+  if (sessionTimer) {
+    clearTimeout(sessionTimer);
+    sessionTimer = null;
+  }
+}
+
+function isSessionValid() {
+  const customerId = localStorage.getItem('customerId');
+  const expiresAt = Number(localStorage.getItem('sessionExpiresAt') || 0);
+  if (!customerId || !expiresAt) return false;
+  if (Date.now() > expiresAt) {
+    clearSession();
+    return false;
+  }
+  return true;
+}
+
+function startSessionTimer() {
+  if (sessionTimer) clearTimeout(sessionTimer);
+  const expiresAt = Number(localStorage.getItem('sessionExpiresAt') || 0);
+  if (!expiresAt) return;
+  const remaining = Math.max(0, expiresAt - Date.now());
+  sessionTimer = setTimeout(() => {
+    clearSession();
+    show(1);
+    const msg = document.getElementById('msg1');
+    if (msg) {
+      msg.textContent = 'Session expired. Please log in again.';
+    }
+  }, remaining);
+}
 
 const trans = {
   en: {
@@ -582,9 +632,8 @@ async function verify() {
       return;
     }
 
-    localStorage.setItem('customerId', custid);
-
     if (role === 'landlord') {
+      setSession(custid, 'Landlord - ' + custid, role);
       // Fetch landlord data
       const exportRes = await fetch(`${url}?action=export`);
       let exportData;
@@ -651,6 +700,7 @@ async function verify() {
 
       localStorage.setItem('customerName', tenantData.name || 'Customer ' + custid);
       document.getElementById('name').textContent = tenantData.name || 'Customer ' + custid;
+      setSession(custid, tenantData.name || 'Customer ' + custid, role);
       document.getElementById('tenant-dashboard').style.display = 'block';
       document.getElementById('landlord-dashboard').style.display = 'none';
 
@@ -668,10 +718,7 @@ async function verify() {
 }
 
 function logout() {
-  localStorage.removeItem('customerId');
-  localStorage.removeItem('customerName');
-  localStorage.removeItem('emailAddress');
-  localStorage.removeItem('whatsappNumber');
+  clearSession();
   document.getElementById('custid').value = '';
   const whatsappInput = document.getElementById('whatsapp');
   if (whatsappInput) whatsappInput.value = '';
@@ -879,11 +926,20 @@ window.addEventListener('load', () => {
     document.querySelectorAll('.lang-btn')[0].classList.remove('active');
   }
 
-  if (localStorage.getItem('customerId')) {
+  if (isSessionValid()) {
+    const activeCustomerId = localStorage.getItem('customerId');
+    const activeRole = localStorage.getItem('userRole') || 'tenant';
     document.getElementById('name').textContent = localStorage.getItem('customerName') || 'User';
+    startSessionTimer();
     show(4);
-    loadTenantBillingData(localStorage.getItem('customerId'));
+    if (activeRole === 'landlord') {
+      document.getElementById('tenant-dashboard').style.display = 'none';
+      document.getElementById('landlord-dashboard').style.display = 'block';
+    } else {
+      loadTenantBillingData(activeCustomerId);
+    }
   } else {
+    clearSession();
     show(1);
   }
 });
