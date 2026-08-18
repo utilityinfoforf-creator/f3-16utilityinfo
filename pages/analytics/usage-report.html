@@ -104,8 +104,11 @@
       }
 
       try {
-        const scriptUrl = window.API_URL || window.API_BASE || window.__API_URL__ || window.__API_BASE__ ||
-          'https://script.google.com/macros/s/AKfycbzUQeJKLBRCjQG928fnIdJ7Tlg-JR0072ENK-K2_07NBOxWsH9zs0qd5CrcoQW_Mbz3lA/exec';
+        const scriptUrl = window.APP_SCRIPT_URL || window.API_URL || window.API_BASE || window.__API_URL__ || window.__API_BASE__ || localStorage.getItem('APP_SCRIPT_URL') || '';
+        if (!scriptUrl) {
+          document.getElementById('comparisonBody').innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 32px;">Apps Script web app URL is not configured. Publish the web app and set APP_SCRIPT_URL or localStorage.APP_SCRIPT_URL.</td></tr>';
+          return;
+        }
         const res = await fetch(`${scriptUrl}?id=${encodeURIComponent(customerId)}&action=getMonthlyComparison`, { cache: 'no-store' });
         if (!res.ok) {
           throw new Error('HTTP ' + res.status);

@@ -246,9 +246,13 @@
         message: message
       };
 
-      // Use the same deployed Apps Script endpoint used by the other pages in this app.
-      const endpoint = window.API_URL || window.API_BASE || window.__API_URL__ || window.__API_BASE__ ||
-        'https://script.google.com/macros/s/AKfycbzUQeJKLBRCjQG928fnIdJ7Tlg-JR0072ENK-K2_07NBOxWsH9zs0qd5CrcoQW_Mbz3lA/exec';
+      // Use the Apps Script endpoint configured at runtime.
+      const endpoint = window.APP_SCRIPT_URL || window.API_URL || window.API_BASE || window.__API_URL__ || window.__API_BASE__ || localStorage.getItem('APP_SCRIPT_URL') || '';
+      if (!endpoint) {
+        resultEl.className = 'result error';
+        resultEl.textContent = 'Apps Script web app URL is not configured. Publish the web app and set APP_SCRIPT_URL or localStorage.APP_SCRIPT_URL.';
+        return;
+      }
       const postUrl = endpoint;
 
       resultEl.textContent = 'Submitting request...';

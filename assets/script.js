@@ -55,7 +55,15 @@ function selectRole(role) {
 }
 
 // Configuration (override these before this file runs if needed)
-const API_BASE = "https://script.google.com/macros/s/AKfycbzUQeJKLBRCjQG928fnIdJ7Tlg-JR0072ENK-K2_07NBOxWsH9zs0qd5CrcoQW_Mbz3lA/exec";
+const API_BASE = (window.APP_SCRIPT_URL || window.API_URL || window.API_BASE || window.__API_URL__ || window.__API_BASE__ || localStorage.getItem('APP_SCRIPT_URL') || '').trim();
+
+function getAppScriptUrl() {
+  const configured = (window.APP_SCRIPT_URL || window.API_URL || window.API_BASE || window.__API_URL__ || window.__API_BASE__ || localStorage.getItem('APP_SCRIPT_URL') || '').trim();
+  if (!configured) {
+    throw new Error('Apps Script web app URL is not configured. Publish the web app and set APP_SCRIPT_URL or localStorage.APP_SCRIPT_URL.');
+  }
+  return configured;
+}
 
 // User role tracking (tenant or landlord)
 let currentUserRole = 'tenant';
