@@ -1150,6 +1150,7 @@ function getMonthlyComparison_(ss, customerId) {
         var monthName = monthDate.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
 
         months[yearMonth] = {
+          yearMonth: yearMonth,
           month: monthName,
           electric: 0,
           water: 0,
@@ -1171,7 +1172,9 @@ function getMonthlyComparison_(ss, customerId) {
   }
 
   monthArray.sort(function(a, b) {
-    return new Date(a.month) - new Date(b.month);
+    var aDate = new Date(String(a.yearMonth || a.month || '2000-01') + '-01');
+    var bDate = new Date(String(b.yearMonth || b.month || '2000-01') + '-01');
+    return aDate - bDate;
   });
 
   return {

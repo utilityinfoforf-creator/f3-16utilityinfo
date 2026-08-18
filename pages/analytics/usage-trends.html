@@ -53,7 +53,7 @@
         <div class="stat-card">
           <div class="stat-label">Lowest Usage</div>
           <div class="stat-value" id="stat-low">Pending</div>
-        </tr>
+        </div>
       </div>
 
       <!-- CHART CARD -->
@@ -114,12 +114,21 @@
       }
 
       try {
-        const scriptUrl = 'https://script.google.com/macros/s/AKfycbzUQeJKLBRCjQG928fnIdJ7Tlg-JR0072ENK-K2_07NBOxWsH9zs0qd5CrcoQW_Mbz3lA/exec';
+        const scriptUrl = window.API_URL || window.API_BASE || window.__API_URL__ || window.__API_BASE__ ||
+          'https://script.google.com/macros/s/AKfycbzUQeJKLBRCjQG928fnIdJ7Tlg-JR0072ENK-K2_07NBOxWsH9zs0qd5CrcoQW_Mbz3lA/exec';
         const res = await fetch(`${scriptUrl}?id=${encodeURIComponent(customerId)}&action=getUsageTrends`, { cache: 'no-store' });
+        if (!res.ok) {
+          throw new Error('HTTP ' + res.status);
+        }
         const data = await res.json();
-        if (data.error) throw new Error(data.error);
+        if (data && data.error) throw new Error(data.error);
 
-        const rows = Array.isArray(data.data) ? data.data : [];
+        const rows = Array.isArray(data && data.data) ? data.data : [];
+        if (!rows.length) {
+          document.getElementById('usageBody').innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 32px;">No usage data available for this customer.</td></tr>';
+          return;
+        }
+
         displayChart(rows);
         displayTable(rows);
         displayStats(rows);
