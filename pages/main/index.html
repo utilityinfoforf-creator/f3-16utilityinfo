@@ -918,6 +918,23 @@ async function loadTenantBillingData(customerId) {
   }
 }
 
+async function loadDashboardData(custId) {
+  try {
+    const url = window.APP_SCRIPT_URL || window.API_URL || window.API_BASE || window.__API_URL__ || window.__API_BASE__ || localStorage.getItem('APP_SCRIPT_URL') || 'https://script.google.com/macros/s/AKfycbzUQeJKLBRCjQG928fnIdJ7Tlg-JR0072ENK-K2_07NBOxWsH9zs0qd5CrcoQW_Mbz3lA/exec';
+    if (!url) return;
+    const res = await fetch(`${url}?id=${encodeURIComponent(custId)}`);
+    const data = await res.json();
+    if (!data.error) {
+      document.getElementById('electric-balance').textContent = data.electricBalance != null ? '৳ ' + parseFloat(data.electricBalance).toLocaleString('bn-BD', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : 'Pending';
+      document.getElementById('water-bill').textContent = data.waterBillDue != null ? '৳ ' + parseFloat(data.waterBillDue).toLocaleString('bn-BD', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : 'Pending';
+      document.getElementById('gas-bill').textContent = data.gasBillDue != null ? '৳ ' + parseFloat(data.gasBillDue).toLocaleString('bn-BD', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : 'Pending';
+      document.getElementById('status').textContent = data.internetConnected || 'Active';
+    }
+  } catch (err) {
+    console.log('Error loading dashboard data:', err);
+  }
+}
+
 window.addEventListener('load', () => {
   updateText();
   document.querySelector('.lang-btn').classList.add('active');
@@ -936,6 +953,7 @@ window.addEventListener('load', () => {
       document.getElementById('tenant-dashboard').style.display = 'none';
       document.getElementById('landlord-dashboard').style.display = 'block';
     } else {
+      loadDashboardData(activeCustomerId);
       loadTenantBillingData(activeCustomerId);
     }
   } else {
